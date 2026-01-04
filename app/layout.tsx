@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { AIChatWidget } from "@/components/ai-chat-widget"
+import { AuthProvider } from "@/lib/auth-context"
+import { Toaster } from "@/components/ui/sonner"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -37,11 +39,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body className={`font-sans antialiased bg-background text-foreground`}>
-        {children}
-        <AIChatWidget />
-        <Analytics />
+        <AuthProvider>
+          {children}
+          <AIChatWidget />
+          <Analytics />
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   )

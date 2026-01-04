@@ -1,113 +1,99 @@
-// Client-side document storage and management
-// This will be replaced by Supabase integration later
+import { supabase } from './supabase'
+import { Document, DocumentType, DocumentStatus, RelationshipType } from './types'
 
-interface StoredDocument {
-  id: string
-  type: "quotation" | "invoice" | "receipt" | "contract"
-  title: string
-  clientName: string
-  content: any
-  createdAt: Date
-  updatedAt: Date
-  status: "draft" | "sent" | "archived"
-}
+export class DocumentStorage {
+  async saveDocument(doc: Partial<Document>): Promise<Document | null> {
+    const { data, error } = await supabase
+      .from('documents')
+      .upsert({
+        ...doc,
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
 
-interface DocumentRelationship {
-  sourceId: string
-  targetId: string
-  type: string
-  createdAt: Date
-}
-
-class DocumentStorage {
-  private documents: Map<string, StoredDocument> = new Map()
-  private relationships: DocumentRelationship[] = []
-  private storageKey = "kino_documents"
-  private relationshipKey = "kino_relationships"
-
-  constructor() {
-    this.loadFromStorage()
-  }
-
-  saveDocument(doc: StoredDocument): void {
-    this.documents.set(doc.id, doc)
-    this.persistToStorage()
-  }
-
-  getDocument(id: string): StoredDocument | undefined {
-    return this.documents.get(id)
-  }
-
-  getAllDocuments(): StoredDocument[] {
-    return Array.from(this.documents.values())
-  }
-
-  deleteDocument(id: string): void {
-    this.documents.delete(id)
-    this.relationships = this.relationships.filter((r) => r.sourceId !== id && r.targetId !== id)
-    this.persistToStorage()
-  }
-
-  createRelationship(sourceId: string, targetId: string, type: string): void {
-    const relationship: DocumentRelationship = {
-      sourceId,
-      targetId,
-      type,
-      createdAt: new Date(),
+    if (error) {
+      console.error('Error saving document:', error)
+      return null
     }
-    this.relationships.push(relationship)
-    this.persistToStorage()
+
+    return data
   }
 
-  getRelationships(docId: string): DocumentRelationship[] {
-    return this.relationships.filter((r) => r.sourceId === docId)
-  }
+  async getDocument(id: string): Promise<Document | null> {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-  removeRelationship(sourceId: string, targetId: string): void {
-    this.relationships = this.relationships.filter((r) => !(r.sourceId === sourceId && r.targetId === targetId))
-    this.persistToStorage()
-  }
-
-  private persistToStorage(): void {
-    try {
-      const docsArray = Array.from(this.documents.values())
-      localStorage.setItem(this.storageKey, JSON.stringify(docsArray))
-      localStorage.setItem(this.relationshipKey, JSON.stringify(this.relationships))
-    } catch (e) {
-      console.error("Failed to persist to storage:", e)
+    if (error) {
+      console.error('Error getting document:', error)
+      return null
     }
+
+    return data
   }
 
-  private loadFromStorage(): void {
-    try {
-      const docsData = localStorage.getItem(this.storageKey)
-      const relData = localStorage.getItem(this.relationshipKey)
+  async getAllDocuments(filters?: { type?: DocumentType; status?: DocumentStatus }): Promise<Document[]> {
+    let query = supabase.from('documents').select('*')
 
-      if (docsData) {
-        const docs = JSON.parse(docsData) as StoredDocument[]
-        docs.forEach((doc) => {
-          this.documents.set(doc.id, {
-            ...doc,
-            createdAt: new Date(doc.createdAt),
-            updatedAt: new Date(doc.updatedAt),
-          })
-        })
-      }
+    if (filters?.type) query = query.eq('doc_type', filters.type)
+    if (filters?.status) query = query.eq('status', filters.status)
 
-      if (relData) {
-        const rels = JSON.parse(relData) as DocumentRelationship[]
-        this.relationships = rels.map((r) => ({
-          ...r,
-          createdAt: new Date(r.createdAt),
-        }))
-      }
-    } catch (e) {
-      console.error("Failed to load from storage:", e)
+    const { data, error } = await query.order('updated_at', { ascending: false })
+
+    if (error) {
+      console.error('Error getting documents:', error)
+      return []
     }
+
+    return data || []
   }
 
-  generateId(): string {
-    return `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  async deleteDocument(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting document:', error)
+      return false
+    }
+
+    return true
+  }
+
+  async createRelationship(sourceId: string, targetId: string, type: RelationshipType): Promise<boolean> {
+    const { error } = await supabase
+      .from('document_relationships')
+      .insert({
+        source_doc_id: sourceId,
+        target_doc_id: targetId,
+        relationship_type: type,
+      })
+
+    if (error) {
+      console.error('Error creating relationship:', error)
+      return false
+    }
+
+    return true
+  }
+
+  async getRelationships(docId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('document_relationships')
+      .select('*')
+      .or(`source_doc_id.eq.${docId},target_doc_id.eq.${docId}`)
+
+    if (error) {
+      console.error('Error getting relationships:', error)
+      return []
+    }
+
+    return data || []
   }
 }
 
