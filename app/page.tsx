@@ -1,40 +1,47 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { DocumentStats } from "@/components/dashboard/document-stats"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { SubscriptionCard } from "@/components/dashboard/subscription-card"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { DraftDocuments } from "@/components/dashboard/draft-documents"
+import { documentStorage } from "@/lib/document-storage"
+import { Document } from "@/lib/types"
+import { Loader2 } from "lucide-react"
 
 export default function DashboardPage() {
-  const mockDrafts = [
-    {
-      id: "draft_001",
-      type: "quotation" as const,
-      title: "Website Redesign - Acme Corp",
-      clientName: "Acme Corporation",
-      createdAt: "2024-01-15",
-      updatedAt: "2024-01-18",
-      status: "draft" as const,
-    },
-    {
-      id: "draft_002",
-      type: "contract" as const,
-      title: "Web Development Services Agreement",
-      clientName: "TechStart Inc",
-      createdAt: "2024-01-16",
-      updatedAt: "2024-01-17",
-      status: "draft" as const,
-    },
-    {
-      id: "draft_003",
-      type: "invoice" as const,
-      title: "Invoice #2024-001",
-      clientName: "Acme Corporation",
-      createdAt: "2024-01-10",
-      updatedAt: "2024-01-10",
-      status: "archived" as const,
-    },
-  ]
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadDocuments() {
+      const docs = await documentStorage.getAllDocuments()
+      setDocuments(docs)
+      setLoading(false)
+    }
+    loadDocuments()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Convert types to match DraftDoc interface
+  const drafts = documents.map(doc => ({
+    id: doc.id,
+    type: doc.doc_type,
+    title: doc.title || "Untitled",
+    clientName: doc.client_name || "Unknown",
+    createdAt: doc.created_at,
+    updatedAt: doc.updated_at,
+    status: doc.status as "draft" | "sent" | "archived"
+  }))
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -57,7 +64,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mb-8">
-          <DraftDocuments drafts={mockDrafts} />
+          <DraftDocuments drafts={drafts} />
         </div>
 
         {/* Activity Feed */}

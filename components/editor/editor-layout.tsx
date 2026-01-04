@@ -12,8 +12,23 @@ import { createPaymentStatus } from "@/lib/payment-utils"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
+import { useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { documentStorage } from "@/lib/document-storage"
+import { toast } from "sonner"
+import { useAuth } from "@/lib/auth-context"
+
+type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
+
 export function EditorLayout({ documentType: initialType }: { documentType: DocumentType }) {
   const [activeTab, setActiveTab] = useState<DocumentType>(initialType)
+  const [isSaving, setIsSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const docId = searchParams.get("id")
+  const { user } = useAuth()
+
   const [formData, setFormData] = useState({
     clientName: "",
     clientEmail: "",
@@ -28,6 +43,78 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     deliveryDate: "",
     paymentStatus: createPaymentStatus() as PaymentStatus,
   })
+
+  // Load document if id is provided
+  useEffect(() => {
+    async function loadDocument() {
+      if (docId) {
+        const doc = await documentStorage.getDocument(docId)
+        if (doc) {
+          setFormData({
+            clientName: doc.client_name || "",
+            clientEmail: doc.client_email || "",
+            clientAddress: doc.client_address || "",
+            items: doc.content?.items || [{ description: "", quantity: 1, unitPrice: 0 }],
+            notes: doc.content?.notes || "",
+            logo: null, // Files can't be easily restored from URLs in this simple mock
+            signature: doc.signature_url || null,
+            stamp: null,
+            contractTerms: doc.content?.contractTerms || "",
+            paymentTerms: doc.content?.paymentTerms || "",
+            deliveryDate: doc.content?.deliveryDate || "",
+            paymentStatus: createPaymentStatus(doc.status as any) as PaymentStatus,
+          })
+          setActiveTab(doc.doc_type)
+        }
+      }
+      setLoading(false)
+    }
+    loadDocument()
+  }, [docId])
+
+  const handleSave = async () => {
+    if (!user) {
+      toast.error("Please sign in to save documents")
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const docData = {
+        id: docId || undefined,
+        user_id: user.id,
+        doc_type: activeTab,
+        status: formData.paymentStatus.status === 'paid' ? 'paid' : 'draft',
+        title: formData.clientName ? `${activeTab.toUpperCase()} - ${formData.clientName}` : `Untitled ${activeTab}`,
+        client_name: formData.clientName,
+        client_email: formData.clientEmail,
+        client_address: formData.clientAddress,
+        content: {
+          items: formData.items,
+          notes: formData.notes,
+          contractTerms: formData.contractTerms,
+          paymentTerms: formData.paymentTerms,
+          deliveryDate: formData.deliveryDate,
+        },
+        signature_url: formData.signature || undefined,
+      }
+
+      const savedDoc = await documentStorage.saveDocument(docData)
+      if (savedDoc) {
+        toast.success("Document saved successfully!")
+        if (!docId) {
+          router.replace(`/editor?type=${activeTab}&id=${savedDoc.id}`)
+        }
+      } else {
+        throw new Error("Failed to save document")
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to save document")
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   const handleDocumentGenerated = (generatedContent: any) => {
     setFormData((prev) => ({
@@ -49,11 +136,19 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
 
   const totalAmount = formData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <EditorHeader documentType={activeTab} />
+      <EditorHeader documentType={activeTab} onSave={handleSave} isSaving={isSaving} />
 
-      <div className="border-b border-border bg-card/50 sticky top-16 z-40">
+      <div className="border-b border-border bg-card sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <EditorTabs activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
@@ -87,3 +182,4 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     </div>
   )
 }
+import { Loader2 } from "lucide-react"
