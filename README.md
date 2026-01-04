@@ -409,9 +409,67 @@ pnpm test:coverage     # 测试覆盖率
 
 ### Vercel 部署 (推荐)
 
-1. 连接 GitHub 仓库
-2. 配置环境变量
-3. 自动部署
+#### 方式 1: 通过 Vercel Dashboard
+
+1. **连接 GitHub 仓库**
+   - 访问 [Vercel Dashboard](https://vercel.com/new)
+   - 导入 `kino-saa-s-platform` 仓库
+   - 授权 Vercel 访问 GitHub
+
+2. **配置环境变量**
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_key
+   ```
+
+3. **部署**
+   - 点击 "Deploy" 按钮
+   - Vercel 会自动检测 Next.js 并配置构建设置
+   - 每次推送到 `main` 分支会自动触发部署
+
+#### 方式 2: 通过 Vercel CLI
+
+```bash
+# 安装 Vercel CLI (已完成)
+npm install -g vercel
+
+# 登录 Vercel
+vercel login
+
+# 链接项目
+vercel link
+
+# 部署到生产环境
+vercel --prod
+
+# 查看部署状态
+vercel ls
+
+# 查看部署日志
+vercel logs
+```
+
+#### 方式 3: 使用便捷脚本
+
+我们提供了一个便捷脚本来检查 Vercel 部署状态：
+
+```bash
+# 查看部署状态
+./scripts/check-vercel-deployment.sh status
+
+# 查看最新部署日志
+./scripts/check-vercel-deployment.sh logs
+
+# 查看最新部署摘要
+./scripts/check-vercel-deployment.sh latest
+
+# 实时监控部署日志
+./scripts/check-vercel-deployment.sh follow
+
+# 只显示错误日志
+./scripts/check-vercel-deployment.sh errors
+```
 
 ### 手动部署
 
@@ -419,6 +477,17 @@ pnpm test:coverage     # 测试覆盖率
 pnpm build
 pnpm start
 ```
+
+### 部署检查清单
+
+- [ ] 环境变量已配置
+- [ ] Supabase 数据库已初始化
+- [ ] GitHub 仓库已连接
+- [ ] Vercel 项目已创建
+- [ ] 自动部署已启用
+- [ ] 域名已配置（可选）
+
+详细部署指南请参考 [DEPLOYMENT-GUIDE.md](./DEPLOYMENT-GUIDE.md)
 
 ---
 
