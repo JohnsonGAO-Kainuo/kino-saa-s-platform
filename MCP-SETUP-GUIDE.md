@@ -182,3 +182,4 @@ AI: [通过 Supabase MCP 执行 SQL]
 **配置者**: AI Assistant  
 **状态**: ✅ 生产就绪
 
+
