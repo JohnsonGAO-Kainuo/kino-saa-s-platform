@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Upload, Trash2, Plus, Pen, MoveHorizontal, Loader2 } from "lucide-react"
 import { SignaturePadModal } from "./signature-pad-modal"
+import { AssetSelector } from "./asset-selector"
 import { removeImageBackground } from "@/lib/image-utils"
 import { Slider } from "@/components/ui/slider"
 
@@ -205,30 +206,14 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground">Company Logo</Label>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={processing.logo}
-                    className="w-full gap-2 bg-transparent border-dashed h-12"
-                    onClick={() => document.getElementById("logo-upload")?.click()}
-                  >
-                    {processing.logo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {formData.logo ? "Replace Logo" : "Upload Logo"}
-                  </Button>
-                  {formData.logo && (
-                    <div className="flex items-center justify-between px-2 py-1 bg-accent/5 rounded border border-accent/10">
-                      <span className="text-[10px] text-accent font-medium">Processed ✓</span>
-                      <button onClick={() => handleFieldChange("logo", null)} className="text-muted-foreground hover:text-destructive">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-                  <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'logo')} />
-                </div>
-              </div>
+              <AssetSelector
+                type="logo"
+                currentValue={formData.logo}
+                onChange={(value) => handleFieldChange("logo", value)}
+                onUploadClick={() => document.getElementById("logo-upload")?.click()}
+                processing={processing.logo}
+              />
+              <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'logo')} />
 
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground">Authorized Signature</Label>
@@ -236,7 +221,7 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full gap-2 bg-transparent border-dashed h-12"
+                    className="w-full gap-2 bg-transparent border-dashed h-10"
                     onClick={() => setSignaturePadOpen(true)}
                   >
                     <Pen className="w-4 h-4" />
@@ -253,30 +238,14 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground">Company Stamp</Label>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={processing.stamp}
-                    className="w-full gap-2 bg-transparent border-dashed h-12"
-                    onClick={() => document.getElementById("stamp-upload")?.click()}
-                  >
-                    {processing.stamp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {formData.stamp ? "Replace Stamp" : "Upload Stamp"}
-                  </Button>
-                  {formData.stamp && (
-                    <div className="flex items-center justify-between px-2 py-1 bg-accent/5 rounded border border-accent/10">
-                      <span className="text-[10px] text-accent font-medium">Processed ✓</span>
-                      <button onClick={() => handleFieldChange("stamp", null)} className="text-muted-foreground hover:text-destructive">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-                  <input id="stamp-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'stamp')} />
-                </div>
-              </div>
+              <AssetSelector
+                type="stamp"
+                currentValue={formData.stamp}
+                onChange={(value) => handleFieldChange("stamp", value)}
+                onUploadClick={() => document.getElementById("stamp-upload")?.click()}
+                processing={processing.stamp}
+              />
+              <input id="stamp-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'stamp')} />
             </div>
           </CardContent>
         </Card>
