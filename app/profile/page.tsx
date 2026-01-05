@@ -10,11 +10,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
-import { Loader2, Building2, CreditCard, Paintbrush, Save, Upload, X, Check, Image as ImageIcon } from 'lucide-react'
+import { Loader2, UserCircle, Building2, CreditCard, Paintbrush, Save, Upload, X, Check, Image as ImageIcon } from 'lucide-react'
 import { removeImageBackground, dataURLtoFile } from '@/lib/image-utils'
-import Link from 'next/link'
 
-export default function SettingsPage() {
+export default function ProfilePage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -51,7 +50,7 @@ export default function SettingsPage() {
       if (error && error.code !== 'PGRST116') throw error
       if (data) setSettings(data)
     } catch (error: any) {
-      toast.error('Failed to load settings')
+      toast.error('Failed to load profile')
     } finally {
       setLoading(false)
     }
@@ -69,7 +68,7 @@ export default function SettingsPage() {
         })
 
       if (error) throw error
-      toast.success('Settings saved successfully!')
+      toast.success('Profile updated successfully!')
     } catch (error: any) {
       toast.error(error.message)
     } finally {
@@ -84,30 +83,23 @@ export default function SettingsPage() {
     setUploading(prev => ({ ...prev, [type]: true }))
     try {
       let finalFile = file
-      
-      // For signature and stamp, automatically remove background
       if (type === 'signature' || type === 'stamp') {
         const transparentDataUrl = await removeImageBackground(file)
         finalFile = dataURLtoFile(transparentDataUrl, `${type}.png`)
       }
 
-      const fileExt = 'png' // Always save as PNG for transparency
-      const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`
-
+      const fileName = `${user.id}/${type}_${Date.now()}.png`
       const { error: uploadError } = await supabase.storage
         .from('assets')
         .upload(fileName, finalFile, { upsert: true, contentType: 'image/png' })
 
       if (uploadError) throw uploadError
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('assets')
-        .getPublicUrl(fileName)
-
+      const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(fileName)
       setSettings(prev => ({ ...prev, [`${type}_url`]: publicUrl }))
-      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully!`)
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded!`)
     } catch (error: any) {
-      toast.error(`Failed to upload ${type}: ${error.message}`)
+      toast.error(`Upload failed: ${error.message}`)
     } finally {
       setUploading(prev => ({ ...prev, [type]: false }))
     }
@@ -129,7 +121,7 @@ export default function SettingsPage() {
               </button>
             </div>
             <p className="text-[11px] text-[#16a34a] font-medium flex items-center gap-1">
-              <Check className="w-3 h-3" /> {type === 'logo' ? 'Logo ready' : 'Background removed & ready'}
+              <Check className="w-3 h-3" /> Ready for use
             </p>
           </div>
         ) : (
@@ -137,15 +129,8 @@ export default function SettingsPage() {
             <div className="w-10 h-10 rounded-full bg-[#6366f1]/10 flex items-center justify-center mb-3">
               <Upload className="w-5 h-5 text-[#6366f1]" />
             </div>
-            <span className="text-[13px] font-medium text-[#1a1f36]">Click to upload {type}</span>
-            <span className="text-[11px] text-[#8792a2] mt-1">PNG, JPG up to 5MB</span>
-            <input 
-              type="file" 
-              className="hidden" 
-              accept="image/*" 
-              onChange={e => handleFileUpload(e, type)}
-              disabled={uploading[type]}
-            />
+            <span className="text-[13px] font-medium text-[#1a1f36]">Upload {type}</span>
+            <input type="file" className="hidden" accept="image/*" onChange={e => handleFileUpload(e, type)} disabled={uploading[type]} />
           </label>
         )}
         {uploading[type] && (
@@ -171,14 +156,19 @@ export default function SettingsPage() {
       
       <main className="max-w-4xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight">Settings</h1>
-            <p className="text-[#4f566b] text-sm mt-1">Manage your company profile and payment details.</p>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-border flex items-center justify-center">
+              <UserCircle className="w-8 h-8 text-[#6366f1]" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight">Business Profile</h1>
+              <p className="text-[#4f566b] text-sm mt-0.5">{user?.email}</p>
+            </div>
           </div>
           <Button 
             onClick={handleSave} 
             disabled={saving}
-            className="bg-[#6366f1] hover:bg-[#5658d2] text-white gap-2 shadow-sm"
+            className="bg-[#6366f1] hover:bg-[#5658d2] text-white gap-2 shadow-sm h-10 px-6"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Changes
@@ -190,36 +180,36 @@ export default function SettingsPage() {
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
               <Building2 className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">Company Information</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider">Business Identity</h2>
             </div>
             <Card className="border-border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
-                    <Label className="text-[13px] font-medium text-[#1a1f36]">Company Name</Label>
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">Registered Business Name</Label>
                     <Input 
                       value={settings.company_name}
                       onChange={e => setSettings({...settings, company_name: e.target.value})}
                       placeholder="e.g. Kainuo Innovision Ltd"
-                      className="border-[#e6e9ef] focus:ring-[#6366f1]/10 h-10"
+                      className="border-[#e6e9ef] h-10"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[13px] font-medium text-[#1a1f36]">Business Email</Label>
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">Business Email (Public)</Label>
                     <Input 
                       value={settings.company_email}
                       onChange={e => setSettings({...settings, company_email: e.target.value})}
-                      placeholder="billing@company.com"
+                      placeholder="contact@yourbusiness.com"
                       className="border-[#e6e9ef] h-10"
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[13px] font-medium text-[#1a1f36]">Office Address</Label>
+                  <Label className="text-[13px] font-medium text-[#1a1f36]">Official Business Address</Label>
                   <Textarea 
                     value={settings.company_address}
                     onChange={e => setSettings({...settings, company_address: e.target.value})}
-                    placeholder="Enter your full business address"
+                    placeholder="This address will appear on all documents"
                     className="border-[#e6e9ef] min-h-[80px]"
                   />
                 </div>
@@ -231,83 +221,55 @@ export default function SettingsPage() {
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
               <CreditCard className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">Payment & Bank Details</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider">Default Payment Methods</h2>
             </div>
             <Card className="border-border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
                     <Label className="text-[13px] font-medium text-[#1a1f36]">Bank Name</Label>
-                    <Input 
-                      value={settings.bank_name}
-                      onChange={e => setSettings({...settings, bank_name: e.target.value})}
-                      placeholder="e.g. HSBC Hong Kong"
-                      className="border-[#e6e9ef] h-10"
-                    />
+                    <Input value={settings.bank_name} onChange={e => setSettings({...settings, bank_name: e.target.value})} placeholder="e.g. HSBC Hong Kong" className="border-[#e6e9ef] h-10" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[13px] font-medium text-[#1a1f36]">Account Number</Label>
-                    <Input 
-                      value={settings.account_number}
-                      onChange={e => setSettings({...settings, account_number: e.target.value})}
-                      placeholder="123-456789-001"
-                      className="border-[#e6e9ef] h-10"
-                    />
+                    <Input value={settings.account_number} onChange={e => setSettings({...settings, account_number: e.target.value})} placeholder="123-456789-001" className="border-[#e6e9ef] h-10" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[13px] font-medium text-[#1a1f36]">FPS ID / Identifier</Label>
-                    <Input 
-                      value={settings.fps_id}
-                      onChange={e => setSettings({...settings, fps_id: e.target.value})}
-                      placeholder="e.g. 12345678 or email"
-                      className="border-[#e6e9ef] h-10"
-                    />
+                    <Input value={settings.fps_id} onChange={e => setSettings({...settings, fps_id: e.target.value})} placeholder="Mobile or Email" className="border-[#e6e9ef] h-10" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[13px] font-medium text-[#1a1f36]">SWIFT / BIC Code (Optional)</Label>
-                    <Input 
-                      value={settings.swift_code}
-                      onChange={e => setSettings({...settings, swift_code: e.target.value})}
-                      placeholder="e.g. HSBC HK HH XXX"
-                      className="border-[#e6e9ef] h-10"
-                    />
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">SWIFT / BIC Code</Label>
+                    <Input value={settings.swift_code} onChange={e => setSettings({...settings, swift_code: e.target.value})} placeholder="Optional for international" className="border-[#e6e9ef] h-10" />
                   </div>
-                </div>
-                <div className="space-y-1.5 pt-2 border-t border-[#f7f9fc]">
-                  <Label className="text-[13px] font-medium text-[#1a1f36]">Default Payment Instructions</Label>
-                  <Textarea 
-                    value={settings.default_payment_notes}
-                    onChange={e => setSettings({...settings, default_payment_notes: e.target.value})}
-                    placeholder="e.g. Please include Invoice # in transfer reference."
-                    className="border-[#e6e9ef] min-h-[60px]"
-                  />
                 </div>
               </CardContent>
             </Card>
           </section>
 
-          {/* Branding & Assets Section */}
+          {/* Branding & Assets */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
               <Paintbrush className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">Branding & Assets</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider">Visual Identity</h2>
             </div>
             <Card className="border-border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <ImageUploadBox type="logo" url={settings.logo_url} label="Company Logo" />
-                  <ImageUploadBox type="signature" url={settings.signature_url} label="Default Signature" />
+                  <ImageUploadBox type="logo" url={settings.logo_url} label="Official Logo" />
+                  <ImageUploadBox type="signature" url={settings.signature_url} label="Digital Signature" />
                   <ImageUploadBox type="stamp" url={settings.stamp_url} label="Company Stamp" />
                 </div>
                 <div className="mt-6 pt-6 border-t border-[#f7f9fc]">
-                  <div className="flex items-start gap-3 bg-[#eff6ff] p-4 rounded-lg">
-                    <div className="p-1.5 bg-blue-100 rounded-md">
+                  <div className="flex items-start gap-3 bg-[#f0f9ff] p-4 rounded-xl border border-blue-100">
+                    <div className="p-2 bg-white rounded-lg shadow-sm">
                       <ImageIcon className="w-4 h-4 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-[13px] font-semibold text-blue-900">Professional Image Processing Active</p>
+                      <p className="text-[13px] font-semibold text-blue-900">How this works</p>
                       <p className="text-[12px] text-blue-800 leading-relaxed mt-0.5">
-                        Upload your signature or stamp on plain white paper. Our system will automatically remove the background to ensure it looks professional on digital documents.
+                        These details will be used as the default for all new documents you create. 
+                        We automatically process your signature and stamp to remove white backgrounds for a professional look.
                       </p>
                     </div>
                   </div>
@@ -320,3 +282,4 @@ export default function SettingsPage() {
     </div>
   )
 }
+
