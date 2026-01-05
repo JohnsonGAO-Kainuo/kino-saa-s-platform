@@ -42,6 +42,8 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     paymentTerms: "",
     deliveryDate: "",
     paymentStatus: createPaymentStatus() as PaymentStatus,
+    languageMode: "bilingual" as "bilingual" | "english" | "chinese",
+    logoPosition: "left" as "left" | "center" | "right",
   })
 
   // Load document or default settings
@@ -64,6 +66,8 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             paymentTerms: doc.content?.paymentTerms || "",
             deliveryDate: doc.content?.deliveryDate || "",
             paymentStatus: createPaymentStatus(doc.status as any) as PaymentStatus,
+            languageMode: doc.content?.languageMode || "bilingual",
+            logoPosition: doc.content?.logoPosition || "left",
           })
           setActiveTab(doc.doc_type)
         }
@@ -117,6 +121,8 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           contractTerms: formData.contractTerms,
           paymentTerms: formData.paymentTerms,
           deliveryDate: formData.deliveryDate,
+          languageMode: formData.languageMode,
+          logoPosition: formData.logoPosition,
         },
         signature_url: formData.signature || undefined,
       }

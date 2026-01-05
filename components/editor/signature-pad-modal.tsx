@@ -31,19 +31,50 @@ export function SignaturePadModal({ open, onClose, onSave }: SignaturePadModalPr
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Set canvas size and background
-    const rect = canvas.parentElement?.getBoundingClientRect()
-    if (rect) {
-      canvas.width = rect.width
-      canvas.height = rect.height
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect()
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = rect.width * dpr
+      canvas.height = rect.height * dpr
+      ctx.scale(dpr, dpr)
+      
+      ctx.strokeStyle = "#1a1f36"
+      ctx.lineWidth = 2.5
+      ctx.lineCap = "round"
+      ctx.lineJoin = "round"
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
     }
-    // Set transparent background
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.strokeStyle = "#1a1f36" // Dark blue-black for professional look
-    ctx.lineWidth = 2.5 // Slightly thicker
-    ctx.lineCap = "round"
-    ctx.lineJoin = "round"
+
+    // Wait a frame for dialog animation to finish and layout to stabilize
+    const timeout = setTimeout(resizeCanvas, 100)
+    window.addEventListener('resize', resizeCanvas)
+    
+    return () => {
+      clearTimeout(timeout)
+      window.removeEventListener('resize', resizeCanvas)
+    }
   }, [open])
+
+  const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current
+    if (!canvas) return { x: 0, y: 0 }
+    
+    const rect = canvas.getBoundingClientRect()
+    let clientX, clientY
+    
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX
+      clientY = e.touches[0].clientY
+    } else {
+      clientX = (e as React.MouseEvent).clientX
+      clientY = (e as React.MouseEvent).clientY
+    }
+    
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    }
+  }
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
@@ -51,16 +82,7 @@ export function SignaturePadModal({ open, onClose, onSave }: SignaturePadModalPr
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    const rect = canvas.getBoundingClientRect()
-    let x, y
-    if ('touches' in e) {
-      x = e.touches[0].clientX - rect.left
-      y = e.touches[0].clientY - rect.top
-    } else {
-      x = e.clientX - rect.left
-      y = e.clientY - rect.top
-    }
-
+    const { x, y } = getCoordinates(e)
     ctx.beginPath()
     ctx.moveTo(x, y)
     setIsDrawing(true)
@@ -73,16 +95,7 @@ export function SignaturePadModal({ open, onClose, onSave }: SignaturePadModalPr
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    const rect = canvas.getBoundingClientRect()
-    let x, y
-    if ('touches' in e) {
-      x = e.touches[0].clientX - rect.left
-      y = e.touches[0].clientY - rect.top
-    } else {
-      x = e.clientX - rect.left
-      y = e.clientY - rect.top
-    }
-
+    const { x, y } = getCoordinates(e)
     ctx.lineTo(x, y)
     ctx.stroke()
   }

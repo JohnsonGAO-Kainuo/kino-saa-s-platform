@@ -24,6 +24,8 @@ interface FormDataType {
   contractTerms: string
   paymentTerms: string
   deliveryDate: string
+  languageMode: "bilingual" | "english" | "chinese"
+  logoPosition: "left" | "center" | "right"
 }
 
 interface EditorFormProps {
@@ -35,7 +37,7 @@ interface EditorFormProps {
 export function EditorForm({ documentType, formData, onChange }: EditorFormProps) {
   const [signaturePadOpen, setSignaturePadOpen] = useState(false)
 
-  const handleClientChange = (field: string, value: string) => {
+  const handleFieldChange = (field: string, value: any) => {
     onChange({ ...formData, [field]: value })
   }
 
@@ -77,92 +79,142 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-6 pb-20">
+        {/* Document Settings */}
+        <Card className="bg-card border-border border-accent/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="w-1.5 h-4 bg-accent rounded-full" />
+              Document Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Language Mode</Label>
+                <div className="flex bg-input p-1 rounded-lg border border-border">
+                  {[
+                    { id: 'bilingual', label: 'Bilingual' },
+                    { id: 'english', label: 'English' },
+                    { id: 'chinese', label: '繁體中文' }
+                  ].map((mode) => (
+                    <button
+                      key={mode.id}
+                      onClick={() => handleFieldChange("languageMode", mode.id)}
+                      className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
+                        formData.languageMode === mode.id 
+                          ? "bg-white text-accent shadow-sm" 
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Logo Alignment</Label>
+                <div className="flex bg-input p-1 rounded-lg border border-border">
+                  {[
+                    { id: 'left', label: 'Left' },
+                    { id: 'center', label: 'Center' },
+                    { id: 'right', label: 'Right' }
+                  ].map((pos) => (
+                    <button
+                      key={pos.id}
+                      onClick={() => handleFieldChange("logoPosition", pos.id)}
+                      className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
+                        formData.logoPosition === pos.id 
+                          ? "bg-white text-accent shadow-sm" 
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {pos.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Company/Logo Section */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-base">Company Branding</CardTitle>
+            <CardTitle className="text-base">Branding & Assets</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="text-sm text-muted-foreground mb-2 block">Logo</Label>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 bg-transparent"
-                  onClick={() => document.getElementById("logo-upload")?.click()}
-                >
-                  <Upload className="w-4 h-4" />
-                  Upload Logo
-                </Button>
-                {formData.logo && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-accent">{formData.logo.name}</span>
-                    <button
-                      onClick={() => onChange({ ...formData, logo: null })}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-sm text-muted-foreground mb-2 block">Signature</Label>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 bg-transparent"
-                  onClick={() => setSignaturePadOpen(true)}
-                >
-                  <Pen className="w-4 h-4" />
-                  Draw Signature
-                </Button>
-                {formData.signature && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-12 h-6 bg-input border border-border rounded flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground">✓</span>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">Company Logo</Label>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 bg-transparent border-dashed h-12"
+                    onClick={() => document.getElementById("logo-upload")?.click()}
+                  >
+                    <Upload className="w-4 h-4" />
+                    {formData.logo ? "Replace Logo" : "Upload Logo"}
+                  </Button>
+                  {formData.logo && (
+                    <div className="flex items-center justify-between px-2 py-1 bg-accent/5 rounded border border-accent/10">
+                      <span className="text-[10px] text-accent truncate max-w-[100px]">{formData.logo.name}</span>
+                      <button onClick={() => handleFieldChange("logo", null)} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => onChange({ ...formData, signature: null })}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                  )}
+                  <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <Label className="text-sm text-muted-foreground mb-2 block">Company Stamp</Label>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 bg-transparent"
-                  onClick={() => document.getElementById("stamp-upload")?.click()}
-                >
-                  <Upload className="w-4 h-4" />
-                  Upload Stamp
-                </Button>
-                {formData.stamp && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-accent">{formData.stamp.name}</span>
-                    <button
-                      onClick={() => onChange({ ...formData, stamp: null })}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                <input id="stamp-upload" type="file" accept="image/*" className="hidden" onChange={handleStampUpload} />
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">Authorized Signature</Label>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 bg-transparent border-dashed h-12"
+                    onClick={() => setSignaturePadOpen(true)}
+                  >
+                    <Pen className="w-4 h-4" />
+                    {formData.signature ? "Re-draw" : "Draw Signature"}
+                  </Button>
+                  {formData.signature && (
+                    <div className="flex items-center justify-between px-2 py-1 bg-green-50 rounded border border-green-100">
+                      <span className="text-[10px] text-green-600 font-medium">Captured ✓</span>
+                      <button onClick={() => handleFieldChange("signature", null)} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">Company Stamp</Label>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 bg-transparent border-dashed h-12"
+                    onClick={() => document.getElementById("stamp-upload")?.click()}
+                  >
+                    <Upload className="w-4 h-4" />
+                    {formData.stamp ? "Replace Stamp" : "Upload Stamp"}
+                  </Button>
+                  {formData.stamp && (
+                    <div className="flex items-center justify-between px-2 py-1 bg-accent/5 rounded border border-accent/10">
+                      <span className="text-[10px] text-accent truncate max-w-[100px]">{formData.stamp.name}</span>
+                      <button onClick={() => handleFieldChange("stamp", null)} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                  <input id="stamp-upload" type="file" accept="image/*" className="hidden" onChange={handleStampUpload} />
+                </div>
               </div>
             </div>
           </CardContent>
@@ -171,44 +223,40 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
         {/* Client Information */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-base">Client Information</CardTitle>
+            <CardTitle className="text-base">Client Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="clientName" className="text-sm text-muted-foreground mb-2 block">
-                Client Name
-              </Label>
-              <Input
-                id="clientName"
-                placeholder="Client name"
-                value={formData.clientName}
-                onChange={(e) => handleClientChange("clientName", e.target.value)}
-                className="bg-input border-border text-foreground"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="clientName" className="text-xs font-medium text-muted-foreground">Client Name</Label>
+                <Input
+                  id="clientName"
+                  placeholder="e.g. Acme Corp"
+                  value={formData.clientName}
+                  onChange={(e) => handleFieldChange("clientName", e.target.value)}
+                  className="bg-input border-border"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="clientEmail" className="text-xs font-medium text-muted-foreground">Email</Label>
+                <Input
+                  id="clientEmail"
+                  type="email"
+                  placeholder="billing@acme.com"
+                  value={formData.clientEmail}
+                  onChange={(e) => handleFieldChange("clientEmail", e.target.value)}
+                  className="bg-input border-border"
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="clientEmail" className="text-sm text-muted-foreground mb-2 block">
-                Email
-              </Label>
-              <Input
-                id="clientEmail"
-                type="email"
-                placeholder="client@example.com"
-                value={formData.clientEmail}
-                onChange={(e) => handleClientChange("clientEmail", e.target.value)}
-                className="bg-input border-border text-foreground"
-              />
-            </div>
-            <div>
-              <Label htmlFor="clientAddress" className="text-sm text-muted-foreground mb-2 block">
-                Address
-              </Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="clientAddress" className="text-xs font-medium text-muted-foreground">Address</Label>
               <Textarea
                 id="clientAddress"
-                placeholder="Client address"
+                placeholder="Full billing address"
                 value={formData.clientAddress}
-                onChange={(e) => handleClientChange("clientAddress", e.target.value)}
-                className="bg-input border-border text-foreground"
+                onChange={(e) => handleFieldChange("clientAddress", e.target.value)}
+                className="bg-input border-border min-h-[80px]"
               />
             </div>
           </CardContent>
@@ -229,7 +277,7 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                     id="contractTerms"
                     placeholder="Enter contract terms, scope of work, deliverables, IP rights, confidentiality, termination clause, liability, dispute resolution, etc."
                     value={formData.contractTerms}
-                    onChange={(e) => handleClientChange("contractTerms", e.target.value)}
+                    onChange={(e) => handleFieldChange("contractTerms", e.target.value)}
                     className="bg-input border-border text-foreground min-h-40"
                   />
                 </div>
@@ -241,7 +289,7 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                     id="paymentTerms"
                     placeholder="e.g., Net 30, 50% upfront, 50% on delivery"
                     value={formData.paymentTerms}
-                    onChange={(e) => handleClientChange("paymentTerms", e.target.value)}
+                    onChange={(e) => handleFieldChange("paymentTerms", e.target.value)}
                     className="bg-input border-border text-foreground"
                   />
                 </div>
@@ -253,7 +301,7 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                     id="deliveryDate"
                     type="date"
                     value={formData.deliveryDate}
-                    onChange={(e) => handleClientChange("deliveryDate", e.target.value)}
+                    onChange={(e) => handleFieldChange("deliveryDate", e.target.value)}
                     className="bg-input border-border text-foreground"
                   />
                 </div>
@@ -332,7 +380,7 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
             <Textarea
               placeholder="Add any additional notes or terms..."
               value={formData.notes}
-              onChange={(e) => handleClientChange("notes", e.target.value)}
+              onChange={(e) => handleFieldChange("notes", e.target.value)}
               className="bg-input border-border text-foreground"
             />
           </CardContent>
