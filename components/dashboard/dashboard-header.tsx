@@ -73,10 +73,10 @@ export function DashboardHeader() {
                   Business Profile
                 </DropdownMenuItem>
               </Link>
-              <Link href="/profile">
+              <Link href="/settings">
                 <DropdownMenuItem className="cursor-pointer text-[#4f566b] focus:text-[#1a1f36] focus:bg-[#f7f9fc]">
                   <Settings className="w-4 h-4 mr-2" />
-                  Settings
+                  Account Settings
                 </DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator className="bg-[#e6e9ef]" />
