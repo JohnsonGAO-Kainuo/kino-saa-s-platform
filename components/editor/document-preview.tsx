@@ -25,6 +25,7 @@ interface FormDataType {
   languageMode?: LanguageMode
   logoPosition?: "left" | "center" | "right"
   logoWidth?: number
+  templateId?: "standard" | "corporate" | "modern"
 }
 
 interface DocumentPreviewProps {
@@ -40,6 +41,7 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
   const languageMode = formData.languageMode || "bilingual"
   const logoPosition = formData.logoPosition || "left"
   const logoWidth = formData.logoWidth || 128
+  const templateId = formData.templateId || "standard"
   const currentYear = new Date().getFullYear()
 
   useEffect(() => {
@@ -76,16 +78,42 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
   }
 
   const title = getDocumentTitle()
-  const logoUrl = formData.logo ? URL.createObjectURL(formData.logo) : null
 
   const isPaidReceipt = documentType === "receipt" && paymentStatus?.status === "paid"
   const isVoidedReceipt = documentType === "receipt" && paymentStatus?.status === "voided"
 
-  // Base layout wrapper
+  // Styles based on Template
+  const styles = {
+    standard: {
+      card: "bg-white text-black p-8 min-h-[800px] shadow-lg border-border/50 sticky top-0 relative",
+      header: "border-b-2 border-gray-800 pb-6 mb-8",
+      accentLine: "border-t-2 border-gray-800",
+      itemRow: "border-b border-gray-300",
+      sectionHeader: "font-bold text-gray-900 mb-2 uppercase tracking-tight border-b border-gray-200 pb-1"
+    },
+    corporate: {
+      card: "bg-white text-black p-10 min-h-[842px] shadow-lg border-t-8 border-[#1a1f36] sticky top-0 relative",
+      header: "flex justify-between items-start mb-12",
+      accentLine: "border-t border-gray-400",
+      itemRow: "border-b border-gray-100",
+      sectionHeader: "bg-gray-50 px-2 py-1 text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3"
+    },
+    modern: {
+      card: "bg-white text-black p-8 min-h-[800px] shadow-lg sticky top-0 relative overflow-hidden",
+      header: "flex justify-between items-center mb-8 bg-[#6366f1]/5 -mx-8 px-8 py-6 border-b border-[#6366f1]/10",
+      accentLine: "border-t-2 border-[#6366f1]",
+      itemRow: "border-b border-slate-50",
+      sectionHeader: "text-[#6366f1] text-[12px] font-black uppercase tracking-tighter mb-2"
+    }
+  }[templateId]
+
   const DocumentWrapper = ({ children }: { children: React.ReactNode }) => (
-    <Card id="document-preview-card" className={`bg-white text-black p-8 min-h-[800px] shadow-lg border-border/50 sticky top-0 relative ${
+    <Card id="document-preview-card" className={`${styles.card} ${
       isPaidReceipt || isVoidedReceipt ? "bg-gradient-to-br from-white to-slate-50" : ""
     }`}>
+      {templateId === 'modern' && (
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#6366f1]/10 rounded-bl-full -mr-16 -mt-16 pointer-events-none" />
+      )}
       {isPaidReceipt && (
         <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none z-0">
           <div className="text-8xl font-bold text-green-700 transform -rotate-45">PAID</div>
@@ -102,44 +130,72 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
     </Card>
   )
 
-  const Header = () => (
-    <div className="border-b-2 border-gray-800 pb-6 mb-8">
-      <div className={`flex flex-col md:flex-row justify-between items-start gap-6`}>
-        <div className={`w-full md:w-auto flex ${
-          logoPosition === "center" ? "justify-center" : 
-          logoPosition === "right" ? "justify-end" : "justify-start"
-        } ${logoPosition !== "left" ? "order-2 md:order-1" : ""}`}>
-          {formData.logo ? (
-            <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
-          ) : companySettings?.logo_url ? (
-            <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
-          ) : (
-            <div className="text-2xl font-bold text-gray-800 tracking-tight uppercase">
-              {companySettings?.company_name || "KINO"}
-            </div>
-          )}
-        </div>
-        <div className={`w-full md:w-auto text-right ${logoPosition === "left" ? "order-1 md:order-2" : "order-1"}`}>
-          <div className="flex flex-col gap-1 items-end">
-            <h1 className="text-3xl font-bold text-gray-900">
-              {languageMode === "chinese" ? title.zh : title.en}
+  const Header = () => {
+    const Logo = () => (
+      <div className={`flex ${
+        logoPosition === "center" ? "justify-center" : 
+        logoPosition === "right" ? "justify-end" : "justify-start"
+      }`}>
+        {formData.logo ? (
+          <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
+        ) : companySettings?.logo_url ? (
+          <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
+        ) : (
+          <div className={`text-2xl font-bold tracking-tight uppercase ${templateId === 'modern' ? 'text-[#6366f1]' : 'text-gray-800'}`}>
+            {companySettings?.company_name || "KINO"}
+          </div>
+        )}
+      </div>
+    )
+
+    const Title = () => (
+      <div className="text-right">
+        <div className="flex flex-col gap-1 items-end">
+          <h1 className={`font-bold ${templateId === 'modern' ? 'text-4xl text-[#1a1f36]' : 'text-3xl text-gray-900'}`}>
+            {languageMode === "chinese" ? title.zh : title.en}
+          </h1>
+          {languageMode === "bilingual" && (
+            <h1 className={`font-bold ${templateId === 'modern' ? 'text-2xl text-gray-400' : 'text-xl text-gray-700'}`}>
+              {title.zh}
             </h1>
-            {languageMode === "bilingual" && (
-              <h1 className="text-xl font-bold text-gray-700">{title.zh}</h1>
-            )}
-            <p className="text-xs text-gray-600 mt-1 font-mono">#{currentYear}-001</p>
+          )}
+          <p className={`text-xs mt-1 font-mono ${templateId === 'modern' ? 'text-[#6366f1] bg-[#6366f1]/5 px-2 py-0.5 rounded' : 'text-gray-600'}`}>
+            #{currentYear}-001
+          </p>
+        </div>
+      </div>
+    )
+
+    if (templateId === 'corporate') {
+      return (
+        <div className="mb-12">
+          <div className="flex justify-between items-start mb-8">
+            <Logo />
+            <Title />
+          </div>
+          <div className={styles.accentLine} />
+        </div>
+      )
+    }
+
+    return (
+      <div className={styles.header}>
+        <div className={`flex flex-col md:flex-row justify-between items-start gap-6 w-full`}>
+          <div className={`w-full md:w-auto ${logoPosition !== "left" ? "order-2 md:order-1" : ""}`}>
+            <Logo />
+          </div>
+          <div className={`w-full md:w-auto ${logoPosition === "left" ? "order-1 md:order-2" : "order-1"}`}>
+            <Title />
           </div>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   const PartiesInfo = () => (
-    <div className="grid grid-cols-2 gap-12 mb-10">
+    <div className={`grid grid-cols-2 gap-12 mb-10 ${templateId === 'modern' ? 'bg-slate-50/50 p-6 rounded-2xl border border-slate-100' : ''}`}>
       <div className="text-xs space-y-1">
-        <p className="font-bold text-gray-900 mb-2 uppercase tracking-tight border-b border-gray-200 pb-1">
-          {t("From:", "發自:")}
-        </p>
+        <p className={styles.sectionHeader}>{t("From:", "發自:")}</p>
         <p className="font-bold text-[14px] text-gray-900">
           {companySettings?.company_name || t("Your Company Name", "您的公司名稱")}
         </p>
@@ -151,9 +207,7 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
         </p>
       </div>
       <div className="text-xs space-y-1">
-        <p className="font-bold text-gray-900 mb-2 uppercase tracking-tight border-b border-gray-200 pb-1">
-          {t("To:", "收票人:")}
-        </p>
+        <p className={styles.sectionHeader}>{t("To:", "收票人:")}</p>
         <p className="font-bold text-[14px] text-gray-900">{formData.clientName || t("Client Name", "客戶名稱")}</p>
         <p className="text-gray-600 break-words">{formData.clientAddress || t("Address", "客戶地址")}</p>
         <p className="text-gray-600">{formData.clientEmail || t("Email", "電子郵件")}</p>
@@ -161,53 +215,31 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
     </div>
   )
 
-  const StatusBadge = () => (
-    (documentType === "invoice" || documentType === "receipt") && paymentStatus && (
-      <div className="absolute top-24 right-8 z-20">
-        <div
-          className={`px-4 py-1.5 border-2 rounded text-sm font-bold uppercase tracking-widest transform rotate-12 ${
-            paymentStatus.status === "paid"
-              ? "text-green-600 border-green-600 bg-white"
-              : paymentStatus.status === "voided"
-                ? "text-red-600 border-red-600 bg-white"
-                : "text-amber-600 border-amber-600 bg-white"
-          }`}
-          style={{ boxShadow: '0 0 0 1px white inset' }}
-        >
-          {paymentStatus.status === "paid" && t("Paid", "已付")}
-          {paymentStatus.status === "voided" && t("Voided", "作廢")}
-          {paymentStatus.status === "unpaid" && t("Unpaid", "待付")}
-          {paymentStatus.status === "pending" && t("Pending", "待填")}
-        </div>
-      </div>
-    )
-  )
-
   const ItemsTable = () => (
     <table className="w-full mb-6">
       <thead>
-        <tr className="border-t-2 border-b-2 border-gray-800">
-          <th className="text-left py-2 font-bold text-gray-900 text-xs">
+        <tr className={templateId === 'corporate' ? 'bg-gray-100' : styles.accentLine}>
+          <th className={`text-left py-2 font-bold text-xs ${templateId === 'corporate' ? 'px-2 text-gray-600' : 'text-gray-900'}`}>
             {t("Description", "描述")}
           </th>
-          <th className="text-right py-2 font-bold text-gray-900 text-xs w-16">
+          <th className={`text-right py-2 font-bold text-xs w-16 ${templateId === 'corporate' ? 'px-2 text-gray-600' : 'text-gray-900'}`}>
             {t("Qty", "數量")}
           </th>
-          <th className="text-right py-2 font-bold text-gray-900 text-xs w-20">
+          <th className={`text-right py-2 font-bold text-xs w-20 ${templateId === 'corporate' ? 'px-2 text-gray-600' : 'text-gray-900'}`}>
             {languageMode === "chinese" ? "單價" : "Unit Price"}
           </th>
-          <th className="text-right py-2 font-bold text-gray-900 text-xs w-20">
+          <th className={`text-right py-2 font-bold text-xs w-20 ${templateId === 'corporate' ? 'px-2 text-gray-600' : 'text-gray-900'}`}>
             {languageMode === "chinese" ? "金額" : "Amount"}
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody className={templateId === 'corporate' ? 'border-b border-gray-400' : ''}>
         {formData.items.map((item, index) => (
-          <tr key={index} className="border-b border-gray-300">
-            <td className="py-3 text-gray-800 text-xs">{item.description || "—"}</td>
-            <td className="text-right py-3 text-gray-800 text-xs">{item.quantity}</td>
-            <td className="text-right py-3 text-gray-800 text-xs">${item.unitPrice.toFixed(2)}</td>
-            <td className="text-right py-3 font-semibold text-gray-900 text-xs">
+          <tr key={index} className={styles.itemRow}>
+            <td className={`py-3 text-xs ${templateId === 'corporate' ? 'px-2 font-medium' : 'text-gray-800'}`}>{item.description || "—"}</td>
+            <td className={`text-right py-3 text-xs ${templateId === 'corporate' ? 'px-2' : 'text-gray-800'}`}>{item.quantity}</td>
+            <td className={`text-right py-3 text-xs ${templateId === 'corporate' ? 'px-2' : 'text-gray-800'}`}>${item.unitPrice.toFixed(2)}</td>
+            <td className={`text-right py-3 font-semibold text-xs ${templateId === 'corporate' ? 'px-2' : 'text-gray-900'}`}>
               ${(item.quantity * item.unitPrice).toFixed(2)}
             </td>
           </tr>
@@ -218,18 +250,18 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
 
   const PaymentMethods = () => (
     (documentType === "invoice" || documentType === "receipt") && (
-      <div className="mb-8 p-0 border-t border-b border-gray-200 py-4">
-        <p className="font-bold text-gray-900 mb-4 text-[13px] uppercase tracking-tight">
+      <div className={`mb-8 py-4 ${templateId === 'modern' ? 'bg-[#6366f1]/5 rounded-2xl p-6 border-none' : 'border-t border-b border-gray-200'}`}>
+        <p className={styles.sectionHeader}>
           {t("Payment Methods", "付款方式")}
         </p>
         <div className="grid grid-cols-2 gap-4 text-xs">
-          <div className="border-l-2 border-gray-100 pl-4">
+          <div className={`${templateId === 'modern' ? '' : 'border-l-2 border-gray-100 pl-4'}`}>
             <p className="font-bold text-gray-800 mb-1">{t("Bank Transfer", "銀行轉賬")}</p>
             <p className="text-gray-600">{languageMode === "chinese" ? "銀行: " : "Bank: "}{companySettings?.bank_name || 'HSBC Hong Kong'}</p>
             <p className="text-gray-600">{languageMode === "chinese" ? "賬號: " : "Account: "}{companySettings?.account_number || '123-456789-012'}</p>
             {companySettings?.swift_code && <p className="text-gray-600">SWIFT: {companySettings.swift_code}</p>}
           </div>
-          <div className="border-l-2 border-gray-100 pl-4">
+          <div className={`${templateId === 'modern' ? '' : 'border-l-2 border-gray-100 pl-4'}`}>
             <p className="font-bold text-gray-800 mb-1">{t("FPS", "快速支付系統 (FPS)")}</p>
             <p className="text-gray-600">ID: {companySettings?.fps_id || '123456789@hkicbc'}</p>
           </div>
@@ -239,7 +271,7 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
   )
 
   const Footer = () => (
-    <div className="pt-6 border-t-2 border-gray-800">
+    <div className={`pt-6 ${templateId === 'modern' ? 'border-none' : 'border-t-2 border-gray-800'}`}>
       <div className="grid grid-cols-2 gap-8 text-center">
         <div className="relative flex flex-col items-center">
           <div className="h-24 flex items-end justify-center mb-2 relative w-full">
@@ -251,7 +283,9 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
               <div className="h-16 flex items-center justify-center text-gray-300 text-xs mb-2 italic">[{t("Company Stamp", "公司印章")}]</div>
             )}
           </div>
-          <p className="font-semibold text-gray-900 text-xs border-t border-gray-200 pt-2 w-32">{t("Company Stamp", "公司印章")}</p>
+          <p className={`font-semibold text-xs pt-2 w-32 ${templateId === 'modern' ? 'text-[#6366f1] border-[#6366f1]/20' : 'text-gray-900 border-t border-gray-200'}`}>
+            {t("Company Stamp", "公司印章")}
+          </p>
         </div>
         <div className="relative flex flex-col items-center">
           <div className="h-24 flex items-end justify-center mb-2 relative w-full">
@@ -263,16 +297,47 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
               <div className="h-16 flex items-center justify-center text-gray-300 text-xs mb-2 italic">[{t("Authorized Signature", "授權簽署")}]</div>
             )}
           </div>
-          <p className="font-semibold text-gray-900 text-xs border-t border-gray-200 pt-2 w-32">{t("Authorized By", "授權簽署")}</p>
+          <p className={`font-semibold text-xs pt-2 w-32 ${templateId === 'modern' ? 'text-[#6366f1] border-[#6366f1]/20' : 'text-gray-900 border-t border-gray-200'}`}>
+            {t("Authorized By", "授權簽署")}
+          </p>
         </div>
       </div>
-      <div className="mt-8 pt-4 border-t border-gray-300 text-center">
+      <div className="mt-12 text-center">
         <p className="text-[10px] text-gray-400 italic">
           {t("End of Document", "文件完")}
         </p>
       </div>
     </div>
   )
+
+  return (
+    <DocumentWrapper>
+      <StatusBadge />
+      <Header />
+      <PartiesInfo />
+      <ItemsTable />
+      
+      <div className="flex justify-end mb-6">
+        <div className="w-48">
+          <div className={`flex justify-between py-2 font-bold text-gray-900 ${templateId === 'modern' ? 'text-[#6366f1] bg-[#6366f1]/5 px-3 rounded-lg border-none' : 'border-t-2 border-gray-800'}`}>
+            <span className="text-xs">{t("TOTAL", "總額")}:</span>
+            <span className="text-xs">${totalAmount.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
+      {formData.notes && (
+        <div className={`mb-6 pt-4 ${templateId === 'modern' ? 'border-none bg-slate-50 p-4 rounded-xl' : 'border-t border-gray-300'}`}>
+          <p className={styles.sectionHeader}>{t("Notes", "備註")}:</p>
+          <p className="text-xs text-gray-700 whitespace-pre-wrap">{formData.notes}</p>
+        </div>
+      )}
+
+      <PaymentMethods />
+      <Footer />
+    </DocumentWrapper>
+  )
+}
 
   return (
     <DocumentWrapper>

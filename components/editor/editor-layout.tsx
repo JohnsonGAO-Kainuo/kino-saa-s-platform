@@ -45,6 +45,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     languageMode: "bilingual" as "bilingual" | "english" | "chinese",
     logoPosition: "left" as "left" | "center" | "right",
     logoWidth: 128,
+    templateId: "standard" as "standard" | "corporate" | "modern",
   })
 
   // Load document or default settings
@@ -70,6 +71,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             languageMode: doc.content?.languageMode || "bilingual",
             logoPosition: doc.content?.logoPosition || "left",
             logoWidth: doc.content?.logoWidth || 128,
+            templateId: doc.content?.templateId || "standard",
           })
           setActiveTab(doc.doc_type)
         }
@@ -126,6 +128,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           languageMode: formData.languageMode,
           logoPosition: formData.logoPosition,
           logoWidth: formData.logoWidth,
+          templateId: formData.templateId,
         },
         signature_url: formData.signature || undefined,
       }

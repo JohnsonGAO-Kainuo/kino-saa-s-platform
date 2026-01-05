@@ -29,6 +29,7 @@ interface FormDataType {
   languageMode: "bilingual" | "english" | "chinese"
   logoPosition: "left" | "center" | "right"
   logoWidth?: number
+  templateId?: "standard" | "corporate" | "modern"
 }
 
 interface EditorFormProps {
@@ -95,11 +96,41 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <div className="w-1.5 h-4 bg-accent rounded-full" />
-              Document Settings
+              Document Layout & Style
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Document Template</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { id: 'standard', label: 'Stripe Minimal' },
+                  { id: 'corporate', label: 'Corporate' },
+                  { id: 'modern', label: 'Modern Tech' }
+                ].map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    onClick={() => handleFieldChange("templateId", tpl.id)}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                      (formData.templateId || 'standard') === tpl.id 
+                        ? "border-[#6366f1] bg-[#6366f1]/5 shadow-sm" 
+                        : "border-[#e6e9ef] hover:border-slate-300 bg-white"
+                    }`}
+                  >
+                    <div className={`w-full aspect-[3/4] rounded shadow-inner ${
+                      tpl.id === 'standard' ? 'bg-slate-50' :
+                      tpl.id === 'corporate' ? 'bg-slate-100 border-t-4 border-[#1a1f36]' :
+                      'bg-slate-100 border-l-4 border-[#6366f1]'
+                    }`} />
+                    <span className={`text-[11px] font-bold ${
+                      (formData.templateId || 'standard') === tpl.id ? "text-[#6366f1]" : "text-[#4f566b]"
+                    }`}>{tpl.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-[#f7f9fc]">
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Language Mode</Label>
                 <div className="flex bg-input p-1 rounded-lg border border-border">
