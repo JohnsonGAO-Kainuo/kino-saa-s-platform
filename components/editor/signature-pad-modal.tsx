@@ -37,30 +37,36 @@ export function SignaturePadModal({ open, onClose, onSave }: SignaturePadModalPr
       canvas.width = rect.width
       canvas.height = rect.height
     }
-    ctx.fillStyle = "#fff"
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.strokeStyle = "#000"
-    ctx.lineWidth = 2
+    // Set transparent background
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.strokeStyle = "#1a1f36" // Dark blue-black for professional look
+    ctx.lineWidth = 2.5 // Slightly thicker
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
   }, [open])
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
     const rect = canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+    let x, y
+    if ('touches' in e) {
+      x = e.touches[0].clientX - rect.left
+      y = e.touches[0].clientY - rect.top
+    } else {
+      x = e.clientX - rect.left
+      y = e.clientY - rect.top
+    }
 
     ctx.beginPath()
     ctx.moveTo(x, y)
     setIsDrawing(true)
   }
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return
     const canvas = canvasRef.current
     if (!canvas) return
@@ -68,8 +74,14 @@ export function SignaturePadModal({ open, onClose, onSave }: SignaturePadModalPr
     if (!ctx) return
 
     const rect = canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+    let x, y
+    if ('touches' in e) {
+      x = e.touches[0].clientX - rect.left
+      y = e.touches[0].clientY - rect.top
+    } else {
+      x = e.clientX - rect.left
+      y = e.clientY - rect.top
+    }
 
     ctx.lineTo(x, y)
     ctx.stroke()
@@ -85,8 +97,7 @@ export function SignaturePadModal({ open, onClose, onSave }: SignaturePadModalPr
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    ctx.fillStyle = "#fff"
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
   }
 
   const handleSave = () => {
@@ -112,7 +123,10 @@ export function SignaturePadModal({ open, onClose, onSave }: SignaturePadModalPr
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
-              className="w-full cursor-crosshair"
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+              className="w-full cursor-crosshair touch-none"
               style={{ height: "200px" }}
             />
           </div>

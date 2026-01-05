@@ -10,13 +10,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
-import { Loader2, Building2, CreditCard, Paintbrush, Save } from 'lucide-react'
+import { Loader2, Building2, CreditCard, Paintbrush, Save, Upload, X, Check, Image as ImageIcon } from 'lucide-react'
+import { removeImageBackground, dataURLtoFile } from '@/lib/image-utils'
+import Link from 'next/link'
 
 export default function SettingsPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [settings, setSettings] = useState({
+  const [uploading, setUploading] = useState<Record<string, boolean>>({})
+  const [settings, setSettings] = useState<any>({
     company_name: '',
     company_email: '',
     company_phone: '',
@@ -26,6 +29,9 @@ export default function SettingsPage() {
     fps_id: '',
     swift_code: '',
     default_payment_notes: '',
+    logo_url: '',
+    signature_url: '',
+    stamp_url: '',
   })
 
   useEffect(() => {
@@ -70,6 +76,86 @@ export default function SettingsPage() {
       setSaving(false)
     }
   }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'signature' | 'stamp') {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    setUploading(prev => ({ ...prev, [type]: true }))
+    try {
+      let finalFile = file
+      
+      // For signature and stamp, automatically remove background
+      if (type === 'signature' || type === 'stamp') {
+        const transparentDataUrl = await removeImageBackground(file)
+        finalFile = dataURLtoFile(transparentDataUrl, `${type}.png`)
+      }
+
+      const fileExt = 'png' // Always save as PNG for transparency
+      const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('assets')
+        .upload(fileName, finalFile, { upsert: true, contentType: 'image/png' })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('assets')
+        .getPublicUrl(fileName)
+
+      setSettings(prev => ({ ...prev, [`${type}_url`]: publicUrl }))
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully!`)
+    } catch (error: any) {
+      toast.error(`Failed to upload ${type}: ${error.message}`)
+    } finally {
+      setUploading(prev => ({ ...prev, [type]: false }))
+    }
+  }
+
+  const ImageUploadBox = ({ type, url, label }: { type: 'logo' | 'signature' | 'stamp', url: string, label: string }) => (
+    <div className="space-y-2">
+      <Label className="text-[13px] font-medium text-[#1a1f36]">{label}</Label>
+      <div className="relative group border-2 border-dashed border-[#e6e9ef] hover:border-[#6366f1] rounded-xl p-4 transition-all bg-[#f7f9fc]">
+        {url ? (
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative w-full h-32 bg-white rounded-lg flex items-center justify-center p-2 shadow-inner overflow-hidden">
+              <img src={url} alt={label} className="max-w-full max-h-full object-contain" />
+              <button 
+                onClick={() => setSettings(prev => ({ ...prev, [`${type}_url`]: '' }))}
+                className="absolute top-2 right-2 p-1 bg-white/80 hover:bg-red-50 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-[11px] text-[#16a34a] font-medium flex items-center gap-1">
+              <Check className="w-3 h-3" /> {type === 'logo' ? 'Logo ready' : 'Background removed & ready'}
+            </p>
+          </div>
+        ) : (
+          <label className="flex flex-col items-center justify-center py-8 cursor-pointer">
+            <div className="w-10 h-10 rounded-full bg-[#6366f1]/10 flex items-center justify-center mb-3">
+              <Upload className="w-5 h-5 text-[#6366f1]" />
+            </div>
+            <span className="text-[13px] font-medium text-[#1a1f36]">Click to upload {type}</span>
+            <span className="text-[11px] text-[#8792a2] mt-1">PNG, JPG up to 5MB</span>
+            <input 
+              type="file" 
+              className="hidden" 
+              accept="image/*" 
+              onChange={e => handleFileUpload(e, type)}
+              disabled={uploading[type]}
+            />
+          </label>
+        )}
+        {uploading[type] && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
+            <Loader2 className="w-6 h-6 animate-spin text-[#6366f1]" />
+          </div>
+        )}
+      </div>
+    </div>
+  )
 
   if (loading) {
     return (
@@ -200,15 +286,32 @@ export default function SettingsPage() {
             </Card>
           </section>
 
-          {/* Branding (Placeholder for now) */}
+          {/* Branding & Assets Section */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
               <Paintbrush className="w-4 h-4" />
               <h2 className="text-sm font-semibold uppercase tracking-wider">Branding & Assets</h2>
             </div>
-            <Card className="border-border border-dashed shadow-none bg-transparent">
-              <CardContent className="p-8 text-center">
-                <p className="text-[#8792a2] text-sm">Logo and Stamp upload coming soon in Phase 3.</p>
+            <Card className="border-border shadow-sm bg-white overflow-hidden">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <ImageUploadBox type="logo" url={settings.logo_url} label="Company Logo" />
+                  <ImageUploadBox type="signature" url={settings.signature_url} label="Default Signature" />
+                  <ImageUploadBox type="stamp" url={settings.stamp_url} label="Company Stamp" />
+                </div>
+                <div className="mt-6 pt-6 border-t border-[#f7f9fc]">
+                  <div className="flex items-start gap-3 bg-[#eff6ff] p-4 rounded-lg">
+                    <div className="p-1.5 bg-blue-100 rounded-md">
+                      <ImageIcon className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-semibold text-blue-900">Professional Image Processing Active</p>
+                      <p className="text-[12px] text-blue-800 leading-relaxed mt-0.5">
+                        Upload your signature or stamp on plain white paper. Our system will automatically remove the background to ensure it looks professional on digital documents.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </section>
@@ -217,4 +320,3 @@ export default function SettingsPage() {
     </div>
   )
 }
-
