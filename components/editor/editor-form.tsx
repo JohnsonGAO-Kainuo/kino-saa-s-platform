@@ -16,17 +16,26 @@ import { Slider } from "@/components/ui/slider"
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
 interface FormDataType {
+  // Company info (can override profile defaults)
+  companyName?: string
+  companyEmail?: string
+  companyAddress?: string
+  // Client info
   clientName: string
   clientEmail: string
   clientAddress: string
+  // Document content
   items: Array<{ description: string; quantity: number; unitPrice: number }>
   notes: string
+  // Assets
   logo: string | null
   signature: string | null
   stamp: string | null
+  // Contract specific
   contractTerms: string
   paymentTerms: string
   deliveryDate: string
+  // Display settings
   languageMode: "bilingual" | "english" | "chinese"
   logoPosition: "left" | "center" | "right"
   logoWidth?: number
@@ -67,16 +76,23 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
     })
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'stamp') => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'stamp' | 'signature') => {
     const file = e.target.files?.[0]
     if (!file) return
 
     setProcessing(prev => ({ ...prev, [type]: true }))
     try {
+      // Apply background removal for all types (especially signature and stamp)
       const transparentDataUrl = await removeImageBackground(file)
       onChange({ ...formData, [type]: transparentDataUrl })
     } catch (error) {
       console.error(`Error processing ${type}:`, error)
+      // Fallback: use original image if background removal fails
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        onChange({ ...formData, [type]: event.target?.result as string })
+      }
+      reader.readAsDataURL(file)
     } finally {
       setProcessing(prev => ({ ...prev, [type]: false }))
     }
@@ -215,28 +231,14 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
               />
               <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'logo')} />
 
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground">Authorized Signature</Label>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-2 bg-transparent border-dashed h-10"
-                    onClick={() => setSignaturePadOpen(true)}
-                  >
-                    <Pen className="w-4 h-4" />
-                    {formData.signature ? "Re-draw" : "Draw Signature"}
-                  </Button>
-                  {formData.signature && (
-                    <div className="flex items-center justify-between px-2 py-1 bg-green-50 rounded border border-green-100">
-                      <span className="text-[10px] text-green-600 font-medium">Captured ✓</span>
-                      <button onClick={() => handleFieldChange("signature", null)} className="text-muted-foreground hover:text-destructive">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <AssetSelector
+                type="signature"
+                currentValue={formData.signature}
+                onChange={(value) => handleFieldChange("signature", value)}
+                onUploadClick={() => document.getElementById("signature-upload")?.click()}
+                processing={processing.signature}
+              />
+              <input id="signature-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'signature')} />
 
               <AssetSelector
                 type="stamp"
@@ -246,6 +248,48 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                 processing={processing.stamp}
               />
               <input id="stamp-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'stamp')} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Company Information Override */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-base">Your Company Information</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">Override default profile settings for this document only</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="companyName" className="text-xs font-medium text-muted-foreground">Company Name</Label>
+                <Input
+                  id="companyName"
+                  placeholder="Your Company Name"
+                  value={formData.companyName || ''}
+                  onChange={(e) => handleFieldChange("companyName", e.target.value)}
+                  className="bg-input border-border"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="companyEmail" className="text-xs font-medium text-muted-foreground">Company Email</Label>
+                <Input
+                  id="companyEmail"
+                  placeholder="contact@company.com"
+                  value={formData.companyEmail || ''}
+                  onChange={(e) => handleFieldChange("companyEmail", e.target.value)}
+                  className="bg-input border-border"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="companyAddress" className="text-xs font-medium text-muted-foreground">Company Address</Label>
+              <Textarea
+                id="companyAddress"
+                placeholder="Full business address"
+                value={formData.companyAddress || ''}
+                onChange={(e) => handleFieldChange("companyAddress", e.target.value)}
+                className="bg-input border-border min-h-[60px]"
+              />
             </div>
           </CardContent>
         </Card>

@@ -10,18 +10,27 @@ type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 type LanguageMode = "bilingual" | "english" | "chinese"
 
 interface FormDataType {
+  // Company info (can override profile defaults)
+  companyName?: string
+  companyEmail?: string
+  companyAddress?: string
+  // Client info
   clientName: string
   clientEmail: string
   clientAddress: string
+  // Document content
   items: Array<{ description: string; quantity: number; unitPrice: number }>
   notes: string
-  logo: File | null
+  // Assets
+  logo: string | null
   signature: string | null
-  stamp: File | null
+  stamp: string | null
+  // Contract specific
   contractTerms: string
   paymentTerms: string
   deliveryDate: string
   paymentStatus?: PaymentStatus
+  // Display settings
   languageMode?: LanguageMode
   logoPosition?: "left" | "center" | "right"
   logoWidth?: number
@@ -255,29 +264,36 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
     )
   }
 
-  const PartiesInfo = () => (
-    <div className={`grid grid-cols-2 gap-12 mb-10 ${templateId === 'modern' ? 'bg-slate-50/50 p-6 rounded-2xl border border-slate-100' : ''}`}>
-      <div className="text-xs space-y-1">
-        <p className="text-gray-500 font-medium mb-1 uppercase tracking-wider border-b border-gray-100 pb-1">
-          {companySettings?.company_name || t("[Your Company Name]", "[您的公司名稱]")}
-        </p>
-        <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
-          {companySettings?.company_address || t("[Your Business Address]", "[您的公司地址]")}
-        </p>
-        <p className="text-gray-600">
-          {companySettings?.company_email || t("[company@example.com]", "[公司電郵]")}
-        </p>
+  const PartiesInfo = () => {
+    // Use formData overrides if available, otherwise fall back to company settings
+    const displayCompanyName = formData.companyName || companySettings?.company_name || t("[Your Company Name]", "[您的公司名稱]")
+    const displayCompanyAddress = formData.companyAddress || companySettings?.company_address || t("[Your Business Address]", "[您的公司地址]")
+    const displayCompanyEmail = formData.companyEmail || companySettings?.company_email || t("[company@example.com]", "[公司電郵]")
+
+    return (
+      <div className={`grid grid-cols-2 gap-12 mb-10 ${templateId === 'modern' ? 'bg-slate-50/50 p-6 rounded-2xl border border-slate-100' : ''}`}>
+        <div className="text-xs space-y-1">
+          <p className="text-gray-500 font-medium mb-1 uppercase tracking-wider border-b border-gray-100 pb-1">
+            {displayCompanyName}
+          </p>
+          <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
+            {displayCompanyAddress}
+          </p>
+          <p className="text-gray-600">
+            {displayCompanyEmail}
+          </p>
+        </div>
+        <div className="text-xs space-y-1">
+          <p className={`${styles.sectionHeader} border-b border-gray-800 pb-1`}>
+            {documentType === "receipt" ? t("RECEIVED FROM", "茲收到") : t("BILL TO", "致")}
+          </p>
+          <p className="font-bold text-[14px] text-gray-900 mt-2">{formData.clientName || t("[Client Name]", "[客戶名稱]")}</p>
+          <p className="text-gray-600 break-words leading-relaxed">{formData.clientAddress || t("[Client Address]", "[客戶地址]")}</p>
+          <p className="text-gray-600">{formData.clientEmail || t("[client@email.com]", "[客戶電郵]")}</p>
+        </div>
       </div>
-      <div className="text-xs space-y-1">
-        <p className={`${styles.sectionHeader} border-b border-gray-800 pb-1`}>
-          {documentType === "receipt" ? t("RECEIVED FROM", "茲收到") : t("BILL TO", "致")}
-        </p>
-        <p className="font-bold text-[14px] text-gray-900 mt-2">{formData.clientName || t("[Client Name]", "[客戶名稱]")}</p>
-        <p className="text-gray-600 break-words leading-relaxed">{formData.clientAddress || t("[Client Address]", "[客戶地址]")}</p>
-        <p className="text-gray-600">{formData.clientEmail || t("[client@email.com]", "[客戶電郵]")}</p>
-      </div>
-    </div>
-  )
+    )
+  }
 
   const TermsAndConditions = () => {
     if (documentType !== "quotation" && documentType !== "contract") return null
