@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import type { PaymentStatus } from "@/lib/payment-utils"
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
+import { Building2, User } from 'lucide-react'
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 type LanguageMode = "bilingual" | "english" | "chinese"
@@ -96,11 +97,13 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
       case "receipt":
         return { en: "OFFICIAL RECEIPT", zh: "正式收據" }
       case "contract":
-        return { en: "CONTRACT & SERVICE AGREEMENT", zh: "合約及服務協議" }
+        return { en: "CONTRACT", zh: "合約" }
+      default:
+        return { en: "DOCUMENT", zh: "文件" }
     }
   }
 
-  const title = getDocumentTitle()
+  const title = getDocumentTitle() || { en: "DOCUMENT", zh: "文件" }
 
   const isPaidReceipt = documentType === "receipt" && paymentStatus?.status === "paid"
   const isVoidedReceipt = documentType === "receipt" && paymentStatus?.status === "voided"
@@ -190,16 +193,17 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
       ) : (
         <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'}`}>
           <div className={`text-2xl font-bold tracking-tight uppercase ${templateId === 'modern' ? 'text-[#6366f1]' : 'text-gray-800'}`}>
-            {companySettings?.company_name?.split(' ')[0] || "Your Logo"}
+            {formData.companyName ? formData.companyName.split(' ')[0] : companySettings?.company_name ? companySettings.company_name.split(' ')[0] : "ADD LOGO"}
           </div>
-          <p className="text-[9px] text-gray-400 italic mt-0.5">{t('[Click to add logo]', '[點擊添加標誌]')}</p>
+          <p className="text-[9px] text-gray-400 italic mt-0.5">{t('[Click to upload logo]', '[點擊上傳標誌]')}</p>
         </div>
       )}
     </div>
   )
 
     const Title = () => {
-      const docNumber = `${documentType === "quotation" || documentType === "contract" ? "QT" : 
+      const docNumber = `${documentType === "quotation" ? "QT" : 
+                           documentType === "contract" ? "CTR" :
                            documentType === "invoice" ? "INV" : "RC"}-${currentYear}001`
       const currentDate = new Date().toISOString().split('T')[0]
       const validUntilDate = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
@@ -293,32 +297,28 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
     return (
       <div className={`grid grid-cols-2 gap-12 mb-10 ${templateId === 'modern' ? 'bg-slate-50/50 p-6 rounded-2xl border border-slate-100' : ''}`}>
         <div 
-          className="text-xs space-y-1 cursor-pointer hover:bg-yellow-50 rounded p-1 transition-all"
+          className="text-xs space-y-1 cursor-pointer hover:bg-yellow-50 rounded p-2 transition-all border-2 border-transparent hover:border-yellow-200"
           onClick={() => onFieldClick?.('companyAddress')}
         >
-          <p className="text-gray-400 font-bold mb-1 uppercase tracking-widest text-[9px] border-b border-gray-100 pb-1 flex items-center gap-1">
-            <Building2 className="w-3 h-3 text-yellow-500" /> {t("FROM", "發件人")}
+          <p className="text-yellow-600 font-bold mb-1 uppercase tracking-widest text-[10px] border-b border-yellow-100 pb-1 flex items-center gap-1">
+            <Building2 className="w-3.5 h-3.5" /> {t("FROM", "發件人")}
           </p>
-          <p className="font-bold text-gray-900 uppercase">
+          <p className="font-black text-gray-900 uppercase text-sm">
             {displayCompanyName}
           </p>
           <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
             {displayCompanyAddress}
           </p>
-          <p className="text-gray-600 italic">
-            {displayCompanyEmail}
-          </p>
         </div>
         <div 
-          className="text-xs space-y-1 cursor-pointer hover:bg-yellow-50 rounded p-1 transition-all"
+          className="text-xs space-y-1 cursor-pointer hover:bg-yellow-50 rounded p-2 transition-all border-2 border-transparent hover:border-yellow-200"
           onClick={() => onFieldClick?.('clientAddress')}
         >
-          <p className={`${styles.sectionHeader} border-b border-gray-800 pb-1 flex items-center gap-1`}>
-            <User className="w-3 h-3 text-yellow-500" /> {documentType === "receipt" ? t("RECEIVED FROM", "茲收到") : t("BILL TO", "致")}
+          <p className="text-yellow-600 font-bold mb-1 uppercase tracking-widest text-[10px] border-b border-yellow-100 pb-1 flex items-center gap-1">
+            <User className="w-3.5 h-3.5" /> {documentType === "receipt" ? t("RECEIVED FROM", "茲收到") : t("BILL TO", "致")}
           </p>
-          <p className="font-bold text-[14px] text-gray-900 mt-2">{formData.clientName || t("[Client Name]", "[客戶名稱]")}</p>
+          <p className="font-black text-[14px] text-gray-900 mt-2">{formData.clientName || t("[Client Name]", "[客戶名稱]")}</p>
           <p className="text-gray-600 break-words leading-relaxed">{formData.clientAddress || t("[Client Address]", "[客戶地址]")}</p>
-          <p className="text-gray-600 italic">{formData.clientEmail || t("[client@email.com]", "[客戶電郵]")}</p>
         </div>
       </div>
     )
@@ -348,7 +348,7 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
   }
 
   const ItemsTable = () => (
-    <table className="w-full mb-6">
+    <table className="w-full mb-6 cursor-pointer hover:bg-slate-50 transition-all rounded" onClick={() => onFieldClick?.('items-section')}>
       <thead>
         <tr className={templateId === 'corporate' ? 'bg-gray-100' : styles.accentLine}>
           <th className={`text-left py-2 font-bold text-xs ${templateId === 'corporate' ? 'px-2 text-gray-600' : 'text-gray-900'}`}>

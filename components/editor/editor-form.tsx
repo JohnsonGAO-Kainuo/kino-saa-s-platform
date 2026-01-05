@@ -205,7 +205,7 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
 
       {/* 3. Line Items Section */}
       {!isContractType && (
-        <div className="bg-white rounded-xl border border-[#e6e9ef] p-6 space-y-6 shadow-sm">
+        <div id="items-section" className="bg-white rounded-xl border border-[#e6e9ef] p-6 space-y-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-[#1a1f36]">
               <FileText className="w-5 h-5 text-[#6366f1]" />
