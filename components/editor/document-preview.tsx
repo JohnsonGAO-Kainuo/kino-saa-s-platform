@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import type { PaymentStatus } from "@/lib/payment-utils"
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { Building2, User } from 'lucide-react'
+import { Building2, User, Pen } from 'lucide-react'
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 type LanguageMode = "bilingual" | "english" | "chinese"
