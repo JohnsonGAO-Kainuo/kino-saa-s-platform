@@ -259,36 +259,39 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
         </div>
 
         {(documentType === "invoice" || documentType === "receipt") && paymentStatus && (
-          <div
-            className={`mb-6 p-3 rounded-lg text-sm font-semibold text-center ${
-              paymentStatus.status === "paid"
-                ? "bg-green-100 text-green-800 border border-green-300"
-                : paymentStatus.status === "voided"
-                  ? "bg-red-100 text-red-800 border border-red-300"
-                  : "bg-yellow-100 text-yellow-800 border border-yellow-300"
-            }`}
-          >
-            {paymentStatus.status === "paid" && "✓ 已全額支付 | FULLY PAID"}
-            {paymentStatus.status === "voided" && "✗ 已作廢 | VOIDED"}
-            {paymentStatus.status === "unpaid" && "待支付 | UNPAID"}
-            {paymentStatus.status === "pending" && "待確認 | PENDING"}
+          <div className="absolute top-24 right-8 z-20">
+            <div
+              className={`px-4 py-1.5 border-2 rounded text-sm font-bold uppercase tracking-widest transform rotate-12 ${
+                paymentStatus.status === "paid"
+                  ? "text-green-600 border-green-600 bg-white"
+                  : paymentStatus.status === "voided"
+                    ? "text-red-600 border-red-600 bg-white"
+                    : "text-amber-600 border-amber-600 bg-white"
+              }`}
+              style={{ boxShadow: '0 0 0 1px white inset' }}
+            >
+              {paymentStatus.status === "paid" && "Paid | 已付"}
+              {paymentStatus.status === "voided" && "Voided | 作廢"}
+              {paymentStatus.status === "unpaid" && "Unpaid | 待付"}
+              {paymentStatus.status === "pending" && "Pending | 待填"}
+            </div>
           </div>
         )}
 
         {/* Company & Client Info */}
-        <div className="grid grid-cols-2 gap-8 mb-8">
-          <div className="text-xs">
-            <p className="font-bold text-gray-900 mb-1">From: | 發自:</p>
-            <p className="font-semibold text-xs">Your Company</p>
-            <p className="text-gray-600 text-xs">123 Business Street</p>
-            <p className="text-gray-600 text-xs">City, State 12345</p>
-            <p className="text-gray-600 text-xs">company@example.com</p>
+        <div className="grid grid-cols-2 gap-12 mb-10">
+          <div className="text-xs space-y-1">
+            <p className="font-bold text-gray-900 mb-2 uppercase tracking-tight border-b border-gray-200 pb-1">From: | 發自:</p>
+            <p className="font-bold text-[14px] text-gray-900">Your Company Name</p>
+            <p className="text-gray-600">123 Business Street</p>
+            <p className="text-gray-600">City, State 12345</p>
+            <p className="text-gray-600">company@example.com</p>
           </div>
-          <div className="text-xs">
-            <p className="font-bold text-gray-900 mb-1">To: | 收票人:</p>
-            <p className="font-semibold text-xs">{formData.clientName || "Client Name"}</p>
-            <p className="text-gray-600 text-xs break-words">{formData.clientAddress || "Address"}</p>
-            <p className="text-gray-600 text-xs">{formData.clientEmail || "Email"}</p>
+          <div className="text-xs space-y-1">
+            <p className="font-bold text-gray-900 mb-2 uppercase tracking-tight border-b border-gray-200 pb-1">To: | 收票人:</p>
+            <p className="font-bold text-[14px] text-gray-900">{formData.clientName || "Client Name"}</p>
+            <p className="text-gray-600 break-words">{formData.clientAddress || "Address"}</p>
+            <p className="text-gray-600">{formData.clientEmail || "Email"}</p>
           </div>
         </div>
 
@@ -335,17 +338,17 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
         )}
 
         {(documentType === "invoice" || documentType === "receipt") && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="font-bold text-blue-900 mb-3 text-xs">Payment Methods | 付款方式</p>
-            <div className="space-y-2 text-xs">
-              <div>
-                <p className="font-semibold text-blue-900 mb-1">Bank Transfer | 銀行轉賬</p>
-                <p className="text-blue-800">Bank: HSBC Hong Kong</p>
-                <p className="text-blue-800">Account: 123-456789-012</p>
+          <div className="mb-8 p-0 border-t border-b border-gray-200 py-4">
+            <p className="font-bold text-gray-900 mb-4 text-[13px] uppercase tracking-tight">Payment Methods | 付款方式</p>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="border-l-2 border-gray-100 pl-4">
+                <p className="font-bold text-gray-800 mb-1">Bank Transfer | 銀行轉賬</p>
+                <p className="text-gray-600">Bank: HSBC Hong Kong</p>
+                <p className="text-gray-600">Account: 123-456789-012</p>
               </div>
-              <div>
-                <p className="font-semibold text-blue-900 mb-1">FPS | 快速支付系統</p>
-                <p className="text-blue-800">ID: 123456789@hkicbc</p>
+              <div className="border-l-2 border-gray-100 pl-4">
+                <p className="font-bold text-gray-800 mb-1">FPS | 快速支付系統</p>
+                <p className="text-gray-600">ID: 123456789@hkicbc</p>
               </div>
             </div>
           </div>
