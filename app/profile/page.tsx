@@ -2,20 +2,32 @@
 
 import React, { useEffect, useState } from 'react'
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
+import { useLanguage } from '@/lib/language-context'
 import { toast } from 'sonner'
-import { Loader2, UserCircle, Building2, CreditCard, Paintbrush, Save, Upload, X, Check, Image as ImageIcon, ArrowLeft } from 'lucide-react'
+import { Loader2, UserCircle, Building2, CreditCard, Paintbrush, Save, Upload, X, Check, Image as ImageIcon, ArrowLeft, Plus, Star, Trash2, Edit2 } from 'lucide-react'
 import { removeImageBackground, dataURLtoFile } from '@/lib/image-utils'
+import { getUserAssets, uploadAsset, setDefaultAsset, deleteAsset, renameAsset, type UserAsset } from '@/lib/asset-management'
 import Link from 'next/link'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 export default function ProfilePage() {
   const { user } = useAuth()
+  const { t } = useLanguage()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState<Record<string, boolean>>({})
@@ -29,14 +41,22 @@ export default function ProfilePage() {
     fps_id: '',
     swift_code: '',
     default_payment_notes: '',
-    logo_url: '',
-    signature_url: '',
-    stamp_url: '',
   })
+
+  // Asset management states
+  const [logos, setLogos] = useState<UserAsset[]>([])
+  const [signatures, setSignatures] = useState<UserAsset[]>([])
+  const [stamps, setStamps] = useState<UserAsset[]>([])
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [uploadType, setUploadType] = useState<'logo' | 'signature' | 'stamp'>('logo')
+  const [newAssetName, setNewAssetName] = useState('')
+  const [newAssetFile, setNewAssetFile] = useState<File | null>(null)
+  const [setAsDefault, setSetAsDefault] = useState(true)
 
   useEffect(() => {
     if (user) {
       fetchSettings()
+      fetchAssets()
     }
   }, [user])
 
@@ -51,10 +71,22 @@ export default function ProfilePage() {
       if (error && error.code !== 'PGRST116') throw error
       if (data) setSettings(data)
     } catch (error: any) {
-      toast.error('Failed to load profile')
+      toast.error(t('Failed to load profile', '載入資料失敗'))
     } finally {
       setLoading(false)
     }
+  }
+
+  async function fetchAssets() {
+    if (!user) return
+    const [logosData, signaturesData, stampsData] = await Promise.all([
+      getUserAssets(user.id, 'logo'),
+      getUserAssets(user.id, 'signature'),
+      getUserAssets(user.id, 'stamp'),
+    ])
+    setLogos(logosData)
+    setSignatures(signaturesData)
+    setStamps(stampsData)
   }
 
   async function handleSave() {
@@ -69,7 +101,7 @@ export default function ProfilePage() {
         })
 
       if (error) throw error
-      toast.success('Profile updated successfully!')
+      toast.success(t('Profile updated successfully!', '資料已更新！'))
     } catch (error: any) {
       toast.error(error.message)
     } finally {
@@ -77,69 +109,109 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'signature' | 'stamp') {
-    const file = e.target.files?.[0]
-    if (!file || !user) return
+  async function handleUploadAsset() {
+    if (!newAssetFile || !newAssetName || !user) return
 
-    setUploading(prev => ({ ...prev, [type]: true }))
+    setUploading(prev => ({ ...prev, [uploadType]: true }))
     try {
-      let finalFile = file
-      if (type === 'signature' || type === 'stamp') {
-        const transparentDataUrl = await removeImageBackground(file)
-        finalFile = dataURLtoFile(transparentDataUrl, `${type}.png`)
+      let fileToUpload = newAssetFile
+      
+      // Apply background removal for signatures and stamps
+      if (uploadType === 'signature' || uploadType === 'stamp') {
+        const transparentDataUrl = await removeImageBackground(newAssetFile)
+        fileToUpload = dataURLtoFile(transparentDataUrl, `${uploadType}.png`)
       }
 
-      const fileName = `${user.id}/${type}_${Date.now()}.png`
-      const { error: uploadError } = await supabase.storage
-        .from('assets')
-        .upload(fileName, finalFile, { upsert: true, contentType: 'image/png' })
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(fileName)
-      setSettings(prev => ({ ...prev, [`${type}_url`]: publicUrl }))
-      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded!`)
+      const result = await uploadAsset(user.id, fileToUpload, uploadType, newAssetName, setAsDefault)
+      
+      if (result) {
+        toast.success(t('Asset uploaded successfully!', '資產已上傳！'))
+        await fetchAssets()
+        setUploadDialogOpen(false)
+        setNewAssetName('')
+        setNewAssetFile(null)
+        setSetAsDefault(true)
+      } else {
+        throw new Error('Upload failed')
+      }
     } catch (error: any) {
-      toast.error(`Upload failed: ${error.message}`)
+      toast.error(t('Upload failed', '上傳失敗'))
     } finally {
-      setUploading(prev => ({ ...prev, [type]: false }))
+      setUploading(prev => ({ ...prev, [uploadType]: false }))
     }
   }
 
-  const ImageUploadBox = ({ type, url, label }: { type: 'logo' | 'signature' | 'stamp', url: string, label: string }) => (
-    <div className="space-y-2">
-      <Label className="text-[13px] font-medium text-[#1a1f36]">{label}</Label>
-      <div className="relative group border-2 border-dashed border-[#e6e9ef] hover:border-[#6366f1] rounded-xl p-4 transition-all bg-[#f7f9fc]">
-        {url ? (
-          <div className="flex flex-col items-center gap-3">
-            <div className="relative w-full h-32 bg-white rounded-lg flex items-center justify-center p-2 shadow-inner overflow-hidden">
-              <img src={url} alt={label} className="max-w-full max-h-full object-contain" />
-              <button 
-                onClick={() => setSettings(prev => ({ ...prev, [`${type}_url`]: '' }))}
-                className="absolute top-2 right-2 p-1 bg-white/80 hover:bg-red-50 text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+  async function handleSetDefault(assetId: string, assetType: 'logo' | 'signature' | 'stamp') {
+    if (!user) return
+    const success = await setDefaultAsset(user.id, assetId, assetType)
+    if (success) {
+      toast.success(t('Default asset updated', '預設資產已更新'))
+      await fetchAssets()
+    } else {
+      toast.error(t('Failed to update default', '更新失敗'))
+    }
+  }
+
+  async function handleDelete(assetId: string) {
+    if (!user) return
+    const success = await deleteAsset(user.id, assetId)
+    if (success) {
+      toast.success(t('Asset deleted', '資產已刪除'))
+      await fetchAssets()
+    } else {
+      toast.error(t('Failed to delete', '刪除失敗'))
+    }
+  }
+
+  const AssetGallery = ({ assets, type }: { assets: UserAsset[], type: 'logo' | 'signature' | 'stamp' }) => (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {assets.map((asset) => (
+        <div key={asset.id} className="relative group border-2 border-border rounded-xl p-4 bg-white hover:border-[#6366f1] transition-all">
+          <div className="aspect-square bg-slate-50 rounded-lg flex items-center justify-center mb-3 overflow-hidden">
+            <img src={asset.asset_url} alt={asset.asset_name} className="max-w-full max-h-full object-contain" />
+          </div>
+          <p className="text-xs font-medium text-gray-900 truncate mb-2">{asset.asset_name}</p>
+          
+          <div className="flex items-center gap-1">
+            {asset.is_default ? (
+              <div className="flex items-center gap-1 text-[10px] text-[#16a34a] bg-green-50 px-2 py-0.5 rounded-full">
+                <Star className="w-3 h-3 fill-current" />
+                {t('Default', '預設')}
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleSetDefault(asset.id, type)}
+                className="text-[10px] h-6 px-2"
               >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <p className="text-[11px] text-[#16a34a] font-medium flex items-center gap-1">
-              <Check className="w-3 h-3" /> Ready for use
-            </p>
+                <Star className="w-3 h-3 mr-1" />
+                {t('Set Default', '設為預設')}
+              </Button>
+            )}
+            
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleDelete(asset.id)}
+              className="text-[10px] h-6 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 ml-auto"
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
           </div>
-        ) : (
-          <label className="flex flex-col items-center justify-center py-8 cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-[#6366f1]/10 flex items-center justify-center mb-3">
-              <Upload className="w-5 h-5 text-[#6366f1]" />
-            </div>
-            <span className="text-[13px] font-medium text-[#1a1f36]">Upload {type}</span>
-            <input type="file" className="hidden" accept="image/*" onChange={e => handleFileUpload(e, type)} disabled={uploading[type]} />
-          </label>
-        )}
-        {uploading[type] && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-            <Loader2 className="w-6 h-6 animate-spin text-[#6366f1]" />
-          </div>
-        )}
-      </div>
+        </div>
+      ))}
+      
+      <button
+        onClick={() => {
+          setUploadType(type)
+          setUploadDialogOpen(true)
+        }}
+        className="border-2 border-dashed border-border rounded-xl p-4 bg-slate-50 hover:border-[#6366f1] hover:bg-[#6366f1]/5 transition-all flex flex-col items-center justify-center aspect-square"
+      >
+        <Plus className="w-8 h-8 text-gray-400 mb-2" />
+        <span className="text-xs font-medium text-gray-600">{t('Add New', '新增')}</span>
+      </button>
     </div>
   )
 
@@ -155,7 +227,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-[#f7f9fc]">
       <DashboardHeader />
       
-      <main className="max-w-4xl mx-auto px-4 py-10">
+      <main className="max-w-5xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-border flex items-center justify-center shrink-0">
@@ -164,9 +236,9 @@ export default function ProfilePage() {
             <div>
               <Link href="/" className="flex items-center gap-2 text-[#4f566b] hover:text-[#1a1f36] text-xs mb-1 transition-colors">
                 <ArrowLeft className="w-3 h-3" />
-                Back to Dashboard
+                {t('Back to Dashboard', '返回主頁')}
               </Link>
-              <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight leading-none">Business Profile</h1>
+              <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight leading-none">{t('Business Profile', '企業資料')}</h1>
               <p className="text-[#4f566b] text-sm mt-1">{user?.email}</p>
             </div>
           </div>
@@ -176,7 +248,7 @@ export default function ProfilePage() {
             className="bg-[#6366f1] hover:bg-[#5658d2] text-white gap-2 shadow-sm h-10 px-6"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save Changes
+            {t('Save Changes', '保存變更')}
           </Button>
         </div>
 
@@ -185,22 +257,22 @@ export default function ProfilePage() {
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
               <Building2 className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">Business Identity</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Business Identity', '企業身份')}</h2>
             </div>
             <Card className="border-border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
-                    <Label className="text-[13px] font-medium text-[#1a1f36]">Registered Business Name</Label>
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">{t('Registered Business Name', '註冊企業名稱')}</Label>
                     <Input 
                       value={settings.company_name}
                       onChange={e => setSettings({...settings, company_name: e.target.value})}
-                      placeholder="e.g. Kainuo Innovision Ltd"
+                      placeholder={t('e.g. Kainuo Innovision Ltd', '例如：凱諾創新科技有限公司')}
                       className="border-[#e6e9ef] h-10"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[13px] font-medium text-[#1a1f36]">Business Email (Public)</Label>
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">{t('Business Email (Public)', '企業電郵（公開）')}</Label>
                     <Input 
                       value={settings.company_email}
                       onChange={e => setSettings({...settings, company_email: e.target.value})}
@@ -210,11 +282,11 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[13px] font-medium text-[#1a1f36]">Official Business Address</Label>
+                  <Label className="text-[13px] font-medium text-[#1a1f36]">{t('Official Business Address', '企業註冊地址')}</Label>
                   <Textarea 
                     value={settings.company_address}
                     onChange={e => setSettings({...settings, company_address: e.target.value})}
-                    placeholder="This address will appear on all documents"
+                    placeholder={t('This address will appear on all documents', '此地址將顯示在所有文件上')}
                     className="border-[#e6e9ef] min-h-[80px]"
                   />
                 </div>
@@ -226,64 +298,126 @@ export default function ProfilePage() {
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
               <CreditCard className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">Default Payment Methods</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Default Payment Methods', '預設付款方式')}</h2>
             </div>
             <Card className="border-border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
-                    <Label className="text-[13px] font-medium text-[#1a1f36]">Bank Name</Label>
-                    <Input value={settings.bank_name} onChange={e => setSettings({...settings, bank_name: e.target.value})} placeholder="e.g. HSBC Hong Kong" className="border-[#e6e9ef] h-10" />
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">{t('Bank Name', '銀行名稱')}</Label>
+                    <Input value={settings.bank_name} onChange={e => setSettings({...settings, bank_name: e.target.value})} placeholder={t('e.g. HSBC Hong Kong', '例如：香港匯豐銀行')} className="border-[#e6e9ef] h-10" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[13px] font-medium text-[#1a1f36]">Account Number</Label>
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">{t('Account Number', '帳戶號碼')}</Label>
                     <Input value={settings.account_number} onChange={e => setSettings({...settings, account_number: e.target.value})} placeholder="123-456789-001" className="border-[#e6e9ef] h-10" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[13px] font-medium text-[#1a1f36]">FPS ID / Identifier</Label>
-                    <Input value={settings.fps_id} onChange={e => setSettings({...settings, fps_id: e.target.value})} placeholder="Mobile or Email" className="border-[#e6e9ef] h-10" />
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">{t('FPS ID / Identifier', 'FPS 識別碼')}</Label>
+                    <Input value={settings.fps_id} onChange={e => setSettings({...settings, fps_id: e.target.value})} placeholder={t('Mobile or Email', '手機號碼或電郵')} className="border-[#e6e9ef] h-10" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[13px] font-medium text-[#1a1f36]">SWIFT / BIC Code</Label>
-                    <Input value={settings.swift_code} onChange={e => setSettings({...settings, swift_code: e.target.value})} placeholder="Optional for international" className="border-[#e6e9ef] h-10" />
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">{t('SWIFT / BIC Code', 'SWIFT / BIC 代碼')}</Label>
+                    <Input value={settings.swift_code} onChange={e => setSettings({...settings, swift_code: e.target.value})} placeholder={t('Optional for international', '國際轉賬選填')} className="border-[#e6e9ef] h-10" />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </section>
 
-          {/* Branding & Assets */}
+          {/* Asset Library */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
               <Paintbrush className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">Visual Identity</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Asset Library', '資產庫')}</h2>
             </div>
+            
+            {/* Logos */}
             <Card className="border-border shadow-sm bg-white overflow-hidden">
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <ImageUploadBox type="logo" url={settings.logo_url} label="Official Logo" />
-                  <ImageUploadBox type="signature" url={settings.signature_url} label="Digital Signature" />
-                  <ImageUploadBox type="stamp" url={settings.stamp_url} label="Company Stamp" />
-                </div>
-                <div className="mt-6 pt-6 border-t border-[#f7f9fc]">
-                  <div className="flex items-start gap-3 bg-[#f0f9ff] p-4 rounded-xl border border-blue-100">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                      <ImageIcon className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-[13px] font-semibold text-blue-900">How this works</p>
-                      <p className="text-[12px] text-blue-800 leading-relaxed mt-0.5">
-                        These details will be used as the default for all new documents you create. 
-                        We automatically process your signature and stamp to remove white backgrounds for a professional look.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-[#1a1f36]">{t('Company Logos', '公司標誌')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AssetGallery assets={logos} type="logo" />
+              </CardContent>
+            </Card>
+
+            {/* Signatures */}
+            <Card className="border-border shadow-sm bg-white overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-[#1a1f36]">{t('Digital Signatures', '數位簽名')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AssetGallery assets={signatures} type="signature" />
+              </CardContent>
+            </Card>
+
+            {/* Stamps */}
+            <Card className="border-border shadow-sm bg-white overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-[#1a1f36]">{t('Company Stamps', '公司印章')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AssetGallery assets={stamps} type="stamp" />
               </CardContent>
             </Card>
           </section>
         </div>
       </main>
+
+      {/* Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('Upload New Asset', '上傳新資產')}</DialogTitle>
+            <DialogDescription>
+              {t('Add a new', '新增')} {uploadType} {t('to your asset library', '到您的資產庫')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>{t('Asset Name', '資產名稱')}</Label>
+              <Input
+                value={newAssetName}
+                onChange={e => setNewAssetName(e.target.value)}
+                placeholder={t('e.g. Primary Logo', '例如：主要標誌')}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('Upload File', '上傳檔案')}</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={e => setNewAssetFile(e.target.files?.[0] || null)}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="setDefault"
+                checked={setAsDefault}
+                onChange={e => setSetAsDefault(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="setDefault" className="text-sm cursor-pointer">
+                {t('Set as default', '設為預設')}
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
+              {t('Cancel', '取消')}
+            </Button>
+            <Button 
+              onClick={handleUploadAsset}
+              disabled={!newAssetFile || !newAssetName || uploading[uploadType]}
+              className="bg-[#6366f1] hover:bg-[#5658d2]"
+            >
+              {uploading[uploadType] ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+              {t('Upload', '上傳')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
