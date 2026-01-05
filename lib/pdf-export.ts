@@ -46,7 +46,7 @@ export async function generatePDF(documentType: string, formData: any, fileName:
       useCORS: true,
       logging: true,
       allowTaint: false,
-      imageTimeout: 15000, // 15 seconds timeout
+      imageTimeout: 30000, // Increase to 30 seconds
       // Critical: Reset transform during capture
       onclone: (clonedDoc) => {
         const clonedElement = clonedDoc.querySelector(".a4-paper-container") as HTMLElement;
@@ -55,23 +55,30 @@ export async function generatePDF(documentType: string, formData: any, fileName:
           clonedElement.style.transform = "none";
           clonedElement.style.margin = "0";
           clonedElement.style.padding = "0";
-          clonedElement.style.position = "absolute";
+          clonedElement.style.position = "fixed"; // Use fixed to avoid scroll issues
           clonedElement.style.top = "0";
           clonedElement.style.left = "0";
           clonedElement.style.width = "210mm";
           clonedElement.style.minHeight = "297mm";
           clonedElement.style.boxShadow = "none";
+          clonedElement.style.zIndex = "9999";
           
           // Ensure container visibility
           clonedElement.style.visibility = 'visible';
           clonedElement.style.display = 'block';
           
-          // Force all children to be visible
+          // Force all children to be visible and handle transparent images
           const allChildren = clonedElement.querySelectorAll('*');
           allChildren.forEach(child => {
             if (child instanceof HTMLElement) {
               child.style.visibility = 'visible';
             }
+          });
+
+          // Pre-process images in the clone for better compatibility
+          const cloneImages = clonedElement.querySelectorAll('img');
+          cloneImages.forEach(img => {
+            img.crossOrigin = "anonymous";
           });
         }
       }
