@@ -76,6 +76,30 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
   const title = getDocumentTitle()
   const logoUrl = formData.logo ? URL.createObjectURL(formData.logo) : null
 
+  const isPaidReceipt = documentType === "receipt" && paymentStatus?.status === "paid"
+  const isVoidedReceipt = documentType === "receipt" && paymentStatus?.status === "voided"
+
+  // Base layout wrapper
+  const DocumentWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Card className={`bg-white text-black p-8 min-h-[800px] shadow-lg border-border/50 sticky top-0 relative ${
+      isPaidReceipt || isVoidedReceipt ? "bg-gradient-to-br from-white to-slate-50" : ""
+    }`}>
+      {isPaidReceipt && (
+        <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none z-0">
+          <div className="text-8xl font-bold text-green-700 transform -rotate-45">PAID</div>
+        </div>
+      )}
+      {isVoidedReceipt && (
+        <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none z-0">
+          <div className="text-8xl font-bold text-red-700 transform -rotate-45">VOID</div>
+        </div>
+      )}
+      <div className="max-w-full text-sm leading-relaxed relative z-10">
+        {children}
+      </div>
+    </Card>
+  )
+
   const Header = () => (
     <div className="border-b-2 border-gray-800 pb-6 mb-8">
       <div className={`flex flex-col md:flex-row justify-between items-start gap-6`}>
@@ -264,35 +288,6 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
       {formData.notes && (
         <div className="mb-6 pt-4 border-t border-gray-300">
           <p className="font-bold text-gray-900 mb-2 text-xs">{t("Notes", "備註")}:</p>
-          <p className="text-xs text-gray-700 whitespace-pre-wrap">{formData.notes}</p>
-        </div>
-      )}
-
-      <PaymentMethods />
-      <Footer />
-    </DocumentWrapper>
-  )
-}
-
-  return (
-    <DocumentWrapper>
-      <StatusBadge />
-      <Header />
-      <PartiesInfo />
-      <ItemsTable />
-      
-      <div className="flex justify-end mb-6">
-        <div className="w-48">
-          <div className="flex justify-between py-2 border-t-2 border-gray-800 font-bold text-gray-900">
-            <span className="text-xs">TOTAL | 總額:</span>
-            <span className="text-xs">${totalAmount.toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
-
-      {formData.notes && (
-        <div className="mb-6 pt-4 border-t border-gray-300">
-          <p className="font-bold text-gray-900 mb-2 text-xs">Notes | 備註:</p>
           <p className="text-xs text-gray-700 whitespace-pre-wrap">{formData.notes}</p>
         </div>
       )}
