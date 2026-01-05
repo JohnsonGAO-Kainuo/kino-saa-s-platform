@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button"
 import { LogOut, Bell, Settings, User, Search, HelpCircle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
+import Link from "next/link"
+import { supabase } from "@/lib/supabase"
 import {
   DropdownMenu,
   DropdownMenuContent,
