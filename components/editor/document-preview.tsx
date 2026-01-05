@@ -24,6 +24,7 @@ interface FormDataType {
   paymentStatus?: PaymentStatus
   languageMode?: LanguageMode
   logoPosition?: "left" | "center" | "right"
+  logoWidth?: number
 }
 
 interface DocumentPreviewProps {
@@ -38,6 +39,7 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
   const paymentStatus = formData.paymentStatus
   const languageMode = formData.languageMode || "bilingual"
   const logoPosition = formData.logoPosition || "left"
+  const logoWidth = formData.logoWidth || 128
   const currentYear = new Date().getFullYear()
 
   useEffect(() => {
@@ -107,10 +109,10 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
           logoPosition === "center" ? "justify-center" : 
           logoPosition === "right" ? "justify-end" : "justify-start"
         } ${logoPosition !== "left" ? "order-2 md:order-1" : ""}`}>
-          {logoUrl ? (
-            <img src={logoUrl} alt="Logo" className="w-32 h-20 object-contain rounded" />
+          {formData.logo ? (
+            <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
           ) : companySettings?.logo_url ? (
-            <img src={companySettings.logo_url} alt="Company Logo" className="w-32 h-20 object-contain rounded" />
+            <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
           ) : (
             <div className="text-2xl font-bold text-gray-800 tracking-tight uppercase">
               {companySettings?.company_name || "KINO"}
@@ -239,25 +241,29 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
   const Footer = () => (
     <div className="pt-6 border-t-2 border-gray-800">
       <div className="grid grid-cols-2 gap-8 text-center">
-        <div>
-          {formData.stamp ? (
-            <img src={URL.createObjectURL(formData.stamp)} alt="Stamp" className="h-16 object-contain mx-auto mb-2" />
-          ) : companySettings?.stamp_url ? (
-            <img src={companySettings.stamp_url} alt="Company Stamp" className="h-16 object-contain mx-auto mb-2" />
-          ) : (
-            <div className="h-16 flex items-center justify-center text-gray-300 text-xs mb-2">[{t("Company Stamp", "公司印章")}]</div>
-          )}
-          <p className="font-semibold text-gray-900 text-xs">{t("Company Stamp", "公司印章")}</p>
+        <div className="relative flex flex-col items-center">
+          <div className="h-24 flex items-end justify-center mb-2 relative w-full">
+            {formData.stamp ? (
+              <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain z-10" />
+            ) : companySettings?.stamp_url ? (
+              <img src={companySettings.stamp_url} alt="Company Stamp" className="h-24 w-24 object-contain z-10" />
+            ) : (
+              <div className="h-16 flex items-center justify-center text-gray-300 text-xs mb-2 italic">[{t("Company Stamp", "公司印章")}]</div>
+            )}
+          </div>
+          <p className="font-semibold text-gray-900 text-xs border-t border-gray-200 pt-2 w-32">{t("Company Stamp", "公司印章")}</p>
         </div>
-        <div>
-          {formData.signature ? (
-            <img src={formData.signature} alt="Signature" className="h-16 object-contain mx-auto mb-2" />
-          ) : companySettings?.signature_url ? (
-            <img src={companySettings.signature_url} alt="Signature" className="h-16 object-contain mx-auto mb-2" />
-          ) : (
-            <div className="h-16 flex items-center justify-center text-gray-300 text-xs mb-2">[{t("Authorized Signature", "授權簽署")}]</div>
-          )}
-          <p className="font-semibold text-gray-900 text-xs">{t("Authorized By", "授權簽署")}</p>
+        <div className="relative flex flex-col items-center">
+          <div className="h-24 flex items-end justify-center mb-2 relative w-full">
+            {formData.signature ? (
+              <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain z-10 translate-y-2" />
+            ) : companySettings?.signature_url ? (
+              <img src={companySettings.signature_url} alt="Signature" className="h-20 w-48 object-contain z-10 translate-y-2" />
+            ) : (
+              <div className="h-16 flex items-center justify-center text-gray-300 text-xs mb-2 italic">[{t("Authorized Signature", "授權簽署")}]</div>
+            )}
+          </div>
+          <p className="font-semibold text-gray-900 text-xs border-t border-gray-200 pt-2 w-32">{t("Authorized By", "授權簽署")}</p>
         </div>
       </div>
       <div className="mt-8 pt-4 border-t border-gray-300 text-center">
