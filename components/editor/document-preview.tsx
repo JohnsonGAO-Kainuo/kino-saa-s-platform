@@ -327,14 +327,19 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
   const TermsAndConditions = () => {
     if (documentType !== "quotation" && documentType !== "contract") return null
 
+    const terms = documentType === "contract" ? formData.contractTerms : formData.paymentTerms
+
     return (
-      <div className="mt-10 pt-6 border-t border-gray-200">
-        <p className="font-bold text-xs text-gray-900 mb-3 uppercase tracking-wider">
-          {t("TERMS & CONDITIONS /", "條款及細則")}
+      <div 
+        className="mt-10 pt-6 border-t border-gray-200 cursor-pointer hover:bg-yellow-50 rounded p-1 transition-all"
+        onClick={() => onFieldClick?.('contractTerms')}
+      >
+        <p className="font-bold text-xs text-gray-900 mb-3 uppercase tracking-wider flex items-center gap-1">
+          <Pen className="w-3 h-3 text-yellow-500" /> {t("TERMS & CONDITIONS /", "條款及細則")}
         </p>
         <div className="text-[10px] text-gray-600 space-y-2 leading-relaxed">
-          {formData.contractTerms ? (
-            <div className="whitespace-pre-wrap">{formData.contractTerms}</div>
+          {terms ? (
+            <div className="whitespace-pre-wrap">{terms}</div>
           ) : (
             <ul className="list-disc pl-4 space-y-1">
               <li>{t("Validity: This quotation is valid for 30 days from the date of issue.", "有效期：本報價單自發出之日起 30 天內有效。")}</li>
