@@ -89,7 +89,7 @@ export function AssetSelector({ type, currentValue, onChange, onUploadClick, pro
           variant="outline"
           size="sm"
           disabled={processing}
-          className="w-full gap-2 bg-transparent border-dashed h-10"
+          className="w-full gap-2 bg-[#FFF9C4] hover:bg-[#FFF59D] border-[#F9A825] hover:border-[#F57C00] text-[#1a1f36] font-semibold h-10 transition-all"
           onClick={onUploadClick}
         >
           {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}

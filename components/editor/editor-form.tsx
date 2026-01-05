@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Upload, Trash2, Plus, Pen, MoveHorizontal, Loader2 } from "lucide-react"
+import { Upload, Trash2, Plus, Pen, MoveHorizontal, Loader2, Paintbrush, Building2, User, FileText, CreditCard } from "lucide-react"
 import { SignaturePadModal } from "./signature-pad-modal"
 import { AssetSelector } from "./asset-selector"
 import { removeImageBackground } from "@/lib/image-utils"
@@ -241,11 +241,11 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
         </div>
 
         {/* Branding & Assets */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-base">Branding & Assets</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        <div className="bg-white rounded-lg border border-[#e6e9ef] p-5 space-y-5">
+          <div className="flex items-center gap-2 text-[#1a1f36] mb-3">
+            <Paintbrush className="w-5 h-5 text-[#6366f1]" />
+            <h3 className="font-bold text-base">Branding & Assets</h3>
+          </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <AssetSelector
                 type="logo"
