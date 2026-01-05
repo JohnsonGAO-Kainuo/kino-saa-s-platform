@@ -44,10 +44,11 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     paymentStatus: createPaymentStatus() as PaymentStatus,
   })
 
-  // Load document if id is provided
+  // Load document or default settings
   useEffect(() => {
-    async function loadDocument() {
+    async function initEditor() {
       if (docId) {
+        // Mode: Edit existing document
         const doc = await documentStorage.getDocument(docId)
         if (doc) {
           setFormData({
@@ -56,7 +57,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             clientAddress: doc.client_address || "",
             items: doc.content?.items || [{ description: "", quantity: 1, unitPrice: 0 }],
             notes: doc.content?.notes || "",
-            logo: null, // Files can't be easily restored from URLs in this simple mock
+            logo: null,
             signature: doc.signature_url || null,
             stamp: null,
             contractTerms: doc.content?.contractTerms || "",
@@ -66,11 +67,32 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           })
           setActiveTab(doc.doc_type)
         }
+      } else if (user) {
+        // Mode: Create new document - Load default settings
+        try {
+          const { data: settings } = await supabase
+            .from('company_settings')
+            .select('*')
+            .eq('user_id', user.id)
+            .single()
+
+          if (settings) {
+            setFormData(prev => ({
+              ...prev,
+              // We can pre-fill company info in the future if we have a "From" section in the form
+              // For now, let's pre-fill the payment terms if it's an invoice
+              paymentTerms: settings.default_payment_notes || "",
+              notes: `Payment Details:\nBank: ${settings.bank_name || '—'}\nA/C: ${settings.account_number || '—'}\nFPS: ${settings.fps_id || '—'}`,
+            }))
+          }
+        } catch (e) {
+          console.error("Error loading default settings:", e)
+        }
       }
       setLoading(false)
     }
-    loadDocument()
-  }, [docId])
+    initEditor()
+  }, [docId, user])
 
   const handleSave = async () => {
     if (!user) {

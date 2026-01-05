@@ -63,18 +63,26 @@ export function DashboardHeader() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuLabel className="text-[#1a1f36]">My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-[#e6e9ef]" />
+              <DropdownMenuItem className="cursor-pointer text-[#4f566b] focus:text-[#1a1f36] focus:bg-[#f7f9fc]">
                 <User className="w-4 h-4 mr-2" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+              <Link href="/settings">
+                <DropdownMenuItem className="cursor-pointer text-[#4f566b] focus:text-[#1a1f36] focus:bg-[#f7f9fc]">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuSeparator className="bg-[#e6e9ef]" />
+              <DropdownMenuItem 
+                className="cursor-pointer text-destructive focus:text-destructive focus:bg-red-50"
+                onClick={async () => {
+                  await supabase.auth.signOut()
+                  window.location.href = '/login'
+                }}
+              >
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
               </DropdownMenuItem>
