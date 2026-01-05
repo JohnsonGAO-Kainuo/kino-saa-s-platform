@@ -12,74 +12,74 @@ export async function generatePDF(documentType: string, formData: any, fileName:
     const html2canvas = (await import("html2canvas")).default
     const { jsPDF } = await import("jspdf")
 
-    // Optimization: Pre-load all images before capture and handle potential errors
+    // Critical: Handle images with a more aggressive strategy
     const images = element.querySelectorAll('img')
-    console.log(`Pre-loading ${images.length} images...`);
+    console.log(`Found ${images.length} images in document`);
     
-    await Promise.all(Array.from(images).map(img => {
-      if (img.complete && img.naturalHeight !== 0) return Promise.resolve()
-      return new Promise((resolve) => {
-        img.onload = () => {
-          console.log(`Image loaded: ${img.src.substring(0, 50)}...`);
-          resolve(true);
-        };
-        img.onerror = () => {
-          console.warn(`Image failed to load: ${img.src.substring(0, 50)}...`);
-          resolve(false); // Resolve anyway to not block export
-        };
-        // Trigger reload if not complete
+    // Convert all images to data URLs to avoid CORS issues
+    const imagePromises = Array.from(images).map(async (img) => {
+      if (!img.src || img.src.startsWith('data:')) {
+        console.log("Image already data URL or empty, skipping");
+        return;
+      }
+
+      try {
+        // Create a canvas to convert the image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Wait for image to load
         if (!img.complete) {
-          const src = img.src;
-          img.src = '';
-          img.src = src;
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            setTimeout(reject, 10000); // 10 second timeout per image
+          });
         }
-      })
-    }))
 
-    // Small delay to ensure browser rendering catches up
-    await new Promise(resolve => setTimeout(resolve, 500));
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        
+        // Draw image to canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Convert to data URL
+        const dataUrl = canvas.toDataURL('image/png');
+        img.src = dataUrl;
+        console.log(`Converted image to data URL: ${dataUrl.substring(0, 50)}...`);
+      } catch (error) {
+        console.warn(`Failed to convert image, will try to proceed anyway:`, error);
+      }
+    });
 
-    // Capture the canvas with specific options to handle scaling
+    await Promise.allSettled(imagePromises);
+    
+    // Additional delay to ensure rendering
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log("Capturing canvas...");
+
+    // Capture with simplified settings
     const canvas = await html2canvas(element, {
       backgroundColor: "#ffffff",
-      scale: 2, 
+      scale: 2,
       useCORS: true,
       logging: true,
-      allowTaint: false,
-      imageTimeout: 30000, // Increase to 30 seconds
-      // Critical: Reset transform during capture
+      allowTaint: true, // Allow tainted canvas since we pre-converted images
+      imageTimeout: 0, // Disable timeout since we pre-loaded
       onclone: (clonedDoc) => {
         const clonedElement = clonedDoc.querySelector(".a4-paper-container") as HTMLElement;
         if (clonedElement) {
-          // Force reset all potential interfering styles in the clone
           clonedElement.style.transform = "none";
           clonedElement.style.margin = "0";
           clonedElement.style.padding = "0";
-          clonedElement.style.position = "fixed"; // Use fixed to avoid scroll issues
-          clonedElement.style.top = "0";
-          clonedElement.style.left = "0";
+          clonedElement.style.position = "relative";
           clonedElement.style.width = "210mm";
           clonedElement.style.minHeight = "297mm";
           clonedElement.style.boxShadow = "none";
-          clonedElement.style.zIndex = "9999";
-          
-          // Ensure container visibility
           clonedElement.style.visibility = 'visible';
           clonedElement.style.display = 'block';
-          
-          // Force all children to be visible and handle transparent images
-          const allChildren = clonedElement.querySelectorAll('*');
-          allChildren.forEach(child => {
-            if (child instanceof HTMLElement) {
-              child.style.visibility = 'visible';
-            }
-          });
-
-          // Pre-process images in the clone for better compatibility
-          const cloneImages = clonedElement.querySelectorAll('img');
-          cloneImages.forEach(img => {
-            img.crossOrigin = "anonymous";
-          });
         }
       }
     })
@@ -88,7 +88,7 @@ export async function generatePDF(documentType: string, formData: any, fileName:
 
     const imgData = canvas.toDataURL("image/png")
     
-    // Create PDF with A4 dimensions (210mm x 297mm)
+    // Create PDF with A4 dimensions
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
