@@ -14,12 +14,22 @@ interface FormDataType {
   companyName?: string
   companyEmail?: string
   companyAddress?: string
+  companyPhone?: string
+  bankName?: string
+  accountNumber?: string
+  fpsId?: string
+  paypalEmail?: string
   // Client info
   clientName: string
   clientEmail: string
   clientAddress: string
   // Document content
-  items: Array<{ description: string; quantity: number; unitPrice: number }>
+  items: Array<{ 
+    description: string
+    subItems?: string[]
+    quantity: number
+    unitPrice: number 
+  }>
   notes: string
   // Assets
   logo: string | null
@@ -341,40 +351,66 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
       </thead>
       <tbody className={templateId === 'corporate' ? 'border-b border-gray-400' : ''}>
         {formData.items.map((item, index) => (
-          <tr key={index} className={styles.itemRow}>
-            <td className={`py-3 text-xs ${templateId === 'corporate' ? 'px-2 font-medium' : 'text-gray-800'}`}>{item.description || "—"}</td>
-            <td className={`text-right py-3 text-xs ${templateId === 'corporate' ? 'px-2' : 'text-gray-800'}`}>{item.quantity}</td>
-            <td className={`text-right py-3 text-xs ${templateId === 'corporate' ? 'px-2' : 'text-gray-800'}`}>${item.unitPrice.toFixed(2)}</td>
-            <td className={`text-right py-3 font-semibold text-xs ${templateId === 'corporate' ? 'px-2' : 'text-gray-900'}`}>
-              ${(item.quantity * item.unitPrice).toFixed(2)}
-            </td>
-          </tr>
+          <React.Fragment key={index}>
+            <tr className={styles.itemRow}>
+              <td className={`py-3 text-xs ${templateId === 'corporate' ? 'px-2 font-semibold' : 'text-gray-900 font-semibold'}`}>
+                {item.description || "—"}
+              </td>
+              <td className={`text-right py-3 text-xs ${templateId === 'corporate' ? 'px-2' : 'text-gray-800'}`}>{item.quantity}</td>
+              <td className={`text-right py-3 text-xs ${templateId === 'corporate' ? 'px-2' : 'text-gray-800'}`}>${item.unitPrice.toFixed(2)}</td>
+              <td className={`text-right py-3 font-semibold text-xs ${templateId === 'corporate' ? 'px-2' : 'text-gray-900'}`}>
+                ${(item.quantity * item.unitPrice).toFixed(2)}
+              </td>
+            </tr>
+            {item.subItems && item.subItems.length > 0 && item.subItems.map((subItem, subIndex) => (
+              <tr key={`${index}-sub-${subIndex}`} className="border-none">
+                <td colSpan={4} className={`py-1 text-[10px] text-gray-500 italic ${templateId === 'corporate' ? 'px-2 pl-6' : 'pl-4'}`}>
+                  • {subItem}
+                </td>
+              </tr>
+            ))}
+          </React.Fragment>
         ))}
       </tbody>
     </table>
   )
 
-  const PaymentMethods = () => (
-    (documentType === "invoice" || documentType === "receipt") && (
+  const PaymentMethods = () => {
+    // Use formData values first (user override), then fall back to company settings
+    const bankName = formData.bankName || companySettings?.bank_name
+    const accountNumber = formData.accountNumber || companySettings?.account_number
+    const fpsId = formData.fpsId || companySettings?.fps_id
+    const paypalEmail = formData.paypalEmail || companySettings?.paypal_email
+
+    return (documentType === "invoice" || documentType === "receipt") && (
       <div className={`mb-8 py-4 ${templateId === 'modern' ? 'bg-[#6366f1]/5 rounded-2xl p-6 border-none' : 'border-t border-b border-gray-200'}`}>
         <p className={styles.sectionHeader}>
           {t("Payment Methods", "付款方式")}
         </p>
         <div className="grid grid-cols-2 gap-4 text-xs">
-          <div className={`${templateId === 'modern' ? '' : 'border-l-2 border-gray-100 pl-4'}`}>
-            <p className="font-bold text-gray-800 mb-1">{t("Bank Transfer", "銀行轉賬")}</p>
-            <p className="text-gray-600">{languageMode === "chinese" ? "銀行: " : "Bank: "}{companySettings?.bank_name || 'HSBC Hong Kong'}</p>
-            <p className="text-gray-600">{languageMode === "chinese" ? "賬號: " : "Account: "}{companySettings?.account_number || '123-456789-012'}</p>
-            {companySettings?.swift_code && <p className="text-gray-600">SWIFT: {companySettings.swift_code}</p>}
-          </div>
-          <div className={`${templateId === 'modern' ? '' : 'border-l-2 border-gray-100 pl-4'}`}>
-            <p className="font-bold text-gray-800 mb-1">{t("FPS", "快速支付系統 (FPS)")}</p>
-            <p className="text-gray-600">ID: {companySettings?.fps_id || '123456789@hkicbc'}</p>
-          </div>
+          {bankName && accountNumber && (
+            <div className={`${templateId === 'modern' ? '' : 'border-l-2 border-gray-100 pl-4'}`}>
+              <p className="font-bold text-gray-800 mb-1">{t("Bank Transfer", "銀行轉賬")}</p>
+              <p className="text-gray-600">{languageMode === "chinese" ? "銀行: " : "Bank: "}{bankName}</p>
+              <p className="text-gray-600">{languageMode === "chinese" ? "賬號: " : "Account: "}{accountNumber}</p>
+            </div>
+          )}
+          {fpsId && (
+            <div className={`${templateId === 'modern' ? '' : 'border-l-2 border-gray-100 pl-4'}`}>
+              <p className="font-bold text-gray-800 mb-1">{t("FPS", "快速支付系統 (FPS)")}</p>
+              <p className="text-gray-600">ID: {fpsId}</p>
+            </div>
+          )}
+          {paypalEmail && (
+            <div className={`${templateId === 'modern' ? '' : 'border-l-2 border-gray-100 pl-4'}`}>
+              <p className="font-bold text-gray-800 mb-1">PayPal</p>
+              <p className="text-gray-600">{paypalEmail}</p>
+            </div>
+          )}
         </div>
       </div>
     )
-  )
+  }
 
   const Footer = () => {
     // 1. Quotation & Invoice usually don't need signatures

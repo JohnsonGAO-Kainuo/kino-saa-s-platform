@@ -40,7 +40,10 @@ export default function ProfilePage() {
     account_number: '',
     fps_id: '',
     swift_code: '',
+    paypal_email: '',
     default_payment_notes: '',
+    default_contract_terms: '',
+    default_invoice_notes: '',
   })
 
   // Asset management states
@@ -318,6 +321,31 @@ export default function ProfilePage() {
                   <div className="space-y-1.5">
                     <Label className="text-[13px] font-medium text-[#1a1f36]">{t('SWIFT / BIC Code', 'SWIFT / BIC 代碼')}</Label>
                     <Input value={settings.swift_code} onChange={e => setSettings({...settings, swift_code: e.target.value})} placeholder={t('Optional for international', '國際轉賬選填')} className="border-[#e6e9ef] h-10" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">PayPal {t('Email', '電郵')}</Label>
+                    <Input value={settings.paypal_email} onChange={e => setSettings({...settings, paypal_email: e.target.value})} placeholder="payments@company.com" className="border-[#e6e9ef] h-10" />
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t border-[#e6e9ef] space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">{t('Default Contract Terms', '預設合同條款')}</Label>
+                    <Textarea 
+                      value={settings.default_contract_terms}
+                      onChange={e => setSettings({...settings, default_contract_terms: e.target.value})}
+                      placeholder={t('Standard terms and conditions for contracts', '合同的標準條款和條件')}
+                      className="border-[#e6e9ef] min-h-[100px]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[13px] font-medium text-[#1a1f36]">{t('Default Invoice Notes', '預設發票備註')}</Label>
+                    <Textarea 
+                      value={settings.default_invoice_notes}
+                      onChange={e => setSettings({...settings, default_invoice_notes: e.target.value})}
+                      placeholder={t('Standard notes for invoices (e.g., payment instructions)', '發票的標準備註（例如付款說明）')}
+                      className="border-[#e6e9ef] min-h-[80px]"
+                    />
                   </div>
                 </div>
               </CardContent>

@@ -35,10 +35,20 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     companyName: "",
     companyEmail: "",
     companyAddress: "",
+    companyPhone: "",
+    bankName: "",
+    accountNumber: "",
+    fpsId: "",
+    paypalEmail: "",
     clientName: "",
     clientEmail: "",
     clientAddress: "",
-    items: [{ description: "", quantity: 1, unitPrice: 0 }],
+    items: [{ description: "", subItems: [], quantity: 1, unitPrice: 0 }] as Array<{
+      description: string
+      subItems?: string[]
+      quantity: number
+      unitPrice: number
+    }>,
     notes: "",
     logo: null as string | null,
     signature: null as string | null,
@@ -101,7 +111,14 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
               companyName: settings.company_name || "",
               companyEmail: settings.company_email || "",
               companyAddress: settings.company_address || "",
+              companyPhone: settings.company_phone || "",
+              bankName: settings.bank_name || "",
+              accountNumber: settings.account_number || "",
+              fpsId: settings.fps_id || "",
+              paypalEmail: settings.paypal_email || "",
               paymentTerms: settings.default_payment_notes || "",
+              contractTerms: settings.default_contract_terms || "",
+              notes: settings.default_invoice_notes || "",
             }))
           }
         } catch (e) {
@@ -132,6 +149,11 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           companyName: formData.companyName,
           companyEmail: formData.companyEmail,
           companyAddress: formData.companyAddress,
+          companyPhone: formData.companyPhone,
+          bankName: formData.bankName,
+          accountNumber: formData.accountNumber,
+          fpsId: formData.fpsId,
+          paypalEmail: formData.paypalEmail,
           items: formData.items,
           notes: formData.notes,
           contractTerms: formData.contractTerms,

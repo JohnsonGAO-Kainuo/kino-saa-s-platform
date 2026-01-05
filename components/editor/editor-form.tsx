@@ -20,12 +20,22 @@ interface FormDataType {
   companyName?: string
   companyEmail?: string
   companyAddress?: string
+  companyPhone?: string
+  bankName?: string
+  accountNumber?: string
+  fpsId?: string
+  paypalEmail?: string
   // Client info
   clientName: string
   clientEmail: string
   clientAddress: string
   // Document content
-  items: Array<{ description: string; quantity: number; unitPrice: number }>
+  items: Array<{ 
+    description: string
+    subItems?: string[]
+    quantity: number
+    unitPrice: number 
+  }>
   notes: string
   // Assets
   logo: string | null
@@ -68,8 +78,28 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
   const addItem = () => {
     onChange({
       ...formData,
-      items: [...formData.items, { description: "", quantity: 1, unitPrice: 0 }],
+      items: [...formData.items, { description: "", subItems: [], quantity: 1, unitPrice: 0 }],
     })
+  }
+
+  const handleSubItemChange = (itemIndex: number, subItemIndex: number, value: string) => {
+    const newItems = [...formData.items]
+    if (!newItems[itemIndex].subItems) newItems[itemIndex].subItems = []
+    newItems[itemIndex].subItems![subItemIndex] = value
+    onChange({ ...formData, items: newItems })
+  }
+
+  const addSubItem = (itemIndex: number) => {
+    const newItems = [...formData.items]
+    if (!newItems[itemIndex].subItems) newItems[itemIndex].subItems = []
+    newItems[itemIndex].subItems!.push("")
+    onChange({ ...formData, items: newItems })
+  }
+
+  const removeSubItem = (itemIndex: number, subItemIndex: number) => {
+    const newItems = [...formData.items]
+    newItems[itemIndex].subItems = newItems[itemIndex].subItems?.filter((_, i) => i !== subItemIndex)
+    onChange({ ...formData, items: newItems })
   }
 
   const removeItem = (index: number) => {
@@ -351,6 +381,18 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                 />
               </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="companyPhone" className="text-xs font-medium text-muted-foreground">Phone Number</Label>
+                <Input
+                  id="companyPhone"
+                  placeholder="+852 1234 5678"
+                  value={formData.companyPhone || ''}
+                  onChange={(e) => handleFieldChange("companyPhone", e.target.value)}
+                  className="bg-input border-border"
+                />
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="companyAddress" className="text-xs font-medium text-muted-foreground">Company Address</Label>
               <Textarea
@@ -360,6 +402,60 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                 onChange={(e) => handleFieldChange("companyAddress", e.target.value)}
                 className="bg-input border-border min-h-[60px]"
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment & Banking Information */}
+        <Card className="bg-card border-border border-[#10b981]/30">
+          <CardHeader>
+            <CardTitle className="text-base text-[#10b981]">Payment & Banking Information</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">Bank details for invoice and receipt documents</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="bankName" className="text-xs font-medium text-muted-foreground">Bank Name</Label>
+                <Input
+                  id="bankName"
+                  placeholder="e.g. HSBC Hong Kong"
+                  value={formData.bankName || ''}
+                  onChange={(e) => handleFieldChange("bankName", e.target.value)}
+                  className="bg-input border-border"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="accountNumber" className="text-xs font-medium text-muted-foreground">Account Number</Label>
+                <Input
+                  id="accountNumber"
+                  placeholder="123-456789-001"
+                  value={formData.accountNumber || ''}
+                  onChange={(e) => handleFieldChange("accountNumber", e.target.value)}
+                  className="bg-input border-border"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="fpsId" className="text-xs font-medium text-muted-foreground">FPS ID (Hong Kong)</Label>
+                <Input
+                  id="fpsId"
+                  placeholder="12345678"
+                  value={formData.fpsId || ''}
+                  onChange={(e) => handleFieldChange("fpsId", e.target.value)}
+                  className="bg-input border-border"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="paypalEmail" className="text-xs font-medium text-muted-foreground">PayPal Email</Label>
+                <Input
+                  id="paypalEmail"
+                  placeholder="payments@company.com"
+                  value={formData.paypalEmail || ''}
+                  onChange={(e) => handleFieldChange("paypalEmail", e.target.value)}
+                  className="bg-input border-border"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -461,46 +557,98 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
           <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle className="text-base">Line Items</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">Add main items and optional sub-items for detailed breakdown</p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {formData.items.map((item, index) => (
-                <div key={index} className="flex gap-2 items-end">
-                  <div className="flex-1">
-                    <Label className="text-sm text-muted-foreground mb-1 block">Description</Label>
-                    <Input
-                      placeholder="Product/service description"
-                      value={item.description}
-                      onChange={(e) => handleItemChange(index, "description", e.target.value)}
-                      className="bg-input border-border text-foreground"
-                    />
+            <CardContent className="space-y-6">
+              {formData.items.map((item, itemIndex) => (
+                <div key={itemIndex} className="border border-border rounded-lg p-4 space-y-3 bg-slate-50/30">
+                  <div className="flex gap-2 items-start">
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <Label className="text-sm font-semibold text-foreground mb-1.5 block">Main Item / Service</Label>
+                        <Input
+                          placeholder="e.g. Website Development"
+                          value={item.description}
+                          onChange={(e) => handleItemChange(itemIndex, "description", e.target.value)}
+                          className="bg-white border-border text-foreground font-medium"
+                        />
+                      </div>
+                      
+                      {/* Sub-items */}
+                      {item.subItems && item.subItems.length > 0 && (
+                        <div className="pl-4 border-l-2 border-[#6366f1]/30 space-y-2">
+                          <Label className="text-xs text-muted-foreground">Sub-items (optional breakdown)</Label>
+                          {item.subItems.map((subItem, subIndex) => (
+                            <div key={subIndex} className="flex gap-2 items-center">
+                              <span className="text-xs text-muted-foreground">•</span>
+                              <Input
+                                placeholder="e.g. Domain registration, SEO optimization"
+                                value={subItem}
+                                onChange={(e) => handleSubItemChange(itemIndex, subIndex, e.target.value)}
+                                className="bg-white border-border text-sm flex-1"
+                              />
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => removeSubItem(itemIndex, subIndex)}
+                              >
+                                <Trash2 className="w-3 h-3 text-muted-foreground" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => addSubItem(itemIndex)}
+                        className="gap-1.5 text-xs h-7"
+                      >
+                        <Plus className="w-3 h-3" /> Add Sub-item
+                      </Button>
+                    </div>
+
+                    <div className="w-20">
+                      <Label className="text-sm text-muted-foreground mb-1.5 block">Qty</Label>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(itemIndex, "quantity", parseInt(e.target.value) || 0)}
+                        className="bg-white border-border text-foreground text-center"
+                      />
+                    </div>
+                    <div className="w-28">
+                      <Label className="text-sm text-muted-foreground mb-1.5 block">Unit Price</Label>
+                      <Input
+                        type="number"
+                        value={item.unitPrice}
+                        onChange={(e) => handleItemChange(itemIndex, "unitPrice", parseFloat(e.target.value) || 0)}
+                        className="bg-white border-border text-foreground"
+                      />
+                    </div>
+                    {formData.items.length > 1 && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => removeItem(itemIndex)} 
+                        className="text-muted-foreground hover:text-destructive mt-6"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
-                  <div className="w-20">
-                    <Label className="text-sm text-muted-foreground mb-1 block">Qty</Label>
-                    <Input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => handleItemChange(index, "quantity", parseInt(e.target.value) || 0)}
-                      className="bg-input border-border text-foreground"
-                    />
+                  
+                  <div className="flex justify-end pt-2 border-t border-border">
+                    <span className="text-sm font-semibold text-foreground">
+                      Subtotal: ${(item.quantity * item.unitPrice).toFixed(2)}
+                    </span>
                   </div>
-                  <div className="w-24">
-                    <Label className="text-sm text-muted-foreground mb-1 block">Price</Label>
-                    <Input
-                      type="number"
-                      value={item.unitPrice}
-                      onChange={(e) => handleItemChange(index, "unitPrice", parseFloat(e.target.value) || 0)}
-                      className="bg-input border-border text-foreground"
-                    />
-                  </div>
-                  {formData.items.length > 1 && (
-                    <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="text-muted-foreground hover:text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
                 </div>
               ))}
               <Button variant="outline" size="sm" onClick={addItem} className="w-full gap-2 mt-2">
-                <Plus className="w-4 h-4" /> Add Item
+                <Plus className="w-4 h-4" /> Add New Item
               </Button>
             </CardContent>
           </Card>
