@@ -159,8 +159,11 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
         ) : companySettings?.logo_url ? (
           <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
         ) : (
-          <div className={`text-2xl font-bold tracking-tight uppercase ${templateId === 'modern' ? 'text-[#6366f1]' : 'text-gray-800'}`}>
-            {companySettings?.company_name || "[Your Company Logo]"}
+          <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'}`}>
+            <div className={`text-2xl font-bold tracking-tight uppercase ${templateId === 'modern' ? 'text-[#6366f1]' : 'text-gray-800'}`}>
+              Kino
+            </div>
+            <p className="text-[9px] text-gray-400 italic mt-0.5">{t('[Click to add logo]', '[點擊添加標誌]')}</p>
           </div>
         )}
       </div>

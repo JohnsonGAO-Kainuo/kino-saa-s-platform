@@ -17,16 +17,16 @@
   --primary-foreground: oklch(1 0 0);
   
   /* Secondary - Slate/Grayish */
-  --secondary: oklch(0.98 0.005 260); /* #f6f9fc */
-  --secondary-foreground: oklch(0.2 0.01 260);
+  --secondary: oklch(0.95 0.01 260); /* Darker for better contrast */
+  --secondary-foreground: oklch(0.15 0.02 260); /* Much darker text */
   
   /* Muted - Subdued text/backgrounds */
   --muted: oklch(0.98 0.005 260);
   --muted-foreground: oklch(0.45 0.02 260); /* #4f566b */
   
   /* Accent - For hover states or highlights */
-  --accent: oklch(0.98 0.005 260);
-  --accent-foreground: oklch(0.2 0.01 260);
+  --accent: oklch(0.96 0.01 260); /* Slightly darker for better contrast */
+  --accent-foreground: oklch(0.15 0.02 260); /* Much darker text for readability */
   
   --destructive: oklch(0.6 0.2 20);
   --destructive-foreground: oklch(1 0 0);

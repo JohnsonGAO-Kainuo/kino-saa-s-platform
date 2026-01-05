@@ -33,11 +33,11 @@ export function SignaturePadModal({ open, onClose, onSave }: SignaturePadModalPr
 
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
-      canvas.width = rect.width * dpr
-      canvas.height = rect.height * dpr
-      ctx.scale(dpr, dpr)
+      // Set canvas size to match CSS size exactly (no DPR scaling)
+      canvas.width = rect.width
+      canvas.height = rect.height
       
+      // Configure drawing style
       ctx.strokeStyle = "#1a1f36"
       ctx.lineWidth = 2.5
       ctx.lineCap = "round"
@@ -45,8 +45,8 @@ export function SignaturePadModal({ open, onClose, onSave }: SignaturePadModalPr
       ctx.clearRect(0, 0, canvas.width, canvas.height)
     }
 
-    // Wait a frame for dialog animation to finish and layout to stabilize
-    const timeout = setTimeout(resizeCanvas, 100)
+    // Wait for dialog animation to finish
+    const timeout = setTimeout(resizeCanvas, 150)
     window.addEventListener('resize', resizeCanvas)
     
     return () => {
