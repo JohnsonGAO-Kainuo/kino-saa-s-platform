@@ -23,6 +23,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const [isSaving, setIsSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [agentOpen, setAgentOpen] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
   const docId = searchParams.get("id")
@@ -242,8 +243,13 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
         </div>
       </div>
 
-      <main className="flex-1 flex overflow-hidden">
-        <div className="flex-1 overflow-hidden">
+      <main className="flex-1 flex overflow-hidden relative">
+        {/* Main Content Area - Slides left when agent opens */}
+        <div 
+          className={`flex-1 overflow-hidden transition-all duration-500 ease-in-out ${
+            agentOpen ? 'mr-[400px]' : 'mr-0'
+          }`}
+        >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full p-4 sm:p-6 lg:p-8">
             {/* Left: Form */}
             <div className="overflow-y-auto pr-4 -mr-4">
@@ -258,14 +264,22 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
               <EditorForm documentType={activeTab} formData={formData} onChange={setFormData} />
             </div>
 
-            {/* Right: Preview */}
-            <div className="overflow-y-auto" id="document-preview">
-              <DocumentPreview documentType={activeTab} formData={formData} />
+            {/* Right: Preview - A4 Format */}
+            <div className="overflow-y-auto flex justify-center py-8 bg-[#f5f5f5]" id="document-preview-container">
+              <div className="a4-paper-container">
+                <DocumentPreview documentType={activeTab} formData={formData} />
+              </div>
             </div>
           </div>
         </div>
 
-        <AIAgentSidebar currentDocType={activeTab} onDocumentGenerated={handleDocumentGenerated} />
+        {/* AI Agent Sidebar - Slides in from right */}
+        <AIAgentSidebar 
+          currentDocType={activeTab} 
+          onDocumentGenerated={handleDocumentGenerated}
+          isOpen={agentOpen}
+          onToggle={setAgentOpen}
+        />
       </main>
     </div>
   )

@@ -140,16 +140,9 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
 
   return (
     <>
-      <div className="space-y-6 pb-20">
-        {/* Document Settings */}
-        <Card className="bg-card border-border border-accent/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <div className="w-1.5 h-4 bg-accent rounded-full" />
-              Document Layout & Style
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+      <div className="space-y-4 pb-20">
+        {/* Document Settings - Simplified */}
+        <div className="bg-white rounded-lg border border-[#e6e9ef] p-5 space-y-5">
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Document Template</Label>
               <div className="grid grid-cols-3 gap-3">

@@ -123,3 +123,55 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ===== A4 Paper Format Styles ===== */
+.a4-paper-container {
+  width: 210mm;
+  min-height: 297mm;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 
+              0 0 0 1px rgba(0, 0, 0, 0.05);
+  margin: 0 auto;
+  padding: 20mm 15mm;
+  position: relative;
+  border-radius: 2px;
+}
+
+@media print {
+  .a4-paper-container {
+    width: 210mm;
+    min-height: 297mm;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    page-break-after: always;
+  }
+  
+  #document-preview-container {
+    background: white !important;
+  }
+}
+
+/* Scale down for smaller screens */
+@media (max-width: 1400px) {
+  .a4-paper-container {
+    transform: scale(0.85);
+    transform-origin: top center;
+  }
+}
+
+@media (max-width: 1200px) {
+  .a4-paper-container {
+    transform: scale(0.7);
+    transform-origin: top center;
+  }
+}
+
+@media (max-width: 768px) {
+  .a4-paper-container {
+    width: 100%;
+    min-height: auto;
+    transform: none;
+    padding: 15mm 10mm;
+  }
+}

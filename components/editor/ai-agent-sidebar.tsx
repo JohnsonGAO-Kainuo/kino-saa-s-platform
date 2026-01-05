@@ -14,10 +14,11 @@ interface Message {
 interface AIAgentSidebarProps {
   currentDocType: string
   onDocumentGenerated: (content: any) => void
+  isOpen: boolean
+  onToggle: (open: boolean) => void
 }
 
-export function AIAgentSidebar({ currentDocType, onDocumentGenerated }: AIAgentSidebarProps) {
-  const [isOpen, setIsOpen] = useState(true)
+export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, onToggle }: AIAgentSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -65,7 +66,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated }: AIAgentS
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => onToggle(true)}
         className="fixed bottom-6 right-6 w-14 h-14 bg-[#6366f1] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#5658d2] transition-all z-50 group"
       >
         <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -75,8 +76,8 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated }: AIAgentS
 
   return (
     <div 
-      className={`fixed right-0 top-[64px] h-[calc(100vh-64px)] bg-white border-l border-[#e6e9ef] shadow-xl transition-all duration-300 z-50 flex flex-col ${
-        isExpanded ? "w-[500px]" : "w-[350px]"
+      className={`fixed right-0 top-[64px] h-[calc(100vh-64px)] bg-white border-l border-[#e6e9ef] shadow-xl transition-all duration-500 ease-in-out z-40 flex flex-col ${
+        isExpanded ? "w-[500px]" : "w-[400px]"
       }`}
     >
       {/* Header */}
@@ -106,7 +107,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated }: AIAgentS
             variant="ghost" 
             size="icon" 
             className="h-8 w-8 text-[#4f566b]" 
-            onClick={() => setIsOpen(false)}
+            onClick={() => onToggle(false)}
           >
             <X className="w-4 h-4" />
           </Button>
