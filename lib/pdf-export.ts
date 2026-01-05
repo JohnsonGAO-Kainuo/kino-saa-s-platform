@@ -1,6 +1,9 @@
 export async function generatePDF(documentType: string, formData: any, fileName: string) {
   try {
-    const element = document.getElementById("document-preview-card") || document.getElementById("document-preview")
+    // Try to find the A4 paper container first, then fall back to other selectors
+    const element = document.querySelector(".a4-paper-container") || 
+                    document.getElementById("document-preview-card") || 
+                    document.getElementById("document-preview")
     if (!element) throw new Error("Document preview not found")
 
     const targetElement = element

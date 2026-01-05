@@ -238,8 +238,7 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                 className="w-full"
               />
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
         {/* Branding & Assets */}
         <Card className="bg-card border-border">
