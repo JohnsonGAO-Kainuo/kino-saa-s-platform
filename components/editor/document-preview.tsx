@@ -160,59 +160,71 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
           <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
         ) : (
           <div className={`text-2xl font-bold tracking-tight uppercase ${templateId === 'modern' ? 'text-[#6366f1]' : 'text-gray-800'}`}>
-            {companySettings?.company_name || "KINO"}
+            {companySettings?.company_name || "[Your Company Logo]"}
           </div>
         )}
       </div>
     )
 
-    const Title = () => (
-      <div className="text-right">
-        <div className="flex flex-col gap-1 items-end">
-          <h1 className={`font-bold ${templateId === 'modern' ? 'text-4xl text-[#1a1f36]' : 'text-3xl text-gray-900'}`}>
-            {languageMode === "chinese" ? title.zh : title.en}
-          </h1>
-          {languageMode === "bilingual" && (
-            <h1 className={`font-bold ${templateId === 'modern' ? 'text-2xl text-gray-400' : 'text-xl text-gray-700'}`}>
-              {title.zh}
+    const Title = () => {
+      const docNumber = `${documentType === "quotation" || documentType === "contract" ? "QT" : 
+                           documentType === "invoice" ? "INV" : "RC"}-${currentYear}001`
+      const currentDate = new Date().toISOString().split('T')[0]
+      const validUntilDate = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
+
+      return (
+        <div className="text-right">
+          <div className="flex flex-col gap-1 items-end">
+            <h1 className={`font-bold ${templateId === 'modern' ? 'text-4xl text-[#1a1f36]' : 'text-3xl text-gray-900'}`}>
+              {languageMode === "chinese" ? title.zh : title.en}
             </h1>
-          )}
-          
-          <div className="mt-4 space-y-1 text-right">
-            <div className="flex justify-end items-center gap-4 text-[11px]">
-              <span className="font-bold text-gray-900">
-                {documentType === "quotation" || documentType === "contract" ? t("QUOTATION NO. / 報價單號", "QUOTATION NO. / 報價單號") : 
-                 documentType === "invoice" ? t("INVOICE NO. / 發票號碼", "INVOICE NO. / 發票號碼") : 
-                 t("RECEIPT NO. / 收據號碼", "RECEIPT NO. / 收據號碼")}
-              </span>
-              <span className="font-mono text-gray-600">
-                {documentType === "quotation" || documentType === "contract" ? "QT" : 
-                 documentType === "invoice" ? "INV" : "RC"}-{currentYear}-001
-              </span>
-            </div>
+            {languageMode === "bilingual" && (
+              <h1 className={`font-bold ${templateId === 'modern' ? 'text-2xl text-gray-400' : 'text-xl text-gray-700'}`}>
+                {title.zh}
+              </h1>
+            )}
             
-            <div className="flex justify-end items-center gap-4 text-[11px]">
-              <span className="font-bold text-gray-900">{t("DATE / 日期", "DATE / 日期")}</span>
-              <span className="font-mono text-gray-600">{new Date().toISOString().split('T')[0]}</span>
+            <div className="mt-4 space-y-1 text-right">
+              <div className="flex justify-end items-center gap-4 text-[11px]">
+                <span className="font-bold text-gray-900 uppercase tracking-wide">
+                  {documentType === "quotation" || documentType === "contract" ? 
+                    (languageMode === "chinese" ? "報價單號" : "QUOTATION NO.") : 
+                   documentType === "invoice" ? 
+                    (languageMode === "chinese" ? "發票號碼" : "INVOICE NO.") : 
+                    (languageMode === "chinese" ? "收據號碼" : "RECEIPT NO.")}
+                </span>
+                <span className="font-mono text-gray-600">{docNumber}</span>
+              </div>
+              
+              <div className="flex justify-end items-center gap-4 text-[11px]">
+                <span className="font-bold text-gray-900 uppercase tracking-wide">
+                  {languageMode === "chinese" ? "日期" : "DATE"}
+                </span>
+                <span className="font-mono text-gray-600">{currentDate}</span>
+              </div>
+
+              {(documentType === "quotation" || documentType === "contract") && (
+                <div className="flex justify-end items-center gap-4 text-[11px]">
+                  <span className="font-bold text-gray-900 uppercase tracking-wide">
+                    {languageMode === "chinese" ? "有效期至" : "VALID UNTIL"}
+                  </span>
+                  <span className="font-mono text-gray-600">{validUntilDate}</span>
+                </div>
+              )}
+
+              {documentType === "receipt" && (
+                <div className="flex justify-end items-center gap-4 text-[11px]">
+                  <span className="font-bold text-gray-900 uppercase tracking-wide">
+                    {languageMode === "chinese" ? "關聯發票" : "REF. INVOICE"}
+                  </span>
+                  <span className="font-mono text-gray-600">INV-{currentYear}001</span>
+                </div>
+              )}
             </div>
-
-            {(documentType === "quotation" || documentType === "contract") && (
-              <div className="flex justify-end items-center gap-4 text-[11px]">
-                <span className="font-bold text-gray-900">{t("VALID UNTIL / 有效期至", "VALID UNTIL / 有效期至")}</span>
-                <span className="font-mono text-gray-600">{new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]}</span>
-              </div>
-            )}
-
-            {documentType === "receipt" && (
-              <div className="flex justify-end items-center gap-4 text-[11px]">
-                <span className="font-bold text-gray-900">{t("REF. INVOICE / 關聯發票", "REF. INVOICE / 關聯發票")}</span>
-                <span className="font-mono text-gray-600">INV-{currentYear}-001</span>
-              </div>
-            )}
           </div>
         </div>
-      </div>
-    )
+      )
+    }
 
     if (templateId === 'corporate') {
       return (
@@ -244,22 +256,22 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
     <div className={`grid grid-cols-2 gap-12 mb-10 ${templateId === 'modern' ? 'bg-slate-50/50 p-6 rounded-2xl border border-slate-100' : ''}`}>
       <div className="text-xs space-y-1">
         <p className="text-gray-500 font-medium mb-1 uppercase tracking-wider border-b border-gray-100 pb-1">
-          {companySettings?.company_name || "Kino Innovision"}
+          {companySettings?.company_name || t("[Your Company Name]", "[您的公司名稱]")}
         </p>
         <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
-          {companySettings?.company_address || t("123 Business Street\nCity, State 12345", "公司詳細地址\n城市，地區 12345")}
+          {companySettings?.company_address || t("[Your Business Address]", "[您的公司地址]")}
         </p>
         <p className="text-gray-600">
-          {companySettings?.company_email || "company@example.com"}
+          {companySettings?.company_email || t("[company@example.com]", "[公司電郵]")}
         </p>
       </div>
       <div className="text-xs space-y-1">
         <p className={`${styles.sectionHeader} border-b border-gray-800 pb-1`}>
-          {documentType === "receipt" ? t("RECEIVED FROM /", "茲收到") : t("TO /", "致")}
+          {documentType === "receipt" ? t("RECEIVED FROM", "茲收到") : t("BILL TO", "致")}
         </p>
-        <p className="font-bold text-[14px] text-gray-900 mt-2">{formData.clientName || t("Client Name", "客戶名稱")}</p>
-        <p className="text-gray-600 break-words leading-relaxed">{formData.clientAddress || t("Address", "客戶地址")}</p>
-        <p className="text-gray-600">{formData.clientEmail || t("Email", "電子郵件")}</p>
+        <p className="font-bold text-[14px] text-gray-900 mt-2">{formData.clientName || t("[Client Name]", "[客戶名稱]")}</p>
+        <p className="text-gray-600 break-words leading-relaxed">{formData.clientAddress || t("[Client Address]", "[客戶地址]")}</p>
+        <p className="text-gray-600">{formData.clientEmail || t("[client@email.com]", "[客戶電郵]")}</p>
       </div>
     </div>
   )
@@ -440,7 +452,7 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
                   {t("ISSUED BY (COMPANY)", "發出人")}
                 </p>
                 <p className="text-[10px] text-gray-600 mt-1 truncate max-w-full">
-                  {companySettings?.company_name || "Kino Innovision"}
+                  {companySettings?.company_name || "[Your Company Name]"}
                 </p>
               </div>
             </div>
