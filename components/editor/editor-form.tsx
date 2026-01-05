@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import type React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -341,17 +340,16 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+        </div>
 
         {/* Company Information Override */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-base">Your Company Information</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">Override default profile settings for this document only</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg border border-[#e6e9ef] p-5 space-y-5">
+          <div className="flex items-center gap-2 text-[#1a1f36] mb-1">
+            <Building2 className="w-5 h-5 text-[#6366f1]" />
+            <h3 className="font-bold text-base">Your Company Information</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">Override default profile settings for this document only</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="companyName" className="text-xs font-medium text-muted-foreground">Company Name</Label>
                 <Input
@@ -385,27 +383,16 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                 />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="companyAddress" className="text-xs font-medium text-muted-foreground">Company Address</Label>
-              <Textarea
-                id="companyAddress"
-                placeholder="Full business address"
-                value={formData.companyAddress || ''}
-                onChange={(e) => handleFieldChange("companyAddress", e.target.value)}
-                className="bg-input border-border min-h-[60px]"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        </div>
 
         {/* Payment & Banking Information */}
-        <Card className="bg-card border-border border-[#10b981]/30">
-          <CardHeader>
-            <CardTitle className="text-base text-[#10b981]">Payment & Banking Information</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">Bank details for invoice and receipt documents</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg border border-[#10b981]/30 p-5 space-y-5">
+          <div className="flex items-center gap-2 text-[#10b981] mb-1">
+            <CreditCard className="w-5 h-5" />
+            <h3 className="font-bold text-base">Payment & Banking Information</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">Bank details for invoice and receipt documents</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="bankName" className="text-xs font-medium text-muted-foreground">Bank Name</Label>
                 <Input
@@ -449,16 +436,15 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
         {/* Client Information */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-base">Client Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg border border-[#e6e9ef] p-5 space-y-5">
+          <div className="flex items-center gap-2 text-[#1a1f36] mb-1">
+            <User className="w-5 h-5 text-[#6366f1]" />
+            <h3 className="font-bold text-base">Client Details</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="clientName" className="text-xs font-medium text-muted-foreground">Client Name</Label>
                 <Input
@@ -488,19 +474,18 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                 placeholder="Full billing address"
                 value={formData.clientAddress}
                 onChange={(e) => handleFieldChange("clientAddress", e.target.value)}
-                className="bg-input border-border min-h-[80px]"
+                  className="bg-input border-border min-h-[80px]"
               />
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
         {isContractType && (
-          <>
-            <Card className="bg-card border-border border-accent/50">
-              <CardHeader>
-                <CardTitle className="text-base text-accent">Contract Terms</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <div className="bg-white rounded-lg border border-[#6366f1]/30 p-5 space-y-5">
+            <div className="flex items-center gap-2 text-[#1a1f36] mb-1">
+              <FileText className="w-5 h-5 text-[#6366f1]" />
+              <h3 className="font-bold text-base text-[#6366f1]">Contract Terms</h3>
+            </div>
+            <div className="space-y-4">
                 <div>
                   <Label htmlFor="contractTerms" className="text-sm text-muted-foreground mb-2 block">
                     Terms & Conditions
@@ -536,22 +521,21 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
                       value={formData.deliveryDate}
                       onChange={(e) => handleFieldChange("deliveryDate", e.target.value)}
                       className="bg-input border-border text-foreground"
-                    />
-                  </div>
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </>
+              </div>
+          </div>
         )}
 
         {/* Line Items */}
         {!isContractType && (
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-base">Line Items</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">Add main items and optional sub-items for detailed breakdown</p>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <div className="bg-white rounded-lg border border-[#e6e9ef] p-5 space-y-5">
+            <div className="flex items-center gap-2 text-[#1a1f36] mb-1">
+              <FileText className="w-5 h-5 text-[#6366f1]" />
+              <h3 className="font-bold text-base">Line Items</h3>
+            </div>
+            <p className="text-xs text-muted-foreground">Add main items and optional sub-items for detailed breakdown</p>
+            <div className="space-y-6">
               {formData.items.map((item, itemIndex) => (
                 <div key={itemIndex} className="border border-border rounded-lg p-4 space-y-3 bg-slate-50/30">
                   <div className="flex gap-2 items-start">
@@ -642,24 +626,22 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
               <Button variant="outline" size="sm" onClick={addItem} className="w-full gap-2 mt-2">
                 <Plus className="w-4 h-4" /> Add New Item
               </Button>
-            </CardContent>
-          </Card>
+          </div>
         )}
 
         {/* Notes */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-base">Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              placeholder="Add additional notes..."
-              value={formData.notes}
-              onChange={(e) => handleFieldChange("notes", e.target.value)}
-              className="bg-input border-border min-h-[100px]"
-            />
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg border border-[#e6e9ef] p-5 space-y-5">
+          <div className="flex items-center gap-2 text-[#1a1f36] mb-1">
+            <Pen className="w-5 h-5 text-[#6366f1]" />
+            <h3 className="font-bold text-base">Notes</h3>
+          </div>
+          <Textarea
+            placeholder="Add additional notes..."
+            value={formData.notes}
+            onChange={(e) => handleFieldChange("notes", e.target.value)}
+            className="bg-input border-border min-h-[100px]"
+          />
+        </div>
       </div>
 
       <SignaturePadModal
