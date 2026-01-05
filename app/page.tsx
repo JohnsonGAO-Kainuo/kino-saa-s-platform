@@ -44,32 +44,41 @@ export default function DashboardPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#f7f9fc] text-foreground">
       <DashboardHeader />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Welcome Header */}
+        <div className="mb-10">
+          <h1 className="text-[28px] font-bold text-[#1a1f36] tracking-tight">Good morning, Johnson</h1>
+          <p className="text-[#4f566b] text-[15px] mt-1">Here's what's happening with your documents today.</p>
+        </div>
+
         {/* Top Section: Stats and Subscription */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-10">
+          <div className="lg:col-span-3">
             <DocumentStats />
           </div>
-          <div>
+          <div className="lg:col-span-1">
             <SubscriptionCard />
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="mb-8">
+        <div className="mb-12">
           <QuickActions />
         </div>
 
-        <div className="mb-8">
-          <DraftDocuments drafts={drafts} />
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content: Drafts */}
+          <div className="lg:col-span-2">
+            <DraftDocuments drafts={drafts} />
+          </div>
 
-        {/* Activity Feed */}
-        <div>
-          <RecentActivity />
+          {/* Sidebar: Activity Feed */}
+          <div className="lg:col-span-1">
+            <RecentActivity />
+          </div>
         </div>
       </main>
     </div>

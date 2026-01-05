@@ -15,36 +15,36 @@ import {
 
 export function DashboardHeader() {
   return (
-    <header className="border-b border-border bg-card sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <header className="border-b border-border bg-white sticky top-0 z-50 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
         {/* Logo and Search */}
-        <div className="flex items-center gap-8 flex-1">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-lg font-bold text-primary-foreground">K</span>
+        <div className="flex items-center gap-6 flex-1">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+              <span className="text-lg font-bold text-primary-foreground leading-none">K</span>
             </div>
-            <span className="text-lg font-bold tracking-tight">Kino</span>
+            <span className="text-lg font-semibold tracking-tight text-[#1a1f36]">Kino</span>
           </div>
           
-          <div className="hidden md:flex relative max-w-sm w-full">
+          <div className="hidden md:flex relative max-w-[320px] w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Search..." 
-              className="pl-9 bg-secondary/50 border-transparent focus:bg-background transition-all" 
+              placeholder="Search documents, clients..." 
+              className="h-9 pl-9 bg-[#f7f9fc] border-transparent focus:bg-white focus:border-border transition-all shadow-none" 
             />
           </div>
         </div>
 
         {/* Right Side Actions */}
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+        <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground">
             <HelpCircle className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
+          <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-card" />
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground">
             <Settings className="w-5 h-5" />
           </Button>
 
@@ -52,13 +52,13 @@ export function DashboardHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 px-1 hover:bg-transparent">
-                <Avatar className="w-8 h-8 border border-border">
+              <Button variant="ghost" className="h-9 gap-2.5 px-1.5 hover:bg-[#f7f9fc]">
+                <Avatar className="w-7 h-7 border border-border">
                   <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                  <AvatarFallback className="bg-secondary text-secondary-foreground text-xs font-medium">JD</AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">JD</AvatarFallback>
                 </Avatar>
-                <div className="hidden md:flex flex-col items-start text-sm">
-                  <span className="font-medium">Kainuo Innovision</span>
+                <div className="hidden md:flex flex-col items-start">
+                  <span className="text-sm font-medium text-[#1a1f36]">Kainuo Innovision</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>

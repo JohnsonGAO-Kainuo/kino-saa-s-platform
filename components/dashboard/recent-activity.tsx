@@ -13,7 +13,8 @@ export function RecentActivity() {
       client: "Acme Corp",
       timestamp: "2 hours ago",
       icon: FileText,
-      status: "draft",
+      color: "text-[#6366f1]",
+      bg: "bg-[#f5f3ff]",
     },
     {
       id: 2,
@@ -22,7 +23,8 @@ export function RecentActivity() {
       client: "TechStart Inc",
       timestamp: "4 hours ago",
       icon: Send,
-      status: "pending",
+      color: "text-[#2563eb]",
+      bg: "bg-[#eff6ff]",
     },
     {
       id: 3,
@@ -31,7 +33,8 @@ export function RecentActivity() {
       client: "Design Studio",
       timestamp: "1 day ago",
       icon: CheckCircle2,
-      status: "success",
+      color: "text-[#16a34a]",
+      bg: "bg-[#f0fdf4]",
     },
     {
       id: 4,
@@ -40,7 +43,8 @@ export function RecentActivity() {
       client: "Global Ltd",
       timestamp: "1 day ago",
       icon: Download,
-      status: "neutral",
+      color: "text-[#475569]",
+      bg: "bg-[#f1f5f9]",
     },
     {
       id: 5,
@@ -49,54 +53,47 @@ export function RecentActivity() {
       client: "StartupXYZ",
       timestamp: "2 days ago",
       icon: Eye,
-      status: "neutral",
+      color: "text-[#475569]",
+      bg: "bg-[#f1f5f9]",
     },
   ]
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "success": return "text-green-600 bg-green-50"
-      case "pending": return "text-blue-600 bg-blue-50"
-      case "draft": return "text-gray-600 bg-gray-50"
-      default: return "text-gray-600 bg-gray-50"
-    }
-  }
-
   return (
-    <Card className="border-border shadow-sm">
-      <CardHeader className="pb-3 border-b border-border/50">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
-          <Button variant="ghost" size="sm" className="text-xs h-8">View all</Button>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="divide-y divide-border/50">
-          {activities.map((activity) => (
-            <div key={activity.id} className="flex items-center gap-4 py-4 hover:bg-muted/30 transition-colors px-2 -mx-2 rounded-md">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getStatusColor(activity.status)}`}>
-                <activity.icon className="w-4 h-4" />
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {activity.document}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-xs text-muted-foreground">
-                    {activity.type} • {activity.client}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[14px] font-semibold text-[#1a1f36] uppercase tracking-wider">Recent Activity</h3>
+        <Button variant="link" className="text-[#6366f1] text-[13px] h-auto p-0 font-medium">View all</Button>
+      </div>
+      
+      <Card className="border-border shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] bg-white overflow-hidden">
+        <CardContent className="p-0">
+          <div className="divide-y divide-[#e6e9ef]">
+            {activities.map((activity) => (
+              <div key={activity.id} className="flex items-center gap-4 p-4 hover:bg-[#f7f9fc] transition-colors">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.bg} ${activity.color}`}>
+                  <activity.icon className="w-4 h-4" />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-semibold text-[#1a1f36] truncate">
+                    {activity.document}
+                  </p>
+                  <p className="text-[12px] text-[#4f566b] mt-0.5">
+                    {activity.type.charAt(0).toUpperCase() + activity.type.slice(1)} • {activity.client}
                   </p>
                 </div>
-              </div>
 
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {activity.timestamp}
-              </span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-[11px] text-[#8792a2] font-medium whitespace-nowrap">
+                    {activity.timestamp}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 import { Button } from "@/components/ui/button"

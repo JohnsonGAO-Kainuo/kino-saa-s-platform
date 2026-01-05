@@ -36,28 +36,28 @@ export function DocumentStats() {
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat) => (
-        <Card key={stat.label} className="border-border shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardContent className="p-5">
-            <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+        <Card key={stat.label} className="border-border shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] bg-white">
+          <CardContent className="p-6">
+            <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</p>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-foreground">{stat.value}</span>
+              <span className="text-2xl font-semibold text-[#1a1f36]">{stat.value}</span>
             </div>
             
-            <div className="mt-2 flex items-center gap-1.5 text-xs">
+            <div className="mt-3 flex items-center gap-2 text-[12px]">
               {stat.trend === "up" && (
-                <span className="flex items-center text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded">
-                  <ArrowUpRight className="w-3 h-3 mr-0.5" />
+                <span className="flex items-center text-[#16a34a] font-semibold">
+                  <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
                   {stat.change}
                 </span>
               )}
               {stat.trend === "neutral" && (
-                <span className="flex items-center text-gray-600 font-medium bg-gray-50 px-1.5 py-0.5 rounded">
+                <span className="flex items-center text-[#4f566b] font-semibold">
                   {stat.change}
                 </span>
               )}
-              <span className="text-muted-foreground">{stat.period}</span>
+              <span className="text-[#8792a2]">{stat.period}</span>
             </div>
           </CardContent>
         </Card>
