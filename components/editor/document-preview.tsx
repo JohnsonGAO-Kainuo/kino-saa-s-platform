@@ -138,17 +138,23 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
         <p className="font-bold text-gray-900 mb-2 uppercase tracking-tight border-b border-gray-200 pb-1">
           {t("From:", "發自:")}
         </p>
-        <p className="font-bold text-[14px] text-gray-900">{companySettings?.company_name || "Your Company Name"}</p>
-        <p className="text-gray-600 whitespace-pre-wrap">{companySettings?.company_address || "123 Business Street\nCity, State 12345"}</p>
-        <p className="text-gray-600">{companySettings?.company_email || "company@example.com"}</p>
+        <p className="font-bold text-[14px] text-gray-900">
+          {companySettings?.company_name || t("Your Company Name", "您的公司名稱")}
+        </p>
+        <p className="text-gray-600 whitespace-pre-wrap">
+          {companySettings?.company_address || t("123 Business Street\nCity, State 12345", "公司詳細地址\n城市，地區 12345")}
+        </p>
+        <p className="text-gray-600">
+          {companySettings?.company_email || "company@example.com"}
+        </p>
       </div>
       <div className="text-xs space-y-1">
         <p className="font-bold text-gray-900 mb-2 uppercase tracking-tight border-b border-gray-200 pb-1">
           {t("To:", "收票人:")}
         </p>
-        <p className="font-bold text-[14px] text-gray-900">{formData.clientName || "Client Name"}</p>
-        <p className="text-gray-600 break-words">{formData.clientAddress || "Address"}</p>
-        <p className="text-gray-600">{formData.clientEmail || "Email"}</p>
+        <p className="font-bold text-[14px] text-gray-900">{formData.clientName || t("Client Name", "客戶名稱")}</p>
+        <p className="text-gray-600 break-words">{formData.clientAddress || t("Address", "客戶地址")}</p>
+        <p className="text-gray-600">{formData.clientEmail || t("Email", "電子郵件")}</p>
       </div>
     </div>
   )
@@ -222,7 +228,7 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
             {companySettings?.swift_code && <p className="text-gray-600">SWIFT: {companySettings.swift_code}</p>}
           </div>
           <div className="border-l-2 border-gray-100 pl-4">
-            <p className="font-bold text-gray-800 mb-1">FPS | 快速支付系統</p>
+            <p className="font-bold text-gray-800 mb-1">{t("FPS", "快速支付系統 (FPS)")}</p>
             <p className="text-gray-600">ID: {companySettings?.fps_id || '123456789@hkicbc'}</p>
           </div>
         </div>
@@ -255,15 +261,8 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
         </div>
       </div>
       <div className="mt-8 pt-4 border-t border-gray-300 text-center">
-        <p className="text-xs text-gray-600">
-          {languageMode === "english" ? "English Only" : 
-           languageMode === "chinese" ? "繁體中文" : 
-           "English | 繁體中文"}
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          {languageMode === "english" ? "Valid in English" :
-           languageMode === "chinese" ? "此文件以中文為準" :
-           "This document is valid in both languages"}
+        <p className="text-[10px] text-gray-400 italic">
+          {t("End of Document", "文件完")}
         </p>
       </div>
     </div>
