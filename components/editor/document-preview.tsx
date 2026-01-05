@@ -53,9 +53,10 @@ interface FormDataType {
 interface DocumentPreviewProps {
   documentType: DocumentType
   formData: FormDataType
+  onFieldClick?: (fieldId: string) => void
 }
 
-export function DocumentPreview({ documentType, formData }: DocumentPreviewProps) {
+export function DocumentPreview({ documentType, formData, onFieldClick }: DocumentPreviewProps) {
   const { user } = useAuth()
   const [companySettings, setCompanySettings] = useState<any>(null)
   const totalAmount = formData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
@@ -95,7 +96,7 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
       case "receipt":
         return { en: "OFFICIAL RECEIPT", zh: "正式收據" }
       case "contract":
-        return { en: "QUOTATION & SERVICE AGREEMENT", zh: "報價單及服務協議" }
+        return { en: "CONTRACT & SERVICE AGREEMENT", zh: "合約及服務協議" }
     }
   }
 
@@ -171,25 +172,31 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
   )
 
   const Header = () => {
-    const Logo = () => (
-      <div className={`flex ${
+  const Logo = () => (
+    <div 
+      className={`flex ${
         logoPosition === "center" ? "justify-center" : 
         logoPosition === "right" ? "justify-end" : "justify-start"
-      }`}>
-        {formData.logo ? (
-          <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
-        ) : companySettings?.logo_url ? (
-          <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
-        ) : (
-          <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'}`}>
-            <div className={`text-2xl font-bold tracking-tight uppercase ${templateId === 'modern' ? 'text-[#6366f1]' : 'text-gray-800'}`}>
-              Kino
-            </div>
-            <p className="text-[9px] text-gray-400 italic mt-0.5">{t('[Click to add logo]', '[點擊添加標誌]')}</p>
-          </div>
-        )}
+      } cursor-pointer hover:ring-2 hover:ring-[#6366f1] rounded p-1 transition-all group relative`}
+      onClick={() => document.getElementById('logo-upload')?.click()}
+    >
+      <div className="absolute inset-0 bg-[#6366f1]/5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded">
+        <span className="text-[10px] font-bold text-[#6366f1]">CLICK TO EDIT</span>
       </div>
-    )
+      {formData.logo ? (
+        <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
+      ) : companySettings?.logo_url ? (
+        <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
+      ) : (
+        <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'}`}>
+          <div className={`text-2xl font-bold tracking-tight uppercase ${templateId === 'modern' ? 'text-[#6366f1]' : 'text-gray-800'}`}>
+            {companySettings?.company_name?.split(' ')[0] || "Your Logo"}
+          </div>
+          <p className="text-[9px] text-gray-400 italic mt-0.5">{t('[Click to add logo]', '[點擊添加標誌]')}</p>
+        </div>
+      )}
+    </div>
+  )
 
     const Title = () => {
       const docNumber = `${documentType === "quotation" || documentType === "contract" ? "QT" : 
@@ -285,24 +292,33 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
 
     return (
       <div className={`grid grid-cols-2 gap-12 mb-10 ${templateId === 'modern' ? 'bg-slate-50/50 p-6 rounded-2xl border border-slate-100' : ''}`}>
-        <div className="text-xs space-y-1">
-          <p className="text-gray-500 font-medium mb-1 uppercase tracking-wider border-b border-gray-100 pb-1">
+        <div 
+          className="text-xs space-y-1 cursor-pointer hover:bg-yellow-50 rounded p-1 transition-all"
+          onClick={() => onFieldClick?.('companyAddress')}
+        >
+          <p className="text-gray-400 font-bold mb-1 uppercase tracking-widest text-[9px] border-b border-gray-100 pb-1 flex items-center gap-1">
+            <Building2 className="w-3 h-3 text-yellow-500" /> {t("FROM", "發件人")}
+          </p>
+          <p className="font-bold text-gray-900 uppercase">
             {displayCompanyName}
           </p>
           <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
             {displayCompanyAddress}
           </p>
-          <p className="text-gray-600">
+          <p className="text-gray-600 italic">
             {displayCompanyEmail}
           </p>
         </div>
-        <div className="text-xs space-y-1">
-          <p className={`${styles.sectionHeader} border-b border-gray-800 pb-1`}>
-            {documentType === "receipt" ? t("RECEIVED FROM", "茲收到") : t("BILL TO", "致")}
+        <div 
+          className="text-xs space-y-1 cursor-pointer hover:bg-yellow-50 rounded p-1 transition-all"
+          onClick={() => onFieldClick?.('clientAddress')}
+        >
+          <p className={`${styles.sectionHeader} border-b border-gray-800 pb-1 flex items-center gap-1`}>
+            <User className="w-3 h-3 text-yellow-500" /> {documentType === "receipt" ? t("RECEIVED FROM", "茲收到") : t("BILL TO", "致")}
           </p>
           <p className="font-bold text-[14px] text-gray-900 mt-2">{formData.clientName || t("[Client Name]", "[客戶名稱]")}</p>
           <p className="text-gray-600 break-words leading-relaxed">{formData.clientAddress || t("[Client Address]", "[客戶地址]")}</p>
-          <p className="text-gray-600">{formData.clientEmail || t("[client@email.com]", "[客戶電郵]")}</p>
+          <p className="text-gray-600 italic">{formData.clientEmail || t("[client@email.com]", "[客戶電郵]")}</p>
         </div>
       </div>
     )

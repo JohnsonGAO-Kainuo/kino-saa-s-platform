@@ -220,6 +220,19 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
 
   const totalAmount = formData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
 
+  const handleFocusField = (fieldId: string) => {
+    const element = document.getElementById(fieldId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      element.focus()
+      // Add a brief highlight effect
+      element.classList.add('ring-4', 'ring-yellow-400', 'ring-opacity-50')
+      setTimeout(() => {
+        element.classList.remove('ring-4', 'ring-yellow-400', 'ring-opacity-50')
+      }, 2000)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -261,13 +274,13 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
                   totalAmount={totalAmount}
                 />
               )}
-              <EditorForm documentType={activeTab} formData={formData} onChange={setFormData} />
+              <EditorForm documentType={activeTab} formData={formData} onChange={setFormData} onFocusField={handleFocusField} />
             </div>
 
             {/* Right: Preview - A4 Format */}
             <div className="overflow-y-auto flex justify-center py-8 bg-[#f5f5f5]" id="document-preview-container">
               <div className="a4-paper-container">
-                <DocumentPreview documentType={activeTab} formData={formData} />
+                <DocumentPreview documentType={activeTab} formData={formData} onFieldClick={handleFocusField} />
               </div>
             </div>
           </div>
