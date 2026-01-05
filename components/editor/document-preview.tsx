@@ -71,9 +71,9 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
       case "invoice":
         return { en: "INVOICE", zh: "發票" }
       case "receipt":
-        return { en: "RECEIPT", zh: "收據" }
+        return { en: "OFFICIAL RECEIPT", zh: "正式收據" }
       case "contract":
-        return { en: "SERVICE AGREEMENT", zh: "服務協議" }
+        return { en: "QUOTATION & SERVICE AGREEMENT", zh: "報價單及服務協議" }
     }
   }
 
@@ -177,9 +177,39 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
               {title.zh}
             </h1>
           )}
-          <p className={`text-xs mt-1 font-mono ${templateId === 'modern' ? 'text-[#6366f1] bg-[#6366f1]/5 px-2 py-0.5 rounded' : 'text-gray-600'}`}>
-            #{currentYear}-001
-          </p>
+          
+          <div className="mt-4 space-y-1 text-right">
+            <div className="flex justify-end items-center gap-4 text-[11px]">
+              <span className="font-bold text-gray-900">
+                {documentType === "quotation" || documentType === "contract" ? t("QUOTATION NO. / 報價單號", "QUOTATION NO. / 報價單號") : 
+                 documentType === "invoice" ? t("INVOICE NO. / 發票號碼", "INVOICE NO. / 發票號碼") : 
+                 t("RECEIPT NO. / 收據號碼", "RECEIPT NO. / 收據號碼")}
+              </span>
+              <span className="font-mono text-gray-600">
+                {documentType === "quotation" || documentType === "contract" ? "QT" : 
+                 documentType === "invoice" ? "INV" : "RC"}-{currentYear}-001
+              </span>
+            </div>
+            
+            <div className="flex justify-end items-center gap-4 text-[11px]">
+              <span className="font-bold text-gray-900">{t("DATE / 日期", "DATE / 日期")}</span>
+              <span className="font-mono text-gray-600">{new Date().toISOString().split('T')[0]}</span>
+            </div>
+
+            {(documentType === "quotation" || documentType === "contract") && (
+              <div className="flex justify-end items-center gap-4 text-[11px]">
+                <span className="font-bold text-gray-900">{t("VALID UNTIL / 有效期至", "VALID UNTIL / 有效期至")}</span>
+                <span className="font-mono text-gray-600">{new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]}</span>
+              </div>
+            )}
+
+            {documentType === "receipt" && (
+              <div className="flex justify-end items-center gap-4 text-[11px]">
+                <span className="font-bold text-gray-900">{t("REF. INVOICE / 關聯發票", "REF. INVOICE / 關聯發票")}</span>
+                <span className="font-mono text-gray-600">INV-{currentYear}-001</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -213,11 +243,10 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
   const PartiesInfo = () => (
     <div className={`grid grid-cols-2 gap-12 mb-10 ${templateId === 'modern' ? 'bg-slate-50/50 p-6 rounded-2xl border border-slate-100' : ''}`}>
       <div className="text-xs space-y-1">
-        <p className={styles.sectionHeader}>{t("From:", "發自:")}</p>
-        <p className="font-bold text-[14px] text-gray-900">
-          {companySettings?.company_name || t("Your Company Name", "您的公司名稱")}
+        <p className="text-gray-500 font-medium mb-1 uppercase tracking-wider border-b border-gray-100 pb-1">
+          {companySettings?.company_name || "Kino Innovision"}
         </p>
-        <p className="text-gray-600 whitespace-pre-wrap">
+        <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
           {companySettings?.company_address || t("123 Business Street\nCity, State 12345", "公司詳細地址\n城市，地區 12345")}
         </p>
         <p className="text-gray-600">
@@ -225,13 +254,38 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
         </p>
       </div>
       <div className="text-xs space-y-1">
-        <p className={styles.sectionHeader}>{t("To:", "收票人:")}</p>
-        <p className="font-bold text-[14px] text-gray-900">{formData.clientName || t("Client Name", "客戶名稱")}</p>
-        <p className="text-gray-600 break-words">{formData.clientAddress || t("Address", "客戶地址")}</p>
+        <p className={`${styles.sectionHeader} border-b border-gray-800 pb-1`}>
+          {documentType === "receipt" ? t("RECEIVED FROM /", "茲收到") : t("TO /", "致")}
+        </p>
+        <p className="font-bold text-[14px] text-gray-900 mt-2">{formData.clientName || t("Client Name", "客戶名稱")}</p>
+        <p className="text-gray-600 break-words leading-relaxed">{formData.clientAddress || t("Address", "客戶地址")}</p>
         <p className="text-gray-600">{formData.clientEmail || t("Email", "電子郵件")}</p>
       </div>
     </div>
   )
+
+  const TermsAndConditions = () => {
+    if (documentType !== "quotation" && documentType !== "contract") return null
+
+    return (
+      <div className="mt-10 pt-6 border-t border-gray-200">
+        <p className="font-bold text-xs text-gray-900 mb-3 uppercase tracking-wider">
+          {t("TERMS & CONDITIONS /", "條款及細則")}
+        </p>
+        <div className="text-[10px] text-gray-600 space-y-2 leading-relaxed">
+          {formData.contractTerms ? (
+            <div className="whitespace-pre-wrap">{formData.contractTerms}</div>
+          ) : (
+            <ul className="list-disc pl-4 space-y-1">
+              <li>{t("Validity: This quotation is valid for 30 days from the date of issue.", "有效期：本報價單自發出之日起 30 天內有效。")}</li>
+              <li>{t("Payment Terms: Full payment is required before service delivery.", "付款條款：服務交付前需全額付款。")}</li>
+              <li>{t("Confidentiality: All information in this document is confidential.", "保密協議：本文件中的所有信息均屬保密。")}</li>
+            </ul>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   const ItemsTable = () => (
     <table className="w-full mb-6">
@@ -288,45 +342,118 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
     )
   )
 
-  const Footer = () => (
-    <div className={`pt-6 ${templateId === 'modern' ? 'border-none' : 'border-t-2 border-gray-800'}`}>
-      <div className="grid grid-cols-2 gap-8 text-center">
-        <div className="relative flex flex-col items-center">
-          <div className="h-24 flex items-end justify-center mb-2 relative w-full">
-            {formData.stamp ? (
-              <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain z-10" />
-            ) : companySettings?.stamp_url ? (
-              <img src={companySettings.stamp_url} alt="Company Stamp" className="h-24 w-24 object-contain z-10" />
-            ) : (
-              <div className="h-16 flex items-center justify-center text-gray-300 text-xs mb-2 italic">[{t("Company Stamp", "公司印章")}]</div>
-            )}
-          </div>
-          <p className={`font-semibold text-xs pt-2 w-32 ${templateId === 'modern' ? 'text-[#6366f1] border-[#6366f1]/20' : 'text-gray-900 border-t border-gray-200'}`}>
-            {t("Company Stamp", "公司印章")}
+  const Footer = () => {
+    // 1. Quotation & Invoice usually don't need signatures
+    if (documentType === "quotation" || documentType === "invoice") {
+      return (
+        <div className="mt-12 text-center pt-8 border-t border-gray-100">
+          <p className="text-[11px] text-gray-400 italic">
+            {t("Thank you for your business!", "多謝惠顧！")}
+          </p>
+          <p className="text-[10px] text-gray-300 mt-2">
+            {t("End of Document", "文件完")}
           </p>
         </div>
-        <div className="relative flex flex-col items-center">
-          <div className="h-24 flex items-end justify-center mb-2 relative w-full">
-            {formData.signature ? (
-              <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain z-10 translate-y-2" />
-            ) : companySettings?.signature_url ? (
-              <img src={companySettings.signature_url} alt="Signature" className="h-20 w-48 object-contain z-10 translate-y-2" />
-            ) : (
-              <div className="h-16 flex items-center justify-center text-gray-300 text-xs mb-2 italic">[{t("Authorized Signature", "授權簽署")}]</div>
-            )}
+      )
+    }
+
+    // 2. Receipt needs Company Signature & Stamp
+    if (documentType === "receipt") {
+      return (
+        <div className="pt-8 mt-8 border-t-2 border-gray-800">
+          <div className="flex justify-end">
+            <div className="relative flex flex-col items-center min-w-[240px]">
+              <div className="h-28 flex items-center justify-center relative w-full mb-2">
+                {/* Stamp - Absolute positioned behind/next to signature */}
+                <div className="absolute right-4 top-0 opacity-80">
+                  {formData.stamp ? (
+                    <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain" />
+                  ) : companySettings?.stamp_url && (
+                    <img src={companySettings.stamp_url} alt="Company Stamp" className="h-24 w-24 object-contain" />
+                  )}
+                </div>
+                {/* Signature */}
+                <div className="z-10">
+                  {formData.signature ? (
+                    <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain" />
+                  ) : companySettings?.signature_url && (
+                    <img src={companySettings.signature_url} alt="Signature" className="h-20 w-48 object-contain" />
+                  )}
+                </div>
+              </div>
+              <div className="w-full border-t border-gray-900 pt-2 text-center">
+                <p className="font-bold text-[11px] uppercase tracking-tight text-gray-900">
+                  {t("AUTHORIZED SIGNATURE & CHOP", "授權簽名及公司蓋章")}
+                </p>
+              </div>
+            </div>
           </div>
-          <p className={`font-semibold text-xs pt-2 w-32 ${templateId === 'modern' ? 'text-[#6366f1] border-[#6366f1]/20' : 'text-gray-900 border-t border-gray-200'}`}>
-            {t("Authorized By", "授權簽署")}
-          </p>
+          <div className="mt-12 text-center">
+            <p className="text-[10px] text-gray-300 italic">{t("End of Document", "文件完")}</p>
+          </div>
         </div>
-      </div>
-      <div className="mt-12 text-center">
-        <p className="text-[10px] text-gray-400 italic">
-          {t("End of Document", "文件完")}
-        </p>
-      </div>
-    </div>
-  )
+      )
+    }
+
+    // 3. Contract needs Dual Signatures
+    if (documentType === "contract") {
+      return (
+        <div className="pt-8 mt-12 border-t-2 border-gray-800">
+          <div className="grid grid-cols-2 gap-12">
+            {/* Client Side */}
+            <div className="flex flex-col items-center">
+              <div className="h-28 flex items-end justify-center mb-2 w-full">
+                <div className="h-16 flex items-center justify-center text-gray-300 text-[10px] italic">
+                  [{t("Client Signature & Date", "客戶簽署及日期")}]
+                </div>
+              </div>
+              <div className="w-full border-t border-gray-900 pt-2 text-center">
+                <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900">
+                  {t("ACCEPTED BY (CLIENT)", "客戶確認")}
+                </p>
+                <p className="text-[10px] text-gray-600 mt-1 truncate max-w-full">
+                  {formData.clientName || t("Client Name", "客戶名稱")}
+                </p>
+              </div>
+            </div>
+
+            {/* Company Side */}
+            <div className="flex flex-col items-center">
+              <div className="h-28 flex items-center justify-center relative w-full mb-2">
+                <div className="absolute right-0 top-0 opacity-80">
+                  {formData.stamp ? (
+                    <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain" />
+                  ) : companySettings?.stamp_url && (
+                    <img src={companySettings.stamp_url} alt="Company Stamp" className="h-24 w-24 object-contain" />
+                  )}
+                </div>
+                <div className="z-10">
+                  {formData.signature ? (
+                    <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain" />
+                  ) : companySettings?.signature_url && (
+                    <img src={companySettings.signature_url} alt="Signature" className="h-20 w-48 object-contain" />
+                  )}
+                </div>
+              </div>
+              <div className="w-full border-t border-gray-900 pt-2 text-center">
+                <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900">
+                  {t("ISSUED BY (COMPANY)", "發出人")}
+                </p>
+                <p className="text-[10px] text-gray-600 mt-1 truncate max-w-full">
+                  {companySettings?.company_name || "Kino Innovision"}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-12 text-center">
+            <p className="text-[10px] text-gray-300 italic">{t("End of Document", "文件完")}</p>
+          </div>
+        </div>
+      )
+    }
+
+    return null
+  }
 
   return (
     <DocumentWrapper>
@@ -336,11 +463,38 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
       <ItemsTable />
       
       <div className="flex justify-end mb-6">
-        <div className="w-48">
-          <div className={`flex justify-between py-2 font-bold text-gray-900 ${templateId === 'modern' ? 'text-[#6366f1] bg-[#6366f1]/5 px-3 rounded-lg border-none' : 'border-t-2 border-gray-800'}`}>
-            <span className="text-xs">{t("TOTAL", "總額")}:</span>
-            <span className="text-xs">${totalAmount.toFixed(2)}</span>
-          </div>
+        <div className="w-64 space-y-1">
+          {documentType !== "receipt" ? (
+            <>
+              <div className="flex justify-between py-1 text-xs">
+                <span className="font-bold text-gray-900">{t("SUBTOTAL", "小計")}:</span>
+                <span className="text-gray-900">${totalAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between py-1 text-xs">
+                <span className="font-bold text-gray-900">{t("TAX / VAT (0%)", "稅額 (0%)")}:</span>
+                <span className="text-gray-900">$0.00</span>
+              </div>
+              <div className={`flex justify-between py-2 font-bold text-gray-900 border-t-2 border-gray-800 mt-2 ${templateId === 'modern' ? 'text-[#6366f1] bg-[#6366f1]/5 px-3 rounded-lg border-none' : ''}`}>
+                <span className="text-sm">{t("TOTAL", "總計")} (HKD):</span>
+                <span className="text-sm">${totalAmount.toFixed(2)}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-between py-1 text-xs">
+                <span className="font-bold text-gray-900">{t("TOTAL PROJECT VALUE", "項目總額")}:</span>
+                <span className="text-gray-900">${totalAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between py-1 text-xs">
+                <span className="font-bold text-gray-900">{t("AMOUNT RECEIVED", "實收金額")}:</span>
+                <span className="text-gray-900">${totalAmount.toFixed(2)}</span>
+              </div>
+              <div className={`flex justify-between py-2 font-bold text-gray-900 border-t-2 border-gray-800 mt-2 ${templateId === 'modern' ? 'text-[#6366f1] bg-[#6366f1]/5 px-3 rounded-lg border-none' : ''}`}>
+                <span className="text-sm">{t("BALANCE DUE", "剩餘款項")} (HKD):</span>
+                <span className="text-sm">0.00</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -352,6 +506,7 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
       )}
 
       <PaymentMethods />
+      <TermsAndConditions />
       <Footer />
     </DocumentWrapper>
   )
