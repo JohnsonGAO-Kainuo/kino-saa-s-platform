@@ -82,6 +82,24 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
   const isPaidReceipt = documentType === "receipt" && paymentStatus?.status === "paid"
   const isVoidedReceipt = documentType === "receipt" && paymentStatus?.status === "voided"
 
+  const StatusBadge = () => {
+    if (!paymentStatus || documentType === "quotation" || documentType === "contract") return null
+    
+    return (
+      <div className="absolute top-8 right-8 z-20">
+        <div className={`px-4 py-1.5 rounded-full border-2 font-bold text-xs tracking-widest uppercase rotate-12 shadow-sm ${
+          paymentStatus.status === 'paid' 
+            ? 'bg-green-50 border-green-600 text-green-600' 
+            : paymentStatus.status === 'voided'
+            ? 'bg-red-50 border-red-600 text-red-600'
+            : 'bg-orange-50 border-orange-600 text-orange-600'
+        }`}>
+          {paymentStatus.status}
+        </div>
+      </div>
+    )
+  }
+
   // Styles based on Template
   const styles = {
     standard: {
@@ -329,35 +347,6 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
       {formData.notes && (
         <div className={`mb-6 pt-4 ${templateId === 'modern' ? 'border-none bg-slate-50 p-4 rounded-xl' : 'border-t border-gray-300'}`}>
           <p className={styles.sectionHeader}>{t("Notes", "備註")}:</p>
-          <p className="text-xs text-gray-700 whitespace-pre-wrap">{formData.notes}</p>
-        </div>
-      )}
-
-      <PaymentMethods />
-      <Footer />
-    </DocumentWrapper>
-  )
-}
-
-  return (
-    <DocumentWrapper>
-      <StatusBadge />
-      <Header />
-      <PartiesInfo />
-      <ItemsTable />
-      
-      <div className="flex justify-end mb-6">
-        <div className="w-48">
-          <div className="flex justify-between py-2 border-t-2 border-gray-800 font-bold text-gray-900">
-            <span className="text-xs">{t("TOTAL", "總額")}:</span>
-            <span className="text-xs">${totalAmount.toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
-
-      {formData.notes && (
-        <div className="mb-6 pt-4 border-t border-gray-300">
-          <p className="font-bold text-gray-900 mb-2 text-xs">{t("Notes", "備註")}:</p>
           <p className="text-xs text-gray-700 whitespace-pre-wrap">{formData.notes}</p>
         </div>
       )}
