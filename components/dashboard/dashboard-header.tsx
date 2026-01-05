@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/lib/auth-context"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,17 +17,20 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function DashboardHeader() {
+  const { user } = useAuth()
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User"
+
   return (
     <header className="border-b border-border bg-white sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
         {/* Logo and Search */}
         <div className="flex items-center gap-6 flex-1">
-          <div className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
               <span className="text-lg font-bold text-primary-foreground leading-none">K</span>
             </div>
             <span className="text-lg font-semibold tracking-tight text-[#1a1f36]">Kino</span>
-          </div>
+          </Link>
           
           <div className="hidden md:flex relative max-w-[320px] w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -46,9 +50,11 @@ export function DashboardHeader() {
             <Bell className="w-5 h-5" />
             <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
           </Button>
-          <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground">
-            <Settings className="w-5 h-5" />
-          </Button>
+          <Link href="/settings">
+            <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground">
+              <Settings className="w-5 h-5" />
+            </Button>
+          </Link>
 
           <div className="w-px h-6 bg-border mx-2" />
 
@@ -56,11 +62,17 @@ export function DashboardHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-9 gap-2.5 px-1.5 hover:bg-[#f7f9fc]">
                 <Avatar className="w-7 h-7 border border-border">
-                  <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                  <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">JD</AvatarFallback>
+                  {user?.user_metadata?.avatar_url ? (
+                    <AvatarImage src={user.user_metadata.avatar_url} alt={displayName} />
+                  ) : (
+                    <AvatarImage src="/placeholder-user.jpg" alt="User" />
+                  )}
+                  <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+                    {displayName.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:flex flex-col items-start">
-                  <span className="text-sm font-medium text-[#1a1f36]">Kainuo Innovision</span>
+                  <span className="text-sm font-medium text-[#1a1f36]">{displayName}</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>

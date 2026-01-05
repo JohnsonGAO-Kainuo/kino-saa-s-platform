@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-import { AIChatWidget } from "@/components/ai-chat-widget"
 import { AuthProvider } from "@/lib/auth-context"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -43,7 +42,6 @@ export default function RootLayout({
       <body className={`font-sans antialiased bg-background text-foreground`}>
         <AuthProvider>
           {children}
-          <AIChatWidget />
           <Analytics />
           <Toaster />
         </AuthProvider>

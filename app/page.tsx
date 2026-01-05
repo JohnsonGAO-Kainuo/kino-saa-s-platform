@@ -10,6 +10,7 @@ import { DraftDocuments } from "@/components/dashboard/draft-documents"
 import { documentStorage } from "@/lib/document-storage"
 import { Document } from "@/lib/types"
 import { Loader2 } from "lucide-react"
+import { AIAgentSidebar } from "@/components/editor/ai-agent-sidebar"
 
 export default function DashboardPage() {
   const [documents, setDocuments] = useState<Document[]>([])
@@ -23,6 +24,11 @@ export default function DashboardPage() {
     }
     loadDocuments()
   }, [])
+
+  const handleDocumentGenerated = (content: any) => {
+    // Logic to handle AI generation from dashboard
+    console.log("Document generated from dashboard:", content)
+  }
 
   if (loading) {
     return (
@@ -50,7 +56,7 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Welcome Header */}
         <div className="mb-10">
-          <h1 className="text-[28px] font-bold text-[#1a1f36] tracking-tight">Good morning, Johnson</h1>
+          <h1 className="text-[28px] font-bold text-[#1a1f36] tracking-tight">Good morning</h1>
           <p className="text-[#4f566b] text-[15px] mt-1">Here's what's happening with your documents today.</p>
         </div>
 
@@ -70,6 +76,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Global Integrated AI Sidebar */}
+      <AIAgentSidebar currentDocType="document" onDocumentGenerated={handleDocumentGenerated} />
     </div>
   )
 }

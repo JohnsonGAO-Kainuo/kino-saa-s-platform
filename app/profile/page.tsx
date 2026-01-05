@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
-import { Loader2, UserCircle, Building2, CreditCard, Paintbrush, Save, Upload, X, Check, Image as ImageIcon } from 'lucide-react'
+import { Loader2, UserCircle, Building2, CreditCard, Paintbrush, Save, Upload, X, Check, Image as ImageIcon, ArrowLeft } from 'lucide-react'
 import { removeImageBackground, dataURLtoFile } from '@/lib/image-utils'
+import Link from 'next/link'
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -157,12 +158,16 @@ export default function ProfilePage() {
       <main className="max-w-4xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-border flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-border flex items-center justify-center shrink-0">
               <UserCircle className="w-8 h-8 text-[#6366f1]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight">Business Profile</h1>
-              <p className="text-[#4f566b] text-sm mt-0.5">{user?.email}</p>
+              <Link href="/" className="flex items-center gap-2 text-[#4f566b] hover:text-[#1a1f36] text-xs mb-1 transition-colors">
+                <ArrowLeft className="w-3 h-3" />
+                Back to Dashboard
+              </Link>
+              <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight leading-none">Business Profile</h1>
+              <p className="text-[#4f566b] text-sm mt-1">{user?.email}</p>
             </div>
           </div>
           <Button 
@@ -282,4 +287,3 @@ export default function ProfilePage() {
     </div>
   )
 }
-

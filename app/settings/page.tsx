@@ -1,18 +1,43 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { User, Mail, Shield, LogOut, Bell, Globe, Moon, Loader2 } from 'lucide-react'
+import { User, Mail, Shield, LogOut, Bell, Globe, Moon, Loader2, ArrowLeft, Save } from 'lucide-react'
+import Link from 'next/link'
 
 export default function SettingsPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [fullName, setFullName] = useState('')
+
+  useEffect(() => {
+    if (user?.user_metadata?.full_name) {
+      setFullName(user.user_metadata.full_name)
+    }
+  }, [user])
+
+  const handleUpdateProfile = async () => {
+    setSaving(true)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: fullName }
+      })
+      if (error) throw error
+      toast.success('Profile updated!')
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleSignOut = async () => {
     setLoading(true)
@@ -25,9 +50,23 @@ export default function SettingsPage() {
       <DashboardHeader />
       
       <main className="max-w-4xl mx-auto px-4 py-10">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight">Account Settings</h1>
-          <p className="text-[#4f566b] text-sm mt-1">Manage your personal account preferences and security.</p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <Link href="/" className="flex items-center gap-2 text-[#4f566b] hover:text-[#1a1f36] text-sm mb-2 transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Link>
+            <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight">Account Settings</h1>
+            <p className="text-[#4f566b] text-sm mt-1">Manage your personal account preferences and security.</p>
+          </div>
+          <Button 
+            onClick={handleUpdateProfile} 
+            disabled={saving}
+            className="bg-[#6366f1] hover:bg-[#5658d2] text-white gap-2 shadow-sm"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save Profile
+          </Button>
         </div>
 
         <div className="space-y-6">
@@ -39,8 +78,8 @@ export default function SettingsPage() {
             </div>
             <Card className="border-border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-6">
-                <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 rounded-full bg-[#6366f1]/10 flex items-center justify-center border-2 border-white shadow-sm">
+                <div className="flex items-start gap-8">
+                  <div className="w-20 h-20 rounded-full bg-[#6366f1]/10 flex items-center justify-center border-2 border-white shadow-sm shrink-0">
                     {user?.user_metadata?.avatar_url ? (
                       <img src={user.user_metadata.avatar_url} className="w-full h-full rounded-full object-cover" alt="Avatar" />
                     ) : (
@@ -49,13 +88,27 @@ export default function SettingsPage() {
                       </span>
                     )}
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-lg font-bold text-[#1a1f36]">{user?.user_metadata?.full_name || 'User'}</p>
-                    <div className="flex items-center gap-2 text-sm text-[#4f566b]">
-                      <Mail className="w-3.5 h-3.5" />
-                      {user?.email}
+                  <div className="flex-1 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="fullName" className="text-xs font-medium text-muted-foreground uppercase">Full Name</Label>
+                        <Input 
+                          id="fullName"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="Your Name"
+                          className="bg-white border-[#e6e9ef]"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-medium text-muted-foreground uppercase">Email Address</Label>
+                        <div className="flex items-center h-10 px-3 bg-slate-50 border border-[#e6e9ef] rounded-md text-sm text-[#4f566b]">
+                          <Mail className="w-3.5 h-3.5 mr-2" />
+                          {user?.email}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-[#16a34a] font-medium bg-green-50 px-2 py-0.5 rounded-full inline-block mt-1">
+                    <p className="text-[11px] text-[#16a34a] font-medium bg-green-50 px-2 py-0.5 rounded-full inline-block">
                       Google Account Connected
                     </p>
                   </div>

@@ -89,7 +89,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated }: AIAgentS
             <h3 className="text-sm font-bold text-[#1a1f36]">AI Intelligence</h3>
             <p className="text-[11px] text-[#4f566b] flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              Gemini 2.0 Flash Active
+              Smart Agent Active
             </p>
           </div>
         </div>
