@@ -175,31 +175,30 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
   )
 
   const Header = () => {
-  const Logo = () => (
-    <div 
-      className={`flex ${
-        logoPosition === "center" ? "justify-center" : 
-        logoPosition === "right" ? "justify-end" : "justify-start"
-      } cursor-pointer hover:ring-2 hover:ring-[#6366f1] rounded p-1 transition-all group relative`}
-      onClick={() => document.getElementById('logo-upload')?.click()}
-    >
-      <div className="absolute inset-0 bg-[#6366f1]/5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded">
-        <span className="text-[10px] font-bold text-[#6366f1]">CLICK TO EDIT</span>
-      </div>
-      {formData.logo ? (
-        <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
-      ) : companySettings?.logo_url ? (
-        <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
-      ) : (
-        <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'}`}>
-          <div className={`text-2xl font-bold tracking-tight uppercase ${templateId === 'modern' ? 'text-[#6366f1]' : 'text-gray-800'}`}>
-            {formData.companyName ? formData.companyName.split(' ')[0] : companySettings?.company_name ? companySettings.company_name.split(' ')[0] : "ADD LOGO"}
-          </div>
-          <p className="text-[9px] text-gray-400 italic mt-0.5">{t('[Click to upload logo]', '[點擊上傳標誌]')}</p>
+    const Logo = () => (
+      <div 
+        className={`flex ${
+          logoPosition === "center" ? "justify-center" : 
+          logoPosition === "right" ? "justify-end" : "justify-start"
+        } cursor-pointer hover:ring-2 hover:ring-[#6366f1] rounded p-1 transition-all group relative`}
+        onClick={() => document.getElementById('logo-upload')?.click()}
+      >
+        <div className="absolute inset-0 bg-[#6366f1]/5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded">
+          <span className="text-[10px] font-bold text-[#6366f1]">CLICK TO UPLOAD</span>
         </div>
-      )}
-    </div>
-  )
+        {formData.logo ? (
+          <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
+        ) : companySettings?.logo_url ? (
+          <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
+        ) : (
+          <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'} border-2 border-dashed border-gray-200 p-4 rounded bg-gray-50/50`}>
+            <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+              {t("UPLOAD LOGO", "點擊上傳標誌")}
+            </div>
+          </div>
+        )}
+      </div>
+    )
 
     const Title = () => {
       const docNumber = `${documentType === "quotation" ? "QT" : 

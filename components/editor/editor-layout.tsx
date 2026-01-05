@@ -76,6 +76,11 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             companyName: doc.content?.companyName || "",
             companyEmail: doc.content?.companyEmail || "",
             companyAddress: doc.content?.companyAddress || "",
+            companyPhone: doc.content?.companyPhone || "",
+            bankName: doc.content?.bankName || "",
+            accountNumber: doc.content?.accountNumber || "",
+            fpsId: doc.content?.fpsId || "",
+            paypalEmail: doc.content?.paypalEmail || "",
             clientName: doc.client_name || "",
             clientEmail: doc.client_email || "",
             clientAddress: doc.client_address || "",
@@ -106,6 +111,11 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             .eq('user_id', user.id)
             .single()
 
+          // Universal industry defaults
+          const defaultPaymentTerms = "1. Payment is due within 15 days of issue date.\n2. Please include invoice number in payment description.\n3. Late payments may be subject to a 2% monthly interest fee."
+          const defaultContractTerms = "1. Scope of Work: As detailed in the project description above.\n2. Timeline: Project will commence upon receipt of initial deposit.\n3. Confidentiality: Both parties agree to keep all project information confidential.\n4. Termination: Either party may terminate with 30 days written notice."
+          const defaultNotes = "Thank you for choosing our services! We look forward to a successful collaboration."
+
           if (settings) {
             setFormData(prev => ({
               ...prev,
@@ -117,9 +127,17 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
               accountNumber: settings.account_number || "",
               fpsId: settings.fps_id || "",
               paypalEmail: settings.paypal_email || "",
-              paymentTerms: settings.default_payment_notes || "",
-              contractTerms: settings.default_contract_terms || "",
-              notes: settings.default_invoice_notes || "",
+              paymentTerms: settings.default_payment_notes || defaultPaymentTerms,
+              contractTerms: settings.default_contract_terms || defaultContractTerms,
+              notes: settings.default_invoice_notes || defaultNotes,
+            }))
+          } else {
+            // Fallback to universal defaults if no settings found
+            setFormData(prev => ({
+              ...prev,
+              paymentTerms: defaultPaymentTerms,
+              contractTerms: defaultContractTerms,
+              notes: defaultNotes,
             }))
           }
         } catch (e) {
