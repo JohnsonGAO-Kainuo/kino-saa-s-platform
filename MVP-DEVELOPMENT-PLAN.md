@@ -12,6 +12,9 @@ Build a production-ready MVP for document generation (Quotations, Invoices, Rece
 - [x] Fix duplicate date displays in headers
 - [x] Differentiate document templates (Quotation, Invoice, Receipt, Contract)
 - [x] Implement proper signature/stamp placement logic
+- [x] Fix PDF export crash (converted oklch colors to standard Hex for html2canvas compatibility)
+- [x] Implement "Click-to-Edit" interactive preview
+- [x] Completely redesigned Editor UI to match Stripe-inspired layout
 
 ---
 
@@ -177,5 +180,5 @@ ADD COLUMN ui_language TEXT DEFAULT 'en' CHECK (ui_language IN ('en', 'zh-TW'));
 ---
 
 **Last Updated**: 2026-01-06
-**Status**: Phase 2 In Progress
+**Status**: Phase 2/3 Integrated & Testing
 

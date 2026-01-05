@@ -12,83 +12,79 @@ export async function generatePDF(documentType: string, formData: any, fileName:
     const html2canvas = (await import("html2canvas")).default
     const { jsPDF } = await import("jspdf")
 
-    // Critical: Handle images with a more aggressive strategy
+    // 1. Aggressive Image Pre-processing
     const images = element.querySelectorAll('img')
     console.log(`Found ${images.length} images in document`);
     
-    // Convert all images to data URLs to avoid CORS issues
     const imagePromises = Array.from(images).map(async (img) => {
-      if (!img.src || img.src.startsWith('data:')) {
-        console.log("Image already data URL or empty, skipping");
-        return;
-      }
+      if (!img.src || img.src.startsWith('data:')) return;
 
       try {
-        // Create a canvas to convert the image
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Wait for image to load
         if (!img.complete) {
           await new Promise((resolve, reject) => {
             img.onload = resolve;
             img.onerror = reject;
-            setTimeout(reject, 10000); // 10 second timeout per image
+            setTimeout(reject, 10000);
           });
         }
 
         canvas.width = img.naturalWidth || img.width;
         canvas.height = img.naturalHeight || img.height;
-        
-        // Draw image to canvas
         ctx.drawImage(img, 0, 0);
-        
-        // Convert to data URL
-        const dataUrl = canvas.toDataURL('image/png');
-        img.src = dataUrl;
-        console.log(`Converted image to data URL: ${dataUrl.substring(0, 50)}...`);
+        img.src = canvas.toDataURL('image/png');
       } catch (error) {
-        console.warn(`Failed to convert image, will try to proceed anyway:`, error);
+        console.warn(`Failed to convert image:`, error);
       }
     });
 
     await Promise.allSettled(imagePromises);
     
-    // Additional delay to ensure rendering
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
+    // 2. Capture the element
     console.log("Capturing canvas...");
 
-    // Capture with simplified settings
     const canvas = await html2canvas(element, {
       backgroundColor: "#ffffff",
       scale: 2,
       useCORS: true,
       logging: true,
-      allowTaint: true, // Allow tainted canvas since we pre-converted images
-      imageTimeout: 0, // Disable timeout since we pre-loaded
+      allowTaint: true,
+      imageTimeout: 0,
       onclone: (clonedDoc) => {
         const clonedElement = clonedDoc.querySelector(".a4-paper-container") as HTMLElement;
         if (clonedElement) {
+          // Reset styles that might break html2canvas
           clonedElement.style.transform = "none";
           clonedElement.style.margin = "0";
-          clonedElement.style.padding = "0";
+          clonedElement.style.padding = "20mm 15mm"; // Standard A4 padding
           clonedElement.style.position = "relative";
           clonedElement.style.width = "210mm";
           clonedElement.style.minHeight = "297mm";
           clonedElement.style.boxShadow = "none";
-          clonedElement.style.visibility = 'visible';
-          clonedElement.style.display = 'block';
+          clonedElement.style.borderRadius = "0";
+          
+          // Force standard colors on everything in the clone to avoid oklch/lab errors
+          const all = clonedElement.querySelectorAll('*');
+          all.forEach(el => {
+            if (el instanceof HTMLElement) {
+              // Extract computed colors and force them to RGB
+              const style = window.getComputedStyle(el);
+              if (style.color.includes('oklch') || style.color.includes('lab')) el.style.color = '#000000';
+              if (style.backgroundColor.includes('oklch') || style.backgroundColor.includes('lab')) el.style.backgroundColor = 'transparent';
+              if (style.borderColor.includes('oklch') || style.borderColor.includes('lab')) el.style.borderColor = '#e5e5e5';
+            }
+          });
         }
       }
     })
 
-    console.log("Canvas captured successfully", { width: canvas.width, height: canvas.height });
+    console.log("Canvas captured successfully");
 
     const imgData = canvas.toDataURL("image/png")
     
-    // Create PDF with A4 dimensions
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -104,11 +100,9 @@ export async function generatePDF(documentType: string, formData: any, fileName:
     let heightLeft = imgHeight
     let position = 0
 
-    // First page
     pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight)
     heightLeft -= pdfHeight
 
-    // Additional pages
     while (heightLeft > 0) {
       position = heightLeft - imgHeight 
       pdf.addPage()
