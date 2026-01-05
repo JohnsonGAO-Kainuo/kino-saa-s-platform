@@ -486,44 +486,45 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
               <h3 className="font-bold text-base text-[#6366f1]">Contract Terms</h3>
             </div>
             <div className="space-y-4">
+              <div>
+                <Label htmlFor="contractTerms" className="text-sm text-muted-foreground mb-2 block">
+                  Terms & Conditions
+                </Label>
+                <Textarea
+                  id="contractTerms"
+                  placeholder="Enter contract terms..."
+                  value={formData.contractTerms}
+                  onChange={(e) => handleFieldChange("contractTerms", e.target.value)}
+                  className="bg-input border-border text-foreground min-h-40"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="contractTerms" className="text-sm text-muted-foreground mb-2 block">
-                    Terms & Conditions
+                  <Label htmlFor="paymentTerms" className="text-sm text-muted-foreground mb-2 block">
+                    Payment Terms
                   </Label>
-                  <Textarea
-                    id="contractTerms"
-                    placeholder="Enter contract terms..."
-                    value={formData.contractTerms}
-                    onChange={(e) => handleFieldChange("contractTerms", e.target.value)}
-                    className="bg-input border-border text-foreground min-h-40"
+                  <Input
+                    id="paymentTerms"
+                    placeholder="e.g., Net 30"
+                    value={formData.paymentTerms}
+                    onChange={(e) => handleFieldChange("paymentTerms", e.target.value)}
+                    className="bg-input border-border text-foreground"
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="paymentTerms" className="text-sm text-muted-foreground mb-2 block">
-                      Payment Terms
-                    </Label>
-                    <Input
-                      id="paymentTerms"
-                      placeholder="e.g., Net 30"
-                      value={formData.paymentTerms}
-                      onChange={(e) => handleFieldChange("paymentTerms", e.target.value)}
-                      className="bg-input border-border text-foreground"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="deliveryDate" className="text-sm text-muted-foreground mb-2 block">
-                      Delivery Date
-                    </Label>
-                    <Input
-                      id="deliveryDate"
-                      type="date"
-                      value={formData.deliveryDate}
-                      onChange={(e) => handleFieldChange("deliveryDate", e.target.value)}
-                      className="bg-input border-border text-foreground"
+                <div>
+                  <Label htmlFor="deliveryDate" className="text-sm text-muted-foreground mb-2 block">
+                    Delivery Date
+                  </Label>
+                  <Input
+                    id="deliveryDate"
+                    type="date"
+                    value={formData.deliveryDate}
+                    onChange={(e) => handleFieldChange("deliveryDate", e.target.value)}
+                    className="bg-input border-border text-foreground"
                   />
                 </div>
               </div>
+            </div>
           </div>
         )}
 
@@ -626,6 +627,7 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
               <Button variant="outline" size="sm" onClick={addItem} className="w-full gap-2 mt-2">
                 <Plus className="w-4 h-4" /> Add New Item
               </Button>
+            </div>
           </div>
         )}
 
