@@ -35,6 +35,9 @@ interface FormDataType {
   logoPosition?: "left" | "center" | "right"
   logoWidth?: number
   templateId?: "standard" | "corporate" | "modern"
+  // Asset positioning
+  signatureOffset?: { x: number; y: number }
+  stampOffset?: { x: number; y: number }
 }
 
 interface DocumentPreviewProps {
@@ -390,13 +393,21 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
 
     // 2. Receipt needs Company Signature & Stamp
     if (documentType === "receipt") {
+      const stampX = formData.stampOffset?.x || 0
+      const stampY = formData.stampOffset?.y || 0
+      const sigX = formData.signatureOffset?.x || 0
+      const sigY = formData.signatureOffset?.y || 0
+
       return (
         <div className="pt-8 mt-8 border-t-2 border-gray-800">
           <div className="flex justify-end">
             <div className="relative flex flex-col items-center min-w-[240px]">
               <div className="h-28 flex items-center justify-center relative w-full mb-2">
                 {/* Stamp - Absolute positioned behind/next to signature */}
-                <div className="absolute right-4 top-0 opacity-80">
+                <div 
+                  className="absolute right-4 top-0 opacity-80"
+                  style={{ transform: `translate(${stampX}px, ${stampY}px)` }}
+                >
                   {formData.stamp ? (
                     <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain" />
                   ) : companySettings?.stamp_url && (
@@ -404,7 +415,10 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
                   )}
                 </div>
                 {/* Signature */}
-                <div className="z-10">
+                <div 
+                  className="z-10"
+                  style={{ transform: `translate(${sigX}px, ${sigY}px)` }}
+                >
                   {formData.signature ? (
                     <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain" />
                   ) : companySettings?.signature_url && (
@@ -428,6 +442,11 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
 
     // 3. Contract needs Dual Signatures
     if (documentType === "contract") {
+      const stampX = formData.stampOffset?.x || 0
+      const stampY = formData.stampOffset?.y || 0
+      const sigX = formData.signatureOffset?.x || 0
+      const sigY = formData.signatureOffset?.y || 0
+
       return (
         <div className="pt-8 mt-12 border-t-2 border-gray-800">
           <div className="grid grid-cols-2 gap-12">
@@ -451,14 +470,20 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
             {/* Company Side */}
             <div className="flex flex-col items-center">
               <div className="h-28 flex items-center justify-center relative w-full mb-2">
-                <div className="absolute right-0 top-0 opacity-80">
+                <div 
+                  className="absolute right-0 top-0 opacity-80"
+                  style={{ transform: `translate(${stampX}px, ${stampY}px)` }}
+                >
                   {formData.stamp ? (
                     <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain" />
                   ) : companySettings?.stamp_url && (
                     <img src={companySettings.stamp_url} alt="Company Stamp" className="h-24 w-24 object-contain" />
                   )}
                 </div>
-                <div className="z-10">
+                <div 
+                  className="z-10"
+                  style={{ transform: `translate(${sigX}px, ${sigY}px)` }}
+                >
                   {formData.signature ? (
                     <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain" />
                   ) : companySettings?.signature_url && (

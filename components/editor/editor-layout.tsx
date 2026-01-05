@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { EditorTabs } from "./editor-tabs"
 import { EditorForm } from "./editor-form"
 import { DocumentPreview } from "./document-preview"
@@ -9,14 +9,12 @@ import { AIAgentSidebar } from "./ai-agent-sidebar"
 import { PaymentStatusUI } from "./payment-status-ui"
 import type { PaymentStatus } from "@/lib/payment-utils"
 import { createPaymentStatus } from "@/lib/payment-utils"
-
-type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
-
-import { useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { documentStorage } from "@/lib/document-storage"
 import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
+import { supabase } from "@/lib/supabase"
+import { Loader2 } from "lucide-react"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
@@ -24,20 +22,27 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const [activeTab, setActiveTab] = useState<DocumentType>(initialType)
   const [isSaving, setIsSaving] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const searchParams = useSearchParams()
   const router = useRouter()
   const docId = searchParams.get("id")
   const { user } = useAuth()
+  
+  // Use a ref to store the current docId to avoid stale closures in auto-save
+  const currentDocId = useRef<string | null>(docId)
 
   const [formData, setFormData] = useState({
+    companyName: "",
+    companyEmail: "",
+    companyAddress: "",
     clientName: "",
     clientEmail: "",
     clientAddress: "",
     items: [{ description: "", quantity: 1, unitPrice: 0 }],
     notes: "",
-    logo: null as File | null,
+    logo: null as string | null,
     signature: null as string | null,
-    stamp: null as File | null,
+    stamp: null as string | null,
     contractTerms: "",
     paymentTerms: "",
     deliveryDate: "",
@@ -46,24 +51,28 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     logoPosition: "left" as "left" | "center" | "right",
     logoWidth: 128,
     templateId: "standard" as "standard" | "corporate" | "modern",
+    signatureOffset: { x: 0, y: 0 },
+    stampOffset: { x: 0, y: 0 },
   })
 
   // Load document or default settings
   useEffect(() => {
     async function initEditor() {
       if (docId) {
-        // Mode: Edit existing document
         const doc = await documentStorage.getDocument(docId)
         if (doc) {
           setFormData({
+            companyName: doc.content?.companyName || "",
+            companyEmail: doc.content?.companyEmail || "",
+            companyAddress: doc.content?.companyAddress || "",
             clientName: doc.client_name || "",
             clientEmail: doc.client_email || "",
             clientAddress: doc.client_address || "",
             items: doc.content?.items || [{ description: "", quantity: 1, unitPrice: 0 }],
             notes: doc.content?.notes || "",
-            logo: null,
+            logo: doc.content?.logo || null,
             signature: doc.signature_url || null,
-            stamp: null,
+            stamp: doc.content?.stamp || null,
             contractTerms: doc.content?.contractTerms || "",
             paymentTerms: doc.content?.paymentTerms || "",
             deliveryDate: doc.content?.deliveryDate || "",
@@ -72,11 +81,13 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             logoPosition: doc.content?.logoPosition || "left",
             logoWidth: doc.content?.logoWidth || 128,
             templateId: doc.content?.templateId || "standard",
+            signatureOffset: doc.content?.signatureOffset || { x: 0, y: 0 },
+            stampOffset: doc.content?.stampOffset || { x: 0, y: 0 },
           })
           setActiveTab(doc.doc_type)
+          currentDocId.current = doc.id
         }
       } else if (user) {
-        // Mode: Create new document - Load default settings
         try {
           const { data: settings } = await supabase
             .from('company_settings')
@@ -87,10 +98,10 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           if (settings) {
             setFormData(prev => ({
               ...prev,
-              // We can pre-fill company info in the future if we have a "From" section in the form
-              // For now, let's pre-fill the payment terms if it's an invoice
+              companyName: settings.company_name || "",
+              companyEmail: settings.company_email || "",
+              companyAddress: settings.company_address || "",
               paymentTerms: settings.default_payment_notes || "",
-              notes: `Payment Details:\nBank: ${settings.bank_name || '—'}\nA/C: ${settings.account_number || '—'}\nFPS: ${settings.fps_id || '—'}`,
             }))
           }
         } catch (e) {
@@ -102,16 +113,14 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     initEditor()
   }, [docId, user])
 
-  const handleSave = async () => {
-    if (!user) {
-      toast.error("Please sign in to save documents")
-      return
-    }
+  const handleSave = useCallback(async (isAuto = false) => {
+    if (!user) return
 
-    setIsSaving(true)
+    if (!isAuto) setIsSaving(true)
+    
     try {
       const docData = {
-        id: docId || undefined,
+        id: currentDocId.current || undefined,
         user_id: user.id,
         doc_type: activeTab,
         status: formData.paymentStatus.status === 'paid' ? 'paid' : 'draft',
@@ -120,6 +129,9 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
         client_email: formData.clientEmail,
         client_address: formData.clientAddress,
         content: {
+          companyName: formData.companyName,
+          companyEmail: formData.companyEmail,
+          companyAddress: formData.companyAddress,
           items: formData.items,
           notes: formData.notes,
           contractTerms: formData.contractTerms,
@@ -129,26 +141,41 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           logoPosition: formData.logoPosition,
           logoWidth: formData.logoWidth,
           templateId: formData.templateId,
+          signatureOffset: formData.signatureOffset,
+          stampOffset: formData.stampOffset,
+          logo: formData.logo,
+          stamp: formData.stamp,
         },
         signature_url: formData.signature || undefined,
       }
 
       const savedDoc = await documentStorage.saveDocument(docData)
       if (savedDoc) {
-        toast.success("Document saved successfully!")
-        if (!docId) {
-          router.replace(`/editor?type=${activeTab}&id=${savedDoc.id}`)
+        setLastSaved(new Date())
+        if (!currentDocId.current) {
+          currentDocId.current = savedDoc.id
+          router.replace(`/editor?type=${activeTab}&id=${savedDoc.id}`, { scroll: false })
         }
-      } else {
-        throw new Error("Failed to save document")
+        if (!isAuto) toast.success("Document saved successfully!")
       }
     } catch (error) {
       console.error(error)
-      toast.error("Failed to save document")
+      if (!isAuto) toast.error("Failed to save document")
     } finally {
-      setIsSaving(false)
+      if (!isAuto) setIsSaving(false)
     }
-  }
+  }, [user, activeTab, formData, router])
+
+  // Auto-save logic
+  useEffect(() => {
+    if (!user || loading) return
+
+    const timer = setTimeout(() => {
+      handleSave(true)
+    }, 5000) // Auto-save every 5 seconds after last change
+
+    return () => clearTimeout(timer)
+  }, [formData, handleSave, user, loading])
 
   const handleDocumentGenerated = (generatedContent: any) => {
     setFormData((prev) => ({
@@ -180,7 +207,12 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <EditorHeader documentType={activeTab} onSave={handleSave} isSaving={isSaving} />
+      <EditorHeader 
+        documentType={activeTab} 
+        onSave={() => handleSave(false)} 
+        isSaving={isSaving} 
+        lastSaved={lastSaved}
+      />
 
       <div className="border-b border-border bg-card sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -216,4 +248,3 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     </div>
   )
 }
-import { Loader2 } from "lucide-react"

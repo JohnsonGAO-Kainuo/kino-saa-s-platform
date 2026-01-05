@@ -40,6 +40,9 @@ interface FormDataType {
   logoPosition: "left" | "center" | "right"
   logoWidth?: number
   templateId?: "standard" | "corporate" | "modern"
+  // Asset positioning
+  signatureOffset?: { x: number; y: number }
+  stampOffset?: { x: number; y: number }
 }
 
 interface EditorFormProps {
@@ -249,6 +252,73 @@ export function EditorForm({ documentType, formData, onChange }: EditorFormProps
               />
               <input id="stamp-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'stamp')} />
             </div>
+
+            {(formData.signature || formData.stamp) && (
+              <div className="pt-6 border-t border-[#f7f9fc] space-y-6">
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <MoveHorizontal className="w-4 h-4 text-[#6366f1]" />
+                  Asset Positioning 微調位置
+                </Label>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {formData.signature && (
+                    <div className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                      <p className="text-[11px] font-bold text-[#4f566b] uppercase">Signature Position 簽名位置</p>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-muted-foreground">Horizontal 水平</span>
+                          <span className="font-mono font-bold text-[#6366f1]">{formData.signatureOffset?.x || 0}px</span>
+                        </div>
+                        <Slider 
+                          value={[formData.signatureOffset?.x || 0]} 
+                          min={-100} max={100} step={1}
+                          onValueChange={([val]) => handleFieldChange("signatureOffset", { ...formData.signatureOffset, x: val })}
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-muted-foreground">Vertical 垂直</span>
+                          <span className="font-mono font-bold text-[#6366f1]">{formData.signatureOffset?.y || 0}px</span>
+                        </div>
+                        <Slider 
+                          value={[formData.signatureOffset?.y || 0]} 
+                          min={-100} max={100} step={1}
+                          onValueChange={([val]) => handleFieldChange("signatureOffset", { ...formData.signatureOffset, y: val })}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.stamp && (
+                    <div className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                      <p className="text-[11px] font-bold text-[#4f566b] uppercase">Stamp Position 印章位置</p>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-muted-foreground">Horizontal 水平</span>
+                          <span className="font-mono font-bold text-[#6366f1]">{formData.stampOffset?.x || 0}px</span>
+                        </div>
+                        <Slider 
+                          value={[formData.stampOffset?.x || 0]} 
+                          min={-100} max={100} step={1}
+                          onValueChange={([val]) => handleFieldChange("stampOffset", { ...formData.stampOffset, x: val })}
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-muted-foreground">Vertical 垂直</span>
+                          <span className="font-mono font-bold text-[#6366f1]">{formData.stampOffset?.y || 0}px</span>
+                        </div>
+                        <Slider 
+                          value={[formData.stampOffset?.y || 0]} 
+                          min={-100} max={100} step={1}
+                          onValueChange={([val]) => handleFieldChange("stampOffset", { ...formData.stampOffset, y: val })}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
