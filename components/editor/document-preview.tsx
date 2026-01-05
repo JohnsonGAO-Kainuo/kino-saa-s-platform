@@ -83,7 +83,7 @@ export function DocumentPreview({ documentType, formData }: DocumentPreviewProps
 
   // Base layout wrapper
   const DocumentWrapper = ({ children }: { children: React.ReactNode }) => (
-    <Card className={`bg-white text-black p-8 min-h-[800px] shadow-lg border-border/50 sticky top-0 relative ${
+    <Card id="document-preview-card" className={`bg-white text-black p-8 min-h-[800px] shadow-lg border-border/50 sticky top-0 relative ${
       isPaidReceipt || isVoidedReceipt ? "bg-gradient-to-br from-white to-slate-50" : ""
     }`}>
       {isPaidReceipt && (

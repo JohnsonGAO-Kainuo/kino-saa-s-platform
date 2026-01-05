@@ -16,17 +16,13 @@ export function EditorHeader({ documentType, onSave, isSaving }: EditorHeaderPro
   const [isExporting, setIsExporting] = useState(false)
 
   const handleExport = async () => {
-    if (documentType === 'contract') {
-      alert("PDF export for contracts coming soon!")
-      return
-    }
     setIsExporting(true)
     try {
       const fileName = `${documentType}-${new Date().getTime()}`
-      await generatePDF(documentType as any, {}, fileName)
+      await generatePDF(documentType, {}, fileName)
     } catch (error) {
       console.error("Export failed:", error)
-      alert("Failed to export PDF. Please try again.")
+      alert("Failed to export PDF. Please ensure all images are loaded and try again.")
     } finally {
       setIsExporting(false)
     }
