@@ -54,29 +54,18 @@ export default function DashboardPage() {
           <p className="text-[#4f566b] text-[15px] mt-1">Here's what's happening with your documents today.</p>
         </div>
 
-        {/* Top Section: Stats and Subscription */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-10">
-          <div className="lg:col-span-3">
+        {/* Main Content Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column (8 units) */}
+          <div className="lg:col-span-8 space-y-8">
             <DocumentStats />
-          </div>
-          <div className="lg:col-span-1">
-            <SubscriptionCard />
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-12">
-          <QuickActions />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content: Drafts */}
-          <div className="lg:col-span-2">
+            <QuickActions />
             <DraftDocuments drafts={drafts} />
           </div>
 
-          {/* Sidebar: Activity Feed */}
-          <div className="lg:col-span-1">
+          {/* Right Column (4 units) */}
+          <div className="lg:col-span-4 space-y-8">
+            <SubscriptionCard />
             <RecentActivity />
           </div>
         </div>

@@ -20,11 +20,18 @@ export function DocumentStats() {
       period: "this month",
     },
     {
+      label: "Contracts",
+      value: "4",
+      change: "+2",
+      trend: "up",
+      period: "active",
+    },
+    {
       label: "Invoices",
       value: "12",
       change: "+5",
       trend: "up",
-      period: "pending payment",
+      period: "pending",
     },
     {
       label: "Receipts",

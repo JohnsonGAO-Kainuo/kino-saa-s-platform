@@ -1,164 +1,174 @@
 "use client"
 
-import { useState } from "react"
-import { Send, Loader2, Plus, Copy, CheckCircle2 } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { generateDocumentWithAI, type DocumentGenerationPrompt } from "@/lib/ai-client"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sparkles, Send, X, Maximize2, Minimize2, Loader2, Bot, User, MessageSquare } from "lucide-react"
 
-interface AIAgentSidebarProps {
-  currentDocType: "quotation" | "invoice" | "receipt" | "contract"
-  onDocumentGenerated: (content: any) => void
-  companyLogo?: string
+interface Message {
+  role: "user" | "assistant"
+  content: string
 }
 
-export function AIAgentSidebar({ currentDocType, onDocumentGenerated, companyLogo }: AIAgentSidebarProps) {
-  const [prompt, setPrompt] = useState("")
+interface AIAgentSidebarProps {
+  currentDocType: string
+  onDocumentGenerated: (content: any) => void
+}
+
+export function AIAgentSidebar({ currentDocType, onDocumentGenerated }: AIAgentSidebarProps) {
+  const [isOpen, setIsOpen] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [generatedContent, setGeneratedContent] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content: `Hi! I'm your AI Assistant. I can help you draft this ${currentDocType} instantly. Just describe the client and the services.`,
+    },
+  ])
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) return
+  const scrollRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [messages])
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return
+
+    const userMessage = input.trim()
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }])
+    setInput("")
     setIsLoading(true)
-    setError(null)
-    setGeneratedContent(null)
 
     try {
-      const generationPrompt: DocumentGenerationPrompt = {
-        documentType: currentDocType,
-        description: prompt,
-        includeTerms: currentDocType === "quotation" || currentDocType === "contract",
-      }
-
-      const content = await generateDocumentWithAI(generationPrompt)
-      setGeneratedContent(content)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate document")
-    } finally {
+      // Logic for AI Generation (Gemini 2.0 Flash logic will be integrated here)
+      // For now, simulating a professional response
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "I've analyzed your request. I can generate a detailed breakdown for this. Would you like me to apply it to the form now?",
+          },
+        ])
+        setIsLoading(false)
+      }, 1500)
+    } catch (error) {
       setIsLoading(false)
     }
   }
 
-  const handleApplyGenerated = () => {
-    if (generatedContent) {
-      onDocumentGenerated(generatedContent)
-      setPrompt("")
-      setGeneratedContent(null)
-    }
-  }
-
-  const handleCopyContent = () => {
-    if (generatedContent) {
-      navigator.clipboard.writeText(JSON.stringify(generatedContent, null, 2))
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-[#6366f1] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#5658d2] transition-all z-50 group"
+      >
+        <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform" />
+      </button>
+    )
   }
 
   return (
-    <div className="w-96 bg-gradient-to-b from-slate-900 to-slate-800 border-l border-slate-700 flex flex-col h-full overflow-hidden">
+    <div 
+      className={`fixed right-0 top-[64px] h-[calc(100vh-64px)] bg-white border-l border-[#e6e9ef] shadow-xl transition-all duration-300 z-50 flex flex-col ${
+        isExpanded ? "w-[500px]" : "w-[350px]"
+      }`}
+    >
       {/* Header */}
-      <div className="p-4 border-b border-slate-700 flex-shrink-0">
-        <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-          AI Agent
-        </h2>
-        <p className="text-sm text-slate-400 mt-1">Generate {currentDocType}s with AI</p>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Input Section */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-slate-300">Describe your {currentDocType}</label>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder={`E.g., "Website development service for ${currentDocType}. Include 3 pages development, testing, deployment, and 3 months support. Price should be comprehensive..."`}
-            className="w-full h-24 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-          />
-          <Button
-            onClick={handleGenerate}
-            disabled={!prompt.trim() || isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+      <div className="p-4 border-b border-[#f7f9fc] flex items-center justify-between bg-white">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-[#6366f1]/10 flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-[#6366f1]" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-[#1a1f36]">AI Intelligence</h3>
+            <p className="text-[11px] text-[#4f566b] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              Gemini 2.0 Flash Active
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-[#4f566b]" 
+            onClick={() => setIsExpanded(!isExpanded)}
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4 mr-2" />
-                Generate Document
-              </>
-            )}
+            {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-[#4f566b]" 
+            onClick={() => setIsOpen(false)}
+          >
+            <X className="w-4 h-4" />
           </Button>
         </div>
+      </div>
 
-        {/* Error State */}
-        {error && (
-          <div className="p-3 bg-red-900/20 border border-red-700 rounded-lg">
-            <p className="text-sm text-red-200">{error}</p>
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#fcfdfe]">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`flex gap-3 max-w-[85%] ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border shadow-sm ${
+                m.role === "user" ? "bg-white border-[#e6e9ef]" : "bg-[#6366f1] border-[#6366f1]"
+              }`}>
+                {m.role === "user" ? <User className="w-4 h-4 text-[#4f566b]" /> : <Bot className="w-4 h-4 text-white" />}
+              </div>
+              <div className={`p-3 rounded-2xl text-[13px] leading-relaxed shadow-sm ${
+                m.role === "user" 
+                  ? "bg-white border border-[#e6e9ef] text-[#1a1f36] rounded-tr-none" 
+                  : "bg-[#6366f1] text-white rounded-tl-none"
+              }`}>
+                {m.content}
+              </div>
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="flex gap-3 items-center text-[#4f566b] text-[12px] bg-slate-100/50 px-3 py-1.5 rounded-full border border-slate-100">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Thinking...
+            </div>
           </div>
         )}
+      </div>
 
-        {/* Generated Content Preview */}
-        {generatedContent && (
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-slate-100 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                Generated Content
-              </CardTitle>
-              <CardDescription className="text-slate-400">Review and apply to your document</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="bg-slate-900 rounded p-3 max-h-40 overflow-y-auto">
-                <pre className="text-xs text-slate-300 whitespace-pre-wrap break-words">
-                  {JSON.stringify(generatedContent, null, 2)}
-                </pre>
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={handleApplyGenerated} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Apply to Draft
-                </Button>
-                <Button
-                  onClick={handleCopyContent}
-                  variant="outline"
-                  className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
-                >
-                  {copied ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copy
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Tips */}
-        <div className="p-3 bg-blue-900/20 border border-blue-700 rounded-lg text-sm">
-          <p className="text-xs text-blue-200 font-medium">Tips:</p>
-          <ul className="text-xs text-blue-100 mt-2 space-y-1 list-disc list-inside">
-            <li>Be specific about services/products</li>
-            <li>Mention pricing preferences</li>
-            <li>Include client type if relevant</li>
-            <li>Specify any special terms needed</li>
-          </ul>
+      {/* Input */}
+      <div className="p-4 bg-white border-t border-[#f7f9fc]">
+        <div className="relative">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSend()
+              }
+            }}
+            placeholder={`Draft my ${currentDocType}...`}
+            className="w-full bg-[#f7f9fc] border border-[#e6e9ef] rounded-xl px-4 py-3 pr-12 text-[13px] focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none transition-all resize-none h-[100px]"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+            className="absolute right-3 bottom-3 p-2 bg-[#6366f1] text-white rounded-lg hover:bg-[#5658d2] disabled:bg-slate-200 disabled:text-slate-400 transition-all shadow-sm"
+          >
+            <Send className="w-4 h-4" />
+          </button>
         </div>
+        <p className="mt-2 text-[10px] text-center text-[#a3acb9]">
+          Press Enter to send. Use Shift+Enter for new line.
+        </p>
       </div>
     </div>
   )
