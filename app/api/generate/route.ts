@@ -26,6 +26,16 @@ export async function POST(req: Request) {
   try {
     const { prompt, documentType, currentContext } = await req.json();
 
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_GENERATION_AI_API_KEY;
+    
+    if (!apiKey) {
+      return Response.json({ error: 'Google API Key is missing in environment variables.' }, { status: 500 });
+    }
+
+    const googleProvider = google({
+      apiKey: apiKey,
+    });
+
     // Dynamic Prompt Engineering based on Document Type
     let roleDescription = "";
     let focusArea = "";
@@ -52,7 +62,7 @@ export async function POST(req: Request) {
     // Use Gemini 2.0 Flash - Ultra fast and capable
     // Note: 'gemini-2.0-flash' is the standard ID. If 3.0 becomes available, update here.
     const result = await generateObject({
-      model: google('gemini-2.0-flash-001'),
+      model: googleProvider('gemini-2.0-flash-001'),
       schema: documentSchema,
       prompt: `
         ROLE: ${roleDescription}
