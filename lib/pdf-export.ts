@@ -65,12 +65,16 @@ export async function generatePDF(documentType: string, formData: any, fileName:
     (window as any).getComputedStyle = function(el: Element, pseudoElt?: string | null) {
       const style = originalGetComputedStyle(el, pseudoElt);
       
-      // We return a proxy that intercepts color lookups
+      // Use a Proxy with binding to avoid "Illegal invocation"
       return new Proxy(style, {
-        get(target, prop: string) {
-          const value = target[prop as any];
+        get(target, prop) {
+          const value = Reflect.get(target, prop);
+          // If it's a function (like getPropertyValue), we MUST bind it to the original target
+          if (typeof value === 'function') {
+            return value.bind(target);
+          }
+          // If it's a string containing lab/oklch, replace it
           if (typeof value === 'string' && (value.includes('lab(') || value.includes('oklch('))) {
-            // Replace modern colors with safe fallbacks for html2canvas
             if (prop === 'color') return 'rgb(26, 31, 54)';
             if (prop === 'backgroundColor') return 'rgba(0, 0, 0, 0)';
             if (prop.includes('Color')) return 'rgb(229, 231, 235)';
