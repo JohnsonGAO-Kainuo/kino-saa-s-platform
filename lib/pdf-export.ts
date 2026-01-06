@@ -81,24 +81,58 @@ export async function generatePDF(documentType: string, formData: any, fileName:
           clonedElement.style.boxShadow = "none";
           clonedElement.style.borderRadius = "0";
           
-          // Force standard colors on everything in the clone to avoid oklch/lab errors
-          const all = clonedElement.querySelectorAll('*');
-          all.forEach(el => {
+          // Aggressively clean ALL styles in the cloned document
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach(el => {
             if (el instanceof HTMLElement) {
-              const style = window.getComputedStyle(el);
-              // Handle text color
-              if (style.color.includes('oklch') || style.color.includes('lab')) {
-                el.style.color = '#000000';
-              }
-              // Handle background color
-              if (style.backgroundColor.includes('oklch') || style.backgroundColor.includes('lab')) {
-                el.style.backgroundColor = 'transparent';
-              }
-              // Handle border color
-              if (style.borderColor.includes('oklch') || style.borderColor.includes('lab')) {
-                el.style.borderColor = '#e5e5e5';
+              // 1. Force override common properties that html2canvas struggles with
+              const styles = window.getComputedStyle(el);
+              
+              const fixColor = (val: string) => {
+                if (!val) return null;
+                if (val.includes('lab') || val.includes('oklch')) {
+                  return '#000000'; // Default fallback
+                }
+                return null;
+              };
+
+              // Check a wide range of properties
+              const colorProps = [
+                'color', 'backgroundColor', 'borderColor', 'borderTopColor', 
+                'borderRightColor', 'borderBottomColor', 'borderLeftColor',
+                'outlineColor', 'fill', 'stroke', 'boxShadow'
+              ];
+
+              colorProps.forEach(prop => {
+                const currentVal = (styles as any)[prop];
+                const fixed = fixColor(currentVal);
+                if (fixed) {
+                  if (prop === 'backgroundColor') el.style.backgroundColor = 'transparent';
+                  else if (prop === 'boxShadow') el.style.boxShadow = 'none';
+                  else (el.style as any)[prop] = fixed;
+                }
+              });
+
+              // 2. Remove any problematic attributes
+              if (el.hasAttribute('style')) {
+                let styleAttr = el.getAttribute('style') || '';
+                if (styleAttr.includes('lab(') || styleAttr.includes('oklch(')) {
+                  styleAttr = styleAttr.replace(/lab\([^)]+\)/g, '#000000').replace(/oklch\([^)]+\)/g, '#000000');
+                  el.setAttribute('style', styleAttr);
+                }
               }
             }
+          });
+
+          // 3. NUCLEAR OPTION: Remove all external stylesheets that might contain modern CSS
+          // html2canvas will still use the styles already applied to elements
+          clonedDoc.querySelectorAll('link[rel="stylesheet"], style').forEach(s => {
+            try {
+              const content = s.textContent || '';
+              if (content.includes('lab(') || content.includes('oklch(')) {
+                s.remove();
+              }
+            } catch (e) {}
           });
         }
       }
