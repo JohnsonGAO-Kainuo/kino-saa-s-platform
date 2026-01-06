@@ -56,7 +56,10 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
         })
       });
 
-      if (!response.ok) throw new Error('Generation failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Generation failed');
+      }
 
       const generatedData = await response.json();
       
@@ -69,13 +72,13 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
       ]);
       
       onDocumentGenerated(generatedData);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "Sorry, I encountered an error while generating the document. Please try again.",
+          content: `Error: ${error.message || 'I encountered an error while generating. Please check your API configuration or billing status.'}`,
         },
       ]);
     } finally {

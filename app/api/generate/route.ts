@@ -50,6 +50,7 @@ export async function POST(req: Request) {
     }
 
     // Use Gemini 2.0 Flash - Ultra fast and capable
+    // Note: 'gemini-2.0-flash' is the standard ID. If 3.0 becomes available, update here.
     const result = await generateObject({
       model: google('gemini-2.0-flash-001'),
       schema: documentSchema,
