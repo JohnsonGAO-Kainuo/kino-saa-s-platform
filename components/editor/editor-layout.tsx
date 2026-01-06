@@ -221,11 +221,14 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const handleDocumentGenerated = (generatedContent: any) => {
     setFormData((prev) => ({
       ...prev,
-      clientName: generatedContent.client_name || prev.clientName,
-      clientEmail: generatedContent.client_email || prev.clientEmail,
+      clientName: generatedContent.clientName || prev.clientName,
+      clientEmail: generatedContent.clientEmail || prev.clientEmail,
+      clientAddress: generatedContent.clientAddress || prev.clientAddress,
       items: generatedContent.items || prev.items,
       notes: generatedContent.notes || prev.notes,
-      contractTerms: generatedContent.terms || prev.contractTerms,
+      contractTerms: generatedContent.contractTerms || prev.contractTerms,
+      paymentTerms: generatedContent.paymentTerms || prev.paymentTerms,
+      deliveryDate: generatedContent.deliveryDate || prev.deliveryDate,
     }))
   }
 
