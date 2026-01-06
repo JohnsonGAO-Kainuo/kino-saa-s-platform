@@ -1,4 +1,4 @@
-import { createOpenAI } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
@@ -26,12 +26,9 @@ export async function POST(req: Request) {
   try {
     const { prompt, documentType, currentContext } = await req.json();
 
-    const openai = createOpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-
+    // Use Gemini 2.0 Flash - Ultra fast and capable
     const result = await generateObject({
-      model: openai('gpt-4o'),
+      model: google('gemini-2.0-flash-001'),
       schema: documentSchema,
       prompt: `
         You are an expert business document assistant for Kino SaaS.
@@ -53,9 +50,8 @@ export async function POST(req: Request) {
     });
 
     return Response.json(result.object);
-  } catch (error) {
+  } catch (error: any) {
     console.error('AI Generation Error:', error);
-    return Response.json({ error: 'Failed to generate document content' }, { status: 500 });
+    return Response.json({ error: error.message || 'Failed to generate document content' }, { status: 500 });
   }
 }
-
