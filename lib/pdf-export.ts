@@ -59,117 +59,79 @@ export async function generatePDF(documentType: string, formData: any, fileName:
     // 2. Capture the element
     console.log("Capturing canvas...");
 
-    const canvas = await html2canvas(element, {
-      backgroundColor: "#ffffff",
-      scale: 2,
-      useCORS: true,
-      logging: true,
-      allowTaint: false, // Don't allow tainting, we want high quality
-      imageTimeout: 15000,
-      onclone: (clonedDoc) => {
-        const clonedElement = clonedDoc.querySelector(".a4-paper-container") as HTMLElement;
-        if (clonedElement) {
-          // Reset styles that might break html2canvas
-          clonedElement.style.transform = "none";
-          clonedElement.style.margin = "0";
-          clonedElement.style.padding = "20mm 15mm"; // Standard A4 padding
-          clonedElement.style.position = "absolute";
-          clonedElement.style.top = "0";
-          clonedElement.style.left = "0";
-          clonedElement.style.width = "210mm";
-          clonedElement.style.minHeight = "297mm";
-          clonedElement.style.boxShadow = "none";
-          clonedElement.style.borderRadius = "0";
-          
-          // Aggressively clean ALL styles in the cloned document
-          const allElements = clonedDoc.querySelectorAll('*');
-          allElements.forEach(el => {
-            if (el instanceof HTMLElement) {
-              // 1. Force override common properties that html2canvas struggles with
-              const styles = window.getComputedStyle(el);
-              
-              const fixColor = (val: string) => {
-                if (!val) return null;
-                if (val.includes('lab') || val.includes('oklch')) {
-                  return '#000000'; // Default fallback
-                }
-                return null;
-              };
-
-              // Check a wide range of properties
-              const colorProps = [
-                'color', 'backgroundColor', 'borderColor', 'borderTopColor', 
-                'borderRightColor', 'borderBottomColor', 'borderLeftColor',
-                'outlineColor', 'fill', 'stroke', 'boxShadow'
-              ];
-
-              colorProps.forEach(prop => {
-                const currentVal = (styles as any)[prop];
-                const fixed = fixColor(currentVal);
-                if (fixed) {
-                  if (prop === 'backgroundColor') el.style.backgroundColor = 'transparent';
-                  else if (prop === 'boxShadow') el.style.boxShadow = 'none';
-                  else (el.style as any)[prop] = fixed;
-                }
-              });
-
-              // 2. Remove any problematic attributes
-              if (el.hasAttribute('style')) {
-                let styleAttr = el.getAttribute('style') || '';
-                if (styleAttr.includes('lab(') || styleAttr.includes('oklch(')) {
-                  styleAttr = styleAttr.replace(/lab\([^)]+\)/g, '#000000').replace(/oklch\([^)]+\)/g, '#000000');
-                  el.setAttribute('style', styleAttr);
-                }
-              }
-            }
-          });
-
-          // 3. NUCLEAR OPTION: Remove all external stylesheets that might contain modern CSS
-          // html2canvas will still use the styles already applied to elements
-          clonedDoc.querySelectorAll('link[rel="stylesheet"], style').forEach(s => {
-            try {
-              const content = s.textContent || '';
-              if (content.includes('lab(') || content.includes('oklch(')) {
-                s.remove();
-              }
-            } catch (e) {}
-          });
+    // SUPER NUCLEAR FIX: Override getComputedStyle to intercept and fix lab/oklch colors
+    // html2canvas calls getComputedStyle on every element. If it receives a lab() string, it crashes.
+    const originalGetComputedStyle = window.getComputedStyle;
+    (window as any).getComputedStyle = function(el: Element, pseudoElt?: string | null) {
+      const style = originalGetComputedStyle(el, pseudoElt);
+      
+      // We return a proxy that intercepts color lookups
+      return new Proxy(style, {
+        get(target, prop: string) {
+          const value = target[prop as any];
+          if (typeof value === 'string' && (value.includes('lab(') || value.includes('oklch('))) {
+            // Replace modern colors with safe fallbacks for html2canvas
+            if (prop === 'color') return 'rgb(26, 31, 54)';
+            if (prop === 'backgroundColor') return 'rgba(0, 0, 0, 0)';
+            if (prop.includes('Color')) return 'rgb(229, 231, 235)';
+            if (prop === 'boxShadow') return 'none';
+            return 'rgb(0, 0, 0)';
+          }
+          return value;
         }
-      }
-    })
+      }) as any;
+    };
 
-    console.log("Canvas captured successfully");
+    try {
+      const canvas = await html2canvas(element, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        allowTaint: false,
+        imageTimeout: 15000,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector(".a4-paper-container") as HTMLElement;
+          if (clonedElement) {
+            clonedElement.style.transform = "none";
+            clonedElement.style.margin = "0";
+            clonedElement.style.padding = "20mm 15mm";
+            clonedElement.style.position = "absolute";
+            clonedElement.style.top = "0";
+            clonedElement.style.left = "0";
+            clonedElement.style.width = "210mm";
+            clonedElement.style.minHeight = "297mm";
+            clonedElement.style.boxShadow = "none";
+            clonedElement.style.borderRadius = "0";
+          }
+        }
+      });
 
-    const imgData = canvas.toDataURL("image/png")
-    
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    })
+      // Restore original getComputedStyle
+      window.getComputedStyle = originalGetComputedStyle;
+      
+      console.log("Canvas captured successfully");
+      const imgData = canvas.toDataURL("image/png")
+      
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      })
 
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = pdf.internal.pageSize.getHeight()
-    
-    const imgWidth = pdfWidth
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
-    
-    let heightLeft = imgHeight
-    let position = 0
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const imgWidth = pdfWidth
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight)
+      pdf.save(`${fileName}.pdf`)
+      return true;
 
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight)
-    heightLeft -= pdfHeight
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight 
-      pdf.addPage()
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight)
-      heightLeft -= pdfHeight
+    } catch (err) {
+      // Make sure to restore even on error
+      window.getComputedStyle = originalGetComputedStyle;
+      throw err;
     }
-    
-    pdf.save(`${fileName}.pdf`)
-    console.log("PDF saved successfully");
-    return true;
   } catch (error: any) {
     console.error("Critical error during PDF generation:", error)
     toast.error(`Export failed: ${error.message || 'Unknown error'}`);
