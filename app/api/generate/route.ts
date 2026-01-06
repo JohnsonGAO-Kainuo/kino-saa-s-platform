@@ -26,26 +26,51 @@ export async function POST(req: Request) {
   try {
     const { prompt, documentType, currentContext } = await req.json();
 
+    // Dynamic Prompt Engineering based on Document Type
+    let roleDescription = "";
+    let focusArea = "";
+    
+    switch (documentType) {
+      case "quotation":
+        roleDescription = "You are an experienced Sales Consultant.";
+        focusArea = "Focus on value proposition, persuasive descriptions, and flexible terms valid for 30 days.";
+        break;
+      case "contract":
+        roleDescription = "You are a diligent Legal Advisor.";
+        focusArea = "Focus on clear liabilities, deliverables, confidentiality, and dispute resolution terms.";
+        break;
+      case "invoice":
+      case "receipt":
+        roleDescription = "You are a precise Financial Accountant.";
+        focusArea = "Focus on payment deadlines, bank details placeholders, and penalty terms for late payment.";
+        break;
+      default:
+        roleDescription = "You are a professional Business Assistant.";
+        focusArea = "Focus on clarity and professionalism.";
+    }
+
     // Use Gemini 2.0 Flash - Ultra fast and capable
     const result = await generateObject({
       model: google('gemini-2.0-flash-001'),
       schema: documentSchema,
       prompt: `
-        You are an expert business document assistant for Kino SaaS.
+        ROLE: ${roleDescription}
+        PRODUCT: Kino SaaS (Document Generation Platform)
         
         TASK:
-        Generate content for a ${documentType} based on this user request: "${prompt}"
+        Generate professional content for a **${documentType.toUpperCase()}** based on this user request: "${prompt}"
         
         CONTEXT:
         ${currentContext ? `Current document content: ${JSON.stringify(currentContext)}` : 'New empty document.'}
         
         GUIDELINES:
-        1. Extract client details, line items, and terms.
-        2. If specific prices aren't mentioned, estimate reasonable professional market rates for the described services in Hong Kong.
-        3. For "Website Development" or similar tasks, break them down into professional sub-items (e.g., "UI/UX Design", "Frontend Implementation", "SEO Setup").
-        4. Generate professional, polite, and concise text for notes and terms.
-        5. Default to HKD currency unless specified otherwise.
-        6. Language: If the prompt is Chinese, generate Chinese content. If English, generate English.
+        1. **${focusArea}**
+        2. **Intelligent Expansion**: If the user gives a vague request like "Website Project", automatically break it down into professional line items (e.g., "UI/UX Design", "Frontend Development", "Backend API Integration").
+        3. **Pricing**: If prices are not specified, estimate **premium/professional market rates** for Hong Kong (HKD). Do not use cheap or placeholder low values.
+        4. **Language Style**:
+           - If prompt is Chinese: Use **Traditional Chinese (Hong Kong Business Style)**. Use terms like "訂金" (Deposit), "餘款" (Balance), "茲收到" (Received with thanks).
+           - If prompt is English: Use formal Business English.
+        5. **Terms & Notes**: Generate specific, relevant terms for the ${documentType}, not generic fillers.
       `,
     });
 
