@@ -34,9 +34,11 @@ export async function POST(req: Request) {
 
     // DeepSeek is OpenAI-compatible
     const deepseek = createOpenAI({
-      baseURL: 'https://api.deepseek.com/v1', // Added /v1 for better compatibility
+      baseURL: 'https://api.deepseek.com',
       apiKey: apiKey,
     });
+    
+    console.log('[API] DeepSeek client initialized with baseURL: https://api.deepseek.com');
 
     // Dynamic Prompt Engineering
     let roleDescription = "";
@@ -61,10 +63,11 @@ export async function POST(req: Request) {
         focusArea = "追求清晰和专业。";
     }
 
+    console.log('[API] Attempting to call DeepSeek with model: deepseek-chat');
+    
     const result = await generateObject({
       model: deepseek('deepseek-chat'),
       schema: documentSchema,
-      mode: 'json', // Force JSON mode for DeepSeek
       prompt: `
         角色: ${roleDescription}
         产品: Kino SaaS (智能文档生成平台)
@@ -88,12 +91,27 @@ export async function POST(req: Request) {
       `,
     });
 
+    console.log('[API] DeepSeek generation successful:', result.object);
     return Response.json(result.object);
   } catch (error: any) {
-    console.error('AI Generation Error Full Object:', JSON.stringify(error, null, 2));
+    console.error('[API] AI Generation Error Full Details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      cause: error.cause,
+      fullError: error
+    });
+    
+    // Try to extract more specific error info
+    let errorMessage = error.message || 'Unknown error';
+    if (error.cause?.message) {
+      errorMessage += ` (Cause: ${error.cause.message})`;
+    }
+    
     return Response.json({ 
-      error: `AI Generation Error: ${error.message || 'Unknown error'}`,
-      details: error.stack 
+      error: `AI Generation Error: ${errorMessage}`,
+      details: error.stack,
+      apiKey: process.env.DEEPSEEK_API_KEY ? 'Present (hidden)' : 'Missing'
     }, { status: 500 });
   }
 }
