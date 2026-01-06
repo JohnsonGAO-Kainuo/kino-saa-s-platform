@@ -6,7 +6,7 @@
 
 ---
 
-## 🎯 当前阶段: Phase 3 - 多资产管理与 UI 最终润色
+## 🎯 当前阶段: Phase 4 - AI Agent & 系统完善
 
 ### 优先级说明
 - 🔴 **P0**: 阻塞性功能，必须立即完成
@@ -18,29 +18,31 @@
 
 ## 📋 任务进度摘要
 
-### 1. UI/UX 优化 🔴 P0
-- [x] 重设计 Editor UI，完全对标参考图 (Stripe 风格)
-- [x] 实现预览区“点击跳转编辑”功能
-- [x] 实现 A4 纸张预览格式
-- [x] 解决 PDF 导出崩溃问题 (修复 oklch 颜色兼容性)
-- [x] 彻底移除硬编码 Logo
+### 1. 核心功能与稳定性 (已完成) ✅
+- [x] 重设计 Editor UI (Stripe 风格)
+- [x] 实现 A4 纸张预览与 PDF 导出 (解决 html2canvas 颜色崩溃问题)
+- [x] 实现点击跳转编辑 (Click-to-Edit)
+- [x] 数据持久化 (Supabase, Auto-save)
+- [x] 移除所有硬编码品牌信息
 
-### 2. 数据持久化 🔴 P0
-- [x] Supabase 数据库集成
-- [x] 文档 CRUD
-- [x] 自动保存功能 (Debounce 5s)
-- [x] 公司设置持久化
-- [ ] 多资产 (Logo/签名/印章) 管理表创建 (等待 SQL 执行)
+### 2. AI 智能助手 (Phase 4 - 进行中) 🤖
+- [x] 集成 Google Gemini 2.0/3.0 Flash API
+- [x] 实现自然语言生成结构化文档 (JSON)
+- [x] 实现 AI 侧边栏 UI 与流式交互
+- [x] 实现 AI 自动填充表单 (Auto-fill)
+- [ ] **P1**: 优化 Prompt 以支持多文档类型 (Quotation vs Invoice)
+- [ ] **P1**: 增加 AI 对话上下文记忆 (多轮修改)
+- [ ] **P2**: 增加 "Apply to All" 智能同步选项
 
-### 3. 用户认证系统 🟠 P1
-- [x] Supabase Auth + Google OAuth
-- [x] 保护路由中间件
-- [x] 登录重定向修复
+### 3. 多资产管理 (Phase 3 - 待完善) 📂
+- [x] 数据库表结构创建 (user_assets)
+- [ ] **P0**: 实现前端资产上传与管理页面 (/profile)
+- [ ] **P1**: 编辑器内实现资产选择器 (Logo/Signature/Stamp)
+- [ ] **P2**: "保存到个人资料" 功能
 
-### 4. PDF 导出功能 🟠 P1
-- [x] 修复 `html2canvas` 不支持 `oklch/lab` 颜色的 Bug
-- [x] 实现跨域图片预处理 (Data URL 转换)
-- [x] 优化多页 PDF 分页逻辑
+### 4. 订阅与支付 (Phase 5 - 规划中) 💳
+- [ ] Stripe 集成
+- [ ] 免费/付费额度管理
 
 ### 6. 公司设置页面 🟡 P2
 
