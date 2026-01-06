@@ -15,6 +15,7 @@ import { AIAgentSidebar } from "@/components/editor/ai-agent-sidebar"
 export default function DashboardPage() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
+  const [agentOpen, setAgentOpen] = useState(false)
 
   useEffect(() => {
     async function loadDocuments() {
@@ -78,7 +79,12 @@ export default function DashboardPage() {
       </main>
 
       {/* Global Integrated AI Sidebar */}
-      <AIAgentSidebar currentDocType="document" onDocumentGenerated={handleDocumentGenerated} />
+      <AIAgentSidebar 
+        currentDocType="document" 
+        onDocumentGenerated={handleDocumentGenerated} 
+        isOpen={agentOpen}
+        onToggle={setAgentOpen}
+      />
     </div>
   )
 }
