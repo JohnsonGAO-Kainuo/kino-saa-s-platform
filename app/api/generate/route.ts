@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     // DeepSeek is OpenAI-compatible
     const deepseek = createOpenAI({
-      baseURL: 'https://api.deepseek.com',
+      baseURL: 'https://api.deepseek.com/v1', // Added /v1 for better compatibility
       apiKey: apiKey,
     });
 
@@ -64,6 +64,7 @@ export async function POST(req: Request) {
     const result = await generateObject({
       model: deepseek('deepseek-chat'),
       schema: documentSchema,
+      mode: 'json', // Force JSON mode for DeepSeek
       prompt: `
         角色: ${roleDescription}
         产品: Kino SaaS (智能文档生成平台)
@@ -82,12 +83,17 @@ export async function POST(req: Request) {
            - 如果是中文: 使用 **繁体中文 (香港商业习惯)**。使用专业词汇如 "訂金"、"餘款"、"茲收到"。
            - 如果是英文: 使用正式的 Business English。
         5. **条款与备注**: 生成与 ${documentType} 强相关的专业条款，不要使用模棱两可的废话。
+        
+        重要: 必须返回有效的 JSON 对象。
       `,
     });
 
     return Response.json(result.object);
   } catch (error: any) {
-    console.error('AI Generation Error:', error);
-    return Response.json({ error: error.message || 'Failed to generate document content' }, { status: 500 });
+    console.error('AI Generation Error Full Object:', JSON.stringify(error, null, 2));
+    return Response.json({ 
+      error: `AI Generation Error: ${error.message || 'Unknown error'}`,
+      details: error.stack 
+    }, { status: 500 });
   }
 }
