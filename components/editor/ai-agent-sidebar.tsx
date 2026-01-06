@@ -86,7 +86,14 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
   if (!isOpen) {
     return (
       <button
-        onClick={() => onToggle(true)}
+        onClick={() => {
+          console.log("AI Toggle clicked, onToggle type:", typeof onToggle);
+          if (typeof onToggle === 'function') {
+            onToggle(true);
+          } else {
+            console.error("onToggle is not a function!");
+          }
+        }}
         className="fixed bottom-6 right-6 w-14 h-14 bg-[#6366f1] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#5658d2] transition-all z-50 group"
       >
         <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -127,7 +134,9 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
             variant="ghost" 
             size="icon" 
             className="h-8 w-8 text-[#4f566b]" 
-            onClick={() => onToggle(false)}
+            onClick={() => {
+              if (typeof onToggle === 'function') onToggle(false);
+            }}
           >
             <X className="w-4 h-4" />
           </Button>

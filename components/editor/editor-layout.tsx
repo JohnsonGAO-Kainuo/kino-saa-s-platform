@@ -312,7 +312,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           currentDocType={activeTab} 
           onDocumentGenerated={handleDocumentGenerated}
           isOpen={agentOpen}
-          onToggle={setAgentOpen}
+          onToggle={(val) => setAgentOpen(val)}
         />
       </main>
     </div>
