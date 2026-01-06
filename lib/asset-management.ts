@@ -177,3 +177,4 @@ export async function renameAsset(userId: string, assetId: string, newName: stri
   }
 }
 
+

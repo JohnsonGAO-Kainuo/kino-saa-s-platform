@@ -187,9 +187,21 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
           <span className="text-[10px] font-bold text-[#6366f1]">CLICK TO UPLOAD</span>
         </div>
         {formData.logo ? (
-          <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
+          <img 
+            src={formData.logo} 
+            alt="Logo" 
+            style={{ width: `${logoWidth}px` }} 
+            className="h-auto object-contain rounded" 
+            crossOrigin="anonymous"
+          />
         ) : (companySettings?.logo_url && !companySettings.logo_url.includes('kino')) ? (
-          <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" />
+          <img 
+            src={companySettings.logo_url} 
+            alt="Company Logo" 
+            style={{ width: `${logoWidth}px` }} 
+            className="h-auto object-contain rounded" 
+            crossOrigin="anonymous"
+          />
         ) : (
           <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'} border-2 border-dashed border-gray-200 p-4 rounded bg-gray-50/50 w-full`}>
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
@@ -465,9 +477,9 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
                   style={{ transform: `translate(${stampX}px, ${stampY}px)` }}
                 >
                   {formData.stamp ? (
-                    <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain" />
+                    <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />
                   ) : companySettings?.stamp_url && (
-                    <img src={companySettings.stamp_url} alt="Company Stamp" className="h-24 w-24 object-contain" />
+                    <img src={companySettings.stamp_url} alt="Company Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />
                   )}
                 </div>
                 {/* Signature */}
@@ -476,9 +488,9 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
                   style={{ transform: `translate(${sigX}px, ${sigY}px)` }}
                 >
                   {formData.signature ? (
-                    <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain" />
+                    <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
                   ) : companySettings?.signature_url && (
-                    <img src={companySettings.signature_url} alt="Signature" className="h-20 w-48 object-contain" />
+                    <img src={companySettings.signature_url} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
                   )}
                 </div>
               </div>
@@ -531,9 +543,9 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
                   style={{ transform: `translate(${stampX}px, ${stampY}px)` }}
                 >
                   {formData.stamp ? (
-                    <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain" />
+                    <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />
                   ) : companySettings?.stamp_url && (
-                    <img src={companySettings.stamp_url} alt="Company Stamp" className="h-24 w-24 object-contain" />
+                    <img src={companySettings.stamp_url} alt="Company Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />
                   )}
                 </div>
                 <div 
@@ -541,9 +553,9 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
                   style={{ transform: `translate(${sigX}px, ${sigY}px)` }}
                 >
                   {formData.signature ? (
-                    <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain" />
+                    <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
                   ) : companySettings?.signature_url && (
-                    <img src={companySettings.signature_url} alt="Signature" className="h-20 w-48 object-contain" />
+                    <img src={companySettings.signature_url} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
                   )}
                 </div>
               </div>

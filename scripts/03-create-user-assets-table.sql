@@ -40,3 +40,4 @@ COMMENT ON TABLE user_assets IS 'Stores multiple logos, signatures, and stamps f
 COMMENT ON COLUMN user_assets.asset_type IS 'Type of asset: logo, signature, or stamp';
 COMMENT ON COLUMN user_assets.is_default IS 'Whether this asset is the default for its type';
 
+

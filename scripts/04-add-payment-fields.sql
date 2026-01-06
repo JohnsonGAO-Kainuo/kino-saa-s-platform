@@ -12,3 +12,4 @@ COMMENT ON COLUMN company_settings.paypal_email IS 'PayPal email for payments';
 COMMENT ON COLUMN company_settings.default_contract_terms IS 'Default terms and conditions for contracts';
 COMMENT ON COLUMN company_settings.default_invoice_notes IS 'Default notes for invoices';
 
+
