@@ -46,19 +46,39 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
     setIsLoading(true)
 
     try {
-      // Logic for AI Generation (Gemini 2.0 Flash logic will be integrated here)
-      // For now, simulating a professional response
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: "I've analyzed your request. I can generate a detailed breakdown for this. Would you like me to apply it to the form now?",
-          },
-        ])
-        setIsLoading(false)
-      }, 1500)
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: userMessage,
+          documentType: currentDocType,
+          currentContext: null // We can pass current form data here later if needed
+        })
+      });
+
+      if (!response.ok) throw new Error('Generation failed');
+
+      const generatedData = await response.json();
+      
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "I've drafted the document based on your request. Review the changes in the form!",
+        },
+      ]);
+      
+      onDocumentGenerated(generatedData);
     } catch (error) {
+      console.error(error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error while generating the document. Please try again.",
+        },
+      ]);
+    } finally {
       setIsLoading(false)
     }
   }
