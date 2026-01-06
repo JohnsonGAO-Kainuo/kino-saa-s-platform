@@ -63,6 +63,12 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
 
       const generatedData = await response.json();
       
+      console.log("AI Generated Data:", generatedData);
+
+      if (generatedData.error) {
+        throw new Error(generatedData.error);
+      }
+      
       setMessages((prev) => [
         ...prev,
         {

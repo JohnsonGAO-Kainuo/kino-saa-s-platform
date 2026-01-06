@@ -1,4 +1,4 @@
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Google API Key is missing in environment variables.' }, { status: 500 });
     }
 
-    const googleProvider = google({
+    const google = createGoogleGenerativeAI({
       apiKey: apiKey,
     });
 
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     // Use Gemini 2.0 Flash - Ultra fast and capable
     // Note: 'gemini-2.0-flash' is the standard ID. If 3.0 becomes available, update here.
     const result = await generateObject({
-      model: googleProvider('gemini-2.0-flash-001'),
+      model: google('gemini-2.0-flash-001'),
       schema: documentSchema,
       prompt: `
         ROLE: ${roleDescription}
