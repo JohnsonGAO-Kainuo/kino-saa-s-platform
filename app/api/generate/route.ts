@@ -1,4 +1,4 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
@@ -26,62 +26,62 @@ export async function POST(req: Request) {
   try {
     const { prompt, documentType, currentContext } = await req.json();
 
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_GENERATION_AI_API_KEY;
+    const apiKey = process.env.DEEPSEEK_API_KEY;
     
     if (!apiKey) {
-      return Response.json({ error: 'Google API Key is missing in environment variables.' }, { status: 500 });
+      return Response.json({ error: 'DeepSeek API Key is missing. Please add DEEPSEEK_API_KEY to environment variables.' }, { status: 500 });
     }
 
-    const google = createGoogleGenerativeAI({
+    // DeepSeek is OpenAI-compatible
+    const deepseek = createOpenAI({
+      baseURL: 'https://api.deepseek.com',
       apiKey: apiKey,
     });
 
-    // Dynamic Prompt Engineering based on Document Type
+    // Dynamic Prompt Engineering
     let roleDescription = "";
     let focusArea = "";
     
     switch (documentType) {
       case "quotation":
-        roleDescription = "You are an experienced Sales Consultant.";
-        focusArea = "Focus on value proposition, persuasive descriptions, and flexible terms valid for 30 days.";
+        roleDescription = "你是一位资深的商务销售顾问。";
+        focusArea = "重点在于展示价值、描述专业，生成的条款通常有效期为30天。";
         break;
       case "contract":
-        roleDescription = "You are a diligent Legal Advisor.";
-        focusArea = "Focus on clear liabilities, deliverables, confidentiality, and dispute resolution terms.";
+        roleDescription = "你是一位严谨的法务顾问。";
+        focusArea = "重点在于责任界定、交付物说明、保密条款和违约责任。";
         break;
       case "invoice":
       case "receipt":
-        roleDescription = "You are a precise Financial Accountant.";
-        focusArea = "Focus on payment deadlines, bank details placeholders, and penalty terms for late payment.";
+        roleDescription = "你是一位精准的财务会计。";
+        focusArea = "重点在于付款截止日期、银行账户信息、逾期利息说明。";
         break;
       default:
-        roleDescription = "You are a professional Business Assistant.";
-        focusArea = "Focus on clarity and professionalism.";
+        roleDescription = "你是一位专业的商务助理。";
+        focusArea = "追求清晰和专业。";
     }
 
-    // Use Gemini 2.0 Flash - Ultra fast and capable
-    // Note: 'gemini-2.0-flash' is the standard ID. If 3.0 becomes available, update here.
     const result = await generateObject({
-      model: google('gemini-2.0-flash-001'),
+      model: deepseek('deepseek-chat'),
       schema: documentSchema,
       prompt: `
-        ROLE: ${roleDescription}
-        PRODUCT: Kino SaaS (Document Generation Platform)
+        角色: ${roleDescription}
+        产品: Kino SaaS (智能文档生成平台)
         
-        TASK:
-        Generate professional content for a **${documentType.toUpperCase()}** based on this user request: "${prompt}"
+        任务:
+        根据用户的请求，为一份 **${documentType.toUpperCase()}** 生成专业的商务内容: "${prompt}"
         
-        CONTEXT:
-        ${currentContext ? `Current document content: ${JSON.stringify(currentContext)}` : 'New empty document.'}
+        上下文信息:
+        ${currentContext ? `当前文档内容: ${JSON.stringify(currentContext)}` : '新创建的空文档。'}
         
-        GUIDELINES:
+        生成指南:
         1. **${focusArea}**
-        2. **Intelligent Expansion**: If the user gives a vague request like "Website Project", automatically break it down into professional line items (e.g., "UI/UX Design", "Frontend Development", "Backend API Integration").
-        3. **Pricing**: If prices are not specified, estimate **premium/professional market rates** for Hong Kong (HKD). Do not use cheap or placeholder low values.
-        4. **Language Style**:
-           - If prompt is Chinese: Use **Traditional Chinese (Hong Kong Business Style)**. Use terms like "訂金" (Deposit), "餘款" (Balance), "茲收到" (Received with thanks).
-           - If prompt is English: Use formal Business English.
-        5. **Terms & Notes**: Generate specific, relevant terms for the ${documentType}, not generic fillers.
+        2. **智能扩展**: 如果用户请求模糊（如"做个网站"），自动拆解为专业细项（如"UI设计"、"前端开发"、"后端API"）。
+        3. **专业定价**: 如果未指定价格，请根据香港市场行情估算合理的 **专业/溢价** 水平 (单位: HKD)。
+        4. **语言风格**:
+           - 如果是中文: 使用 **繁体中文 (香港商业习惯)**。使用专业词汇如 "訂金"、"餘款"、"茲收到"。
+           - 如果是英文: 使用正式的 Business English。
+        5. **条款与备注**: 生成与 ${documentType} 强相关的专业条款，不要使用模棱两可的废话。
       `,
     });
 
