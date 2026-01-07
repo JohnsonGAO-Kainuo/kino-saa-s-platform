@@ -1,10 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText, Download, Eye, Send, CheckCircle2, Clock } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-
+import { Card, CardContent } from "@/components/ui/card"
 import { FileText, FileSignature, Receipt, Clock } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { formatDistanceToNow } from "date-fns"
 import { Document } from "@/lib/types"
 import Link from "next/link"
@@ -69,4 +68,4 @@ export function RecentActivity({ documents }: { documents: Document[] }) {
     </div>
   )
 }
-import { Button } from "@/components/ui/button"
+
