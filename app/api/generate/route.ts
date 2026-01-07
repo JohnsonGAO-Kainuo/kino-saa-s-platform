@@ -32,13 +32,13 @@ export async function POST(req: Request) {
       return Response.json({ error: 'DeepSeek API Key is missing. Please add DEEPSEEK_API_KEY to environment variables.' }, { status: 500 });
     }
 
-    // DeepSeek is OpenAI-compatible
+    // DeepSeek is OpenAI-compatible (using /v1 for better compatibility)
     const deepseek = createOpenAI({
-      baseURL: 'https://api.deepseek.com',
+      baseURL: 'https://api.deepseek.com/v1',
       apiKey: apiKey,
     });
     
-    console.log('[API] DeepSeek client initialized with baseURL: https://api.deepseek.com');
+    console.log('[API] DeepSeek client initialized with baseURL: https://api.deepseek.com/v1');
 
     // Dynamic Prompt Engineering
     let roleDescription = "";
