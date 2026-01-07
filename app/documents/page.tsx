@@ -32,8 +32,9 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { format } from "date-fns"
 import { toast } from "sonner"
+import { Suspense } from "react"
 
-export default function DocumentsPage() {
+function DocumentsContent() {
   const searchParams = useSearchParams()
   const typeFilter = searchParams.get("type") as DocumentType | null
   
@@ -215,6 +216,18 @@ export default function DocumentsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function DocumentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f7f9fc] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <DocumentsContent />
+    </Suspense>
   )
 }
 
