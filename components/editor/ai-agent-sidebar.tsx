@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { Sparkles, Send, X, Maximize2, Minimize2, Loader2, Bot, User, MessageSquare } from "lucide-react"
+import { Sparkles, Send, X, Maximize2, Minimize2, Loader2, Bot, User, MessageSquare, Languages } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
+import { toast } from "sonner"
 
 interface Message {
   role: "user" | "assistant"
@@ -16,25 +18,44 @@ interface AIAgentSidebarProps {
   onDocumentGenerated: (content: any) => void
   isOpen: boolean
   onToggle: (open: boolean) => void
+  docId?: string | null
 }
 
-export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, onToggle, initialContext }: AIAgentSidebarProps & { initialContext?: any }) {
+export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, onToggle, initialContext, docId }: AIAgentSidebarProps & { initialContext?: any }) {
+  const { language, t } = useLanguage()
   const [isExpanded, setIsExpanded] = useState(false)
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: `您好！我是您的智能商務助手。🚀
+  
+  // Persistent messages state
+  const [messages, setMessages] = useState<Message[]>([])
 
-我可以幫您：
-1. **秒速生成**: 只要說“幫我寫一份網頁開發的報價單”，我就能為您擬好草稿。
-2. **精確修改**: 生成後如果不滿意，您可以說“把價格提高10%”或“增加一項UI設計”。
-3. **識別信息**: 您可以粘貼客戶的需求或發票內容，我會自動為您提取並填充。
+  const welcomeMessage = t(
+    `Hi! I'm your AI Business Assistant. 🚀\n\nI can help you:\n1. **Draft instantly**: Just say "Help me write a quotation for web development".\n2. **Precise edits**: After generation, you can say "Increase the price by 10%" or "Add UI design".\n3. **Identify info**: Paste client requirements or invoice content, and I'll extract it for you.\n\nHow can I help you today?`,
+    `您好！我是您的智能商務助手。🚀\n\n我可以幫您：\n1. **秒速生成**: 只要說“幫我寫一份網頁開發的報價單”，我就能為您擬好草稿。\n2. **精確修改**: 生成後如果不滿意，您可以說“把價格提高10%”或“增加一項UI設計”。\n3. **識別信息**: 您可以粘貼客戶的需求或發票內容，我會自動為您提取並填充。\n\n請問您今天要處理什麼文檔？`
+  )
 
-請問您今天要處理什麼文檔？`,
-    },
-  ])
+  // Initialize/Load messages
+  useEffect(() => {
+    const savedMessages = docId ? localStorage.getItem(`chat_history_${docId}`) : null
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages))
+      } catch (e) {
+        console.error("Failed to parse saved messages", e)
+        setMessages([{ role: "assistant", content: welcomeMessage }])
+      }
+    } else {
+      setMessages([{ role: "assistant", content: welcomeMessage }])
+    }
+  }, [docId, welcomeMessage])
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (docId && messages.length > 0) {
+      localStorage.setItem(`chat_history_${docId}`, JSON.stringify(messages))
+    }
+  }, [messages, docId])
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -43,6 +64,41 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
+
+  const handleTranslateContent = async () => {
+    if (!initialContext || isLoading) return
+    
+    setIsLoading(true)
+    const targetLang = language === 'en' ? 'Traditional Chinese (Hong Kong)' : 'English'
+    
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `Translate the entire document content to ${targetLang}. Keep the structure exactly the same.`,
+          documentType: currentDocType,
+          currentContext: initialContext
+        })
+      });
+
+      if (!response.ok) throw new Error('Translation failed')
+      
+      const responseData = await response.json()
+      if (responseData.action === 'update_document' && responseData.data) {
+        onDocumentGenerated(responseData.data)
+        setMessages(prev => [...prev, { 
+          role: "assistant", 
+          content: t(`Done! I've translated the document content to English.`, `完成！我已將文檔內容翻譯為繁體中文。`) 
+        }])
+        toast.success(t("Content translated!", "內容已翻譯！"))
+      }
+    } catch (error: any) {
+      toast.error("Translation failed")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
@@ -87,7 +143,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
         ...prev,
         {
           role: "assistant",
-          content: `抱歉，我遇到了點問題: ${error.message || '請稍後再試。'}`,
+          content: t(`Sorry, I encountered an error: ${error.message}`, `抱歉，我遇到了點問題: ${error.message || '請稍後再試。'}`),
         },
       ]);
     } finally {
@@ -123,14 +179,25 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
             <Sparkles className="w-4 h-4 text-[#6366f1]" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#1a1f36]">AI Intelligence</h3>
+            <h3 className="text-sm font-bold text-[#1a1f36]">{t("AI Intelligence", "AI 智能助手")}</h3>
             <p className="text-[11px] text-[#4f566b] flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              Smart Agent Active
+              {t("Smart Agent Active", "智能助手已就緒")}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {initialContext && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-[#6366f1] hover:bg-[#6366f1]/10"
+              onClick={handleTranslateContent}
+              title={t("Translate document content", "翻譯文檔內容")}
+            >
+              <Languages className="w-4 h-4" />
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -194,7 +261,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
                 handleSend()
               }
             }}
-            placeholder={`Draft my ${currentDocType}...`}
+            placeholder={t(`Ask AI to draft or edit...`, `讓 AI 幫您編寫或修改...`)}
             className="w-full bg-[#f7f9fc] border border-[#e6e9ef] rounded-xl px-4 py-3 pr-12 text-[13px] focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none transition-all resize-none h-[100px]"
           />
           <button
@@ -206,7 +273,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
           </button>
         </div>
         <p className="mt-2 text-[10px] text-center text-[#a3acb9]">
-          Press Enter to send. Use Shift+Enter for new line.
+          {t("Press Enter to send. Use Shift+Enter for new line.", "按下 Enter 發送，Shift+Enter 換行。")}
         </p>
       </div>
     </div>

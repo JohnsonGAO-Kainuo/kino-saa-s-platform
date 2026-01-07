@@ -321,6 +321,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           isOpen={agentOpen}
           onToggle={(val) => setAgentOpen(val)}
           initialContext={formData}
+          docId={docId}
         />
       </main>
     </div>

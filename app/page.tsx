@@ -124,6 +124,7 @@ export default function DashboardPage() {
         onDocumentGenerated={handleDocumentGenerated} 
         isOpen={agentOpen}
         onToggle={setAgentOpen}
+        docId="dashboard"
       />
     </div>
   )
