@@ -11,7 +11,13 @@ import { AIAgentSidebar } from "@/components/editor/ai-agent-sidebar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { toast } from "sonner"
+
 export default function DashboardPage() {
+  const router = useRouter()
+  const { user } = useAuth()
   const [documents, setDocuments] = useState<Document[]>([])
   const [stats, setStats] = useState({ total: 0, quotations: 0, contracts: 0, invoices: 0 })
   const [loading, setLoading] = useState(true)
@@ -31,8 +37,34 @@ export default function DashboardPage() {
     loadDashboardData()
   }, [])
 
-  const handleDocumentGenerated = (content: any) => {
-    console.log("Document generated from dashboard:", content)
+  const handleDocumentGenerated = async (content: any) => {
+    if (!user) {
+      toast.error("Please login to create documents")
+      return
+    }
+
+    try {
+      const docType = "quotation" // Default
+      const docData = {
+        user_id: user.id,
+        doc_type: docType,
+        status: "draft",
+        title: content.clientName ? `${docType.toUpperCase()} - ${content.clientName}` : `AI Generated ${docType}`,
+        client_name: content.clientName || "",
+        client_email: content.clientEmail || "",
+        client_address: content.clientAddress || "",
+        content: content,
+      }
+
+      const savedDoc = await documentStorage.saveDocument(docData)
+      if (savedDoc) {
+        toast.success("AI draft created! Opening editor...")
+        router.push(`/editor?type=${docType}&id=${savedDoc.id}`)
+      }
+    } catch (error) {
+      console.error("Error creating AI draft:", error)
+      toast.error("Failed to create AI draft")
+    }
   }
 
   if (loading) {

@@ -20,6 +20,12 @@ const documentSchema = z.object({
   currency: z.string().default('HKD')
 });
 
+const responseSchema = z.object({
+  message: z.string().describe('The chat response to show to the user'),
+  action: z.enum(['none', 'update_document']).describe('Whether the AI wants to update the document data'),
+  data: documentSchema.optional().describe('The structured document data if action is update_document')
+});
+
 export async function POST(req: Request) {
   try {
     const { prompt, documentType, currentContext } = await req.json();
@@ -56,34 +62,41 @@ export async function POST(req: Request) {
 角色: ${roleDescription}
 产品: Kino SaaS (智能文档生成平台)
 
-任务: 根据用户的请求生成结构化的 JSON 数据。
+任务:
+1. 分析用户的请求。
+2. 如果用户只是在打招呼、闲聊或提出无法直接转化为文档的操作，请友好地回应（action: "none"）。
+3. 如果用户要求生成、修改或补全文档内容，请提取信息并生成 JSON 数据（action: "update_document"）。
+4. **多轮对话支持**: 如果提供了 "当前文档上下文"，说明这是一次修改请求。请基于上下文进行调整，而不是重头开始。
 
 生成指南:
 1. **${focusArea}**
-2. **智能扩展**: 如果用户请求模糊（如"做个网站"），自动拆解为专业细项（如"UI设计"、"前端开发"、"后端API"）。
-3. **专业定价**: 如果未指定价格，请根据香港市场行情估算合理的 **专业/溢价** 水平 (单位: HKD)。
-4. **语言风格**:
-   - 如果是中文: 使用 **繁体中文 (香港商业习惯)**。使用专业词汇如 "訂金"、"餘款"、"茲收到"。
-   - 如果是英文: 使用正式的 Business English。
-5. **条款与备注**: 生成与 ${documentType} 强相关的专业条款，不要使用模棱两可的废话。
+2. **智能扩展**: 如果用户请求模糊（如"做个网站"），自动拆解为专业细项。
+3. **专业定价**: 如果未指定价格，请根据香港市场行情估算 HKD 价格。
+4. **语言风格**: 
+   - 中文使用 **繁体中文 (香港商业习惯)**。
+   - 英文使用正式 Business English。
 
 必须返回以下格式的 JSON 对象:
 {
-  "clientName": "...",
-  "clientEmail": "...",
-  "clientAddress": "...",
-  "items": [{"description": "...", "subItems": ["...", "..."], "quantity": 1, "unitPrice": 1000}],
-  "notes": "...",
-  "contractTerms": "...",
-  "paymentTerms": "...",
-  "deliveryDate": "...",
-  "currency": "HKD"
+  "message": "回复给用户的话 (例如: '好的，我已经为您更新了价格' 或 '您好！有什么我可以帮您的？')",
+  "action": "update_document" 或 "none",
+  "data": { // 仅在 action 为 update_document 时提供
+    "clientName": "...",
+    "clientEmail": "...",
+    "clientAddress": "...",
+    "items": [{"description": "...", "subItems": ["...", "..."], "quantity": 1, "unitPrice": 1000}],
+    "notes": "...",
+    "contractTerms": "...",
+    "paymentTerms": "...",
+    "deliveryDate": "...",
+    "currency": "HKD"
+  }
 }`;
 
-    const userPrompt = `根据用户的请求生成内容: "${prompt}"
-${currentContext ? `当前文档上下文: ${JSON.stringify(currentContext)}` : ''}`;
+    const userPrompt = `用户请求: "${prompt}"
+${currentContext ? `当前文档上下文 (JSON): ${JSON.stringify(currentContext)}` : '新文档，暂无上下文。'}`;
 
-    console.log('[API] Calling DeepSeek API directly via fetch...');
+    console.log('[API] Calling DeepSeek API via direct fetch...');
 
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -104,11 +117,7 @@ ${currentContext ? `当前文档上下文: ${JSON.stringify(currentContext)}` : 
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[API] DeepSeek API Direct Call Failed:', response.status, errorText);
-      return Response.json({ 
-        error: `DeepSeek API Error: ${response.status} ${response.statusText}`,
-        details: errorText
-      }, { status: response.status });
+      return Response.json({ error: `DeepSeek API Error: ${response.status}`, details: errorText }, { status: response.status });
     }
 
     const data = await response.json();
@@ -119,13 +128,11 @@ ${currentContext ? `当前文档上下文: ${JSON.stringify(currentContext)}` : 
     }
 
     try {
-      const parsedContent = JSON.parse(content);
-      // Validate with zod
-      const validatedContent = documentSchema.parse(parsedContent);
-      console.log('[API] Successfully generated and validated content');
-      return Response.json(validatedContent);
+      const parsedResponse = JSON.parse(content);
+      const validatedResponse = responseSchema.parse(parsedResponse);
+      return Response.json(validatedResponse);
     } catch (parseError: any) {
-      console.error('[API] Failed to parse or validate JSON:', parseError);
+      console.error('[API] Validation Error:', parseError);
       return Response.json({ 
         error: 'AI generated invalid data format.',
         details: parseError.message,
@@ -134,10 +141,7 @@ ${currentContext ? `当前文档上下文: ${JSON.stringify(currentContext)}` : 
     }
 
   } catch (error: any) {
-    console.error('[API] Unexpected error in /api/generate:', error);
-    return Response.json({ 
-      error: `Internal Server Error: ${error.message}`,
-      stack: error.stack
-    }, { status: 500 });
+    console.error('[API] Unexpected error:', error);
+    return Response.json({ error: `Internal Server Error: ${error.message}` }, { status: 500 });
   }
 }

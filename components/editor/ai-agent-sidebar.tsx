@@ -18,14 +18,21 @@ interface AIAgentSidebarProps {
   onToggle: (open: boolean) => void
 }
 
-export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, onToggle }: AIAgentSidebarProps) {
+export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, onToggle, initialContext }: AIAgentSidebarProps & { initialContext?: any }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: `Hi! I'm your AI Assistant. I can help you draft this ${currentDocType} instantly. Just describe the client and the services.`,
+      content: `您好！我是您的智能商務助手。🚀
+
+我可以幫您：
+1. **秒速生成**: 只要說“幫我寫一份網頁開發的報價單”，我就能為您擬好草稿。
+2. **精確修改**: 生成後如果不滿意，您可以說“把價格提高10%”或“增加一項UI設計”。
+3. **識別信息**: 您可以粘貼客戶的需求或發票內容，我會自動為您提取並填充。
+
+請問您今天要處理什麼文檔？`,
     },
   ])
 
@@ -52,7 +59,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
         body: JSON.stringify({
           prompt: userMessage,
           documentType: currentDocType,
-          currentContext: null // We can pass current form data here later if needed
+          currentContext: initialContext || null
         })
       });
 
@@ -61,30 +68,26 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
         throw new Error(errorData.error || 'Generation failed');
       }
 
-      const generatedData = await response.json();
-      
-      console.log("AI Generated Data:", generatedData);
-
-      if (generatedData.error) {
-        throw new Error(generatedData.error);
-      }
+      const responseData = await response.json();
       
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "I've drafted the document based on your request. Review the changes in the form!",
+          content: responseData.message,
         },
       ]);
       
-      onDocumentGenerated(generatedData);
+      if (responseData.action === 'update_document' && responseData.data) {
+        onDocumentGenerated(responseData.data);
+      }
     } catch (error: any) {
       console.error(error);
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: `Error: ${error.message || 'I encountered an error while generating. Please check your API configuration or billing status.'}`,
+          content: `抱歉，我遇到了點問題: ${error.message || '請稍後再試。'}`,
         },
       ]);
     } finally {
