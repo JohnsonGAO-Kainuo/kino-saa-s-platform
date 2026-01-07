@@ -19,26 +19,26 @@
 ## 📋 任务进度摘要
 
 ### 1. 核心功能与稳定性 (已完成) ✅
-- [x] 重构全局 UI (严格参考新设计稿：侧边栏、仪表盘、个人资料、设置)
+- [x] 重设计 Editor UI (Stripe 风格)
 - [x] 实现 A4 纸张预览与 PDF 导出 (解决 html2canvas 颜色崩溃问题)
 - [x] 实现点击跳转编辑 (Click-to-Edit)
 - [x] 数据持久化 (Supabase, Auto-save)
 - [x] 移除所有硬编码品牌信息
 
 ### 2. AI 智能助手 (Phase 4 - 进行中) 🤖
-- [x] 集成 DeepSeek API (已解决 Vercel 连通性与 JSON 模式问题)
+- [x] 集成 Google Gemini 2.0/3.0 Flash API
 - [x] 实现自然语言生成结构化文档 (JSON)
 - [x] 实现 AI 侧边栏 UI 与流式交互
 - [x] 实现 AI 自动填充表单 (Auto-fill)
-- [x] 优化 Prompt 以支持多文档类型 (Quotation vs Invoice)
+- [ ] **P1**: 优化 Prompt 以支持多文档类型 (Quotation vs Invoice)
 - [ ] **P1**: 增加 AI 对话上下文记忆 (多轮修改)
 - [ ] **P2**: 增加 "Apply to All" 智能同步选项
 
-### 3. 多资产管理 (Phase 3 - 已完成) 📂
+### 3. 多资产管理 (Phase 3 - 待完善) 📂
 - [x] 数据库表结构创建 (user_assets)
-- [x] 实现前端资产上传与管理页面 (/profile)
-- [x] 编辑器内实现资产选择器 (Logo/Signature/Stamp)
-- [x] "保存到个人资料" 功能 (UI 已实现)
+- [ ] **P0**: 实现前端资产上传与管理页面 (/profile)
+- [ ] **P1**: 编辑器内实现资产选择器 (Logo/Signature/Stamp)
+- [ ] **P2**: "保存到个人资料" 功能
 
 ### 4. 订阅与支付 (Phase 5 - 规划中) 💳
 - [ ] Stripe 集成

@@ -15,7 +15,6 @@ import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
 import { Loader2 } from "lucide-react"
-import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
@@ -264,81 +263,65 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   }
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col h-screen overflow-hidden">
-        <EditorHeader 
-          documentType={activeTab} 
-          onSave={() => handleSave(false)} 
-          isSaving={isSaving} 
-          lastSaved={lastSaved}
-        />
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <EditorHeader 
+        documentType={activeTab} 
+        onSave={() => handleSave(false)} 
+        isSaving={isSaving} 
+        lastSaved={lastSaved}
+      />
 
-        <div className="border-b border-slate-100 bg-white sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-            <EditorTabs activeTab={activeTab} onTabChange={setActiveTab} />
-            
-            {activeTab === 'contract' && (
-              <div className="hidden md:flex items-center gap-4 py-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-[#6366f1] text-white flex items-center justify-center text-[10px] font-bold">✓</div>
-                  <span className="text-xs font-bold text-[#6366f1]">Contract</span>
-                </div>
-                <div className="w-8 h-px bg-slate-200" />
-                <div className="flex items-center gap-2 opacity-50">
-                  <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] font-bold">2</div>
-                  <span className="text-xs font-bold text-slate-500">Progress</span>
-                </div>
-                <div className="w-8 h-px bg-slate-200" />
-                <div className="flex items-center gap-2 opacity-50">
-                  <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] font-bold">3</div>
-                  <span className="text-xs font-bold text-slate-500">Stepes</span>
-                </div>
-              </div>
-            )}
-          </div>
+      <div className="border-b border-border bg-card sticky top-16 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <EditorTabs activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
+      </div>
 
-        <main className="flex-1 flex overflow-hidden relative bg-[#f8fafc]">
-          {/* Main Content Area - Slides left when agent opens */}
-          <div 
-            className={`flex-1 overflow-hidden transition-all duration-500 ease-in-out ${
-              agentOpen ? 'mr-[400px]' : 'mr-0'
-            }`}
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 h-full">
-              {/* Left: Form */}
-              <div className="overflow-y-auto p-8 border-r border-slate-200 bg-white">
-                <div className="max-w-2xl mx-auto">
-                  {(activeTab === "invoice" || activeTab === "receipt") && (
-                    <PaymentStatusUI
-                      documentType={activeTab}
-                      currentStatus={formData.paymentStatus}
-                      onStatusChange={handlePaymentStatusChange}
-                      totalAmount={totalAmount}
-                    />
-                  )}
-                  <EditorForm documentType={activeTab} formData={formData} onChange={setFormData} onFocusField={handleFocusField} />
-                </div>
+      <main className="flex-1 flex overflow-hidden relative">
+        {/* Main Content Area - Slides left when agent opens */}
+        <div 
+          className={`flex-1 overflow-hidden transition-all duration-500 ease-in-out ${
+            agentOpen ? 'mr-[400px]' : 'mr-0'
+          }`}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
+            {/* Left: Form */}
+            <div className="overflow-y-auto bg-white border-r border-gray-100 p-6 lg:p-10 scrollbar-hide">
+              <div className="max-w-2xl mx-auto space-y-6">
+                 {(activeTab === "invoice" || activeTab === "receipt") && (
+                  <PaymentStatusUI
+                    documentType={activeTab}
+                    currentStatus={formData.paymentStatus}
+                    onStatusChange={handlePaymentStatusChange}
+                    totalAmount={totalAmount}
+                  />
+                )}
+                <EditorForm documentType={activeTab} formData={formData} onChange={setFormData} onFocusField={handleFocusField} />
               </div>
+            </div>
 
-              {/* Right: Preview - A4 Format */}
-              <div className="overflow-y-auto flex justify-center py-12 bg-[#f1f5f9]" id="document-preview-container">
-                <div className="a4-paper-container">
-                  <DocumentPreview documentType={activeTab} formData={formData} onFieldClick={handleFocusField} />
-                </div>
+            {/* Right: Preview - A4 Format */}
+            <div className="overflow-y-auto bg-gray-50/50 p-8 flex justify-center relative" id="document-preview-container">
+               <div className="absolute top-4 right-4 z-10">
+                  <div className="bg-white/80 backdrop-blur px-3 py-1.5 rounded-full text-xs font-medium text-gray-500 shadow-sm border border-gray-100">
+                    Live Preview
+                  </div>
+               </div>
+              <div className="a4-paper-container shadow-2xl">
+                <DocumentPreview documentType={activeTab} formData={formData} onFieldClick={handleFocusField} />
               </div>
             </div>
           </div>
+        </div>
 
-          {/* AI Agent Sidebar - Slides in from right */}
-          <AIAgentSidebar 
-            currentDocType={activeTab} 
-            onDocumentGenerated={handleDocumentGenerated}
-            isOpen={agentOpen}
-            onToggle={(val) => setAgentOpen(val)}
-          />
-        </main>
-      </div>
-    </DashboardLayout>
+        {/* AI Agent Sidebar - Slides in from right */}
+        <AIAgentSidebar 
+          currentDocType={activeTab} 
+          onDocumentGenerated={handleDocumentGenerated}
+          isOpen={agentOpen}
+          onToggle={(val) => setAgentOpen(val)}
+        />
+      </main>
+    </div>
   )
 }

@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Trash2, Plus, Building2, User, FileText, CreditCard, Layers, Stamp, Signature as SignatureIcon, Image as ImageIcon } from "lucide-react"
+import { Trash2, Plus, GripVertical, Search } from "lucide-react"
 import { AssetSelector } from "./asset-selector"
 import { removeImageBackground } from "@/lib/image-utils"
 import { Slider } from "@/components/ui/slider"
-import { cn } from "@/lib/utils"
+import { Switch } from "@/components/ui/switch"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
@@ -43,6 +43,8 @@ interface FormDataType {
   logoPosition: "left" | "center" | "right"
   logoWidth?: number
   templateId?: "standard" | "corporate" | "modern"
+  signatureOffset?: { x: number; y: number }
+  stampOffset?: { x: number; y: number }
 }
 
 interface EditorFormProps {
@@ -70,26 +72,6 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
       ...formData,
       items: [...formData.items, { description: "", subItems: [], quantity: 1, unitPrice: 0 }],
     })
-  }
-
-  const handleSubItemChange = (itemIndex: number, subItemIndex: number, value: string) => {
-    const newItems = [...formData.items]
-    if (!newItems[itemIndex].subItems) newItems[itemIndex].subItems = []
-    newItems[itemIndex].subItems![subItemIndex] = value
-    onChange({ ...formData, items: newItems })
-  }
-
-  const addSubItem = (itemIndex: number) => {
-    const newItems = [...formData.items]
-    if (!newItems[itemIndex].subItems) newItems[itemIndex].subItems = []
-    newItems[itemIndex].subItems!.push("")
-    onChange({ ...formData, items: newItems })
-  }
-
-  const removeSubItem = (itemIndex: number, subItemIndex: number) => {
-    const newItems = [...formData.items]
-    newItems[itemIndex].subItems = newItems[itemIndex].subItems?.filter((_, i) => i !== subItemIndex)
-    onChange({ ...formData, items: newItems })
   }
 
   const removeItem = (index: number) => {
@@ -121,242 +103,216 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
 
   const isContractType = documentType === "contract"
 
-  const SectionHeader = ({ icon: Icon, title }: { icon: any, title: string }) => (
-    <div className="flex items-center gap-2 mb-4">
-      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-        <Icon className="w-4 h-4 text-slate-500" />
-      </div>
-      <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">{title}</h3>
-    </div>
-  )
-
-  const InputField = ({ id, label, placeholder, value, onChange, type = "text", className = "" }: any) => (
-    <div className={cn("space-y-1.5", className)}>
-      {label && <Label htmlFor={id} className="text-xs font-semibold text-slate-500">{label}</Label>}
-      <Input
-        id={id}
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="bg-[#f8fafc] border-slate-200 h-10 text-slate-900 focus:bg-white transition-all shadow-none"
-      />
-    </div>
-  )
-
   return (
-    <div className="space-y-10 pb-40">
-      {/* 1. From & Logo */}
-      <section>
-        <SectionHeader icon={Building2} title="From" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-4">
-            <InputField 
-              id="companyName" 
-              placeholder="Kainuo Kainuo" 
-              value={formData.companyName} 
-              onChange={(v: string) => handleFieldChange("companyName", v)} 
-            />
-            <Textarea
-              placeholder="User Company Name & Address"
-              value={formData.companyAddress}
-              onChange={(e) => handleFieldChange("companyAddress", e.target.value)}
-              className="bg-[#f8fafc] border-slate-200 min-h-[100px] text-slate-900 focus:bg-white transition-all shadow-none"
-            />
-          </div>
-          <div 
-            className="aspect-square bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center p-4 cursor-pointer hover:border-[#6366f1] transition-all"
-            onClick={() => document.getElementById('logo-upload')?.click()}
-          >
-            <AssetSelector
-              type="logo"
-              currentValue={formData.logo}
-              onChange={(value) => handleFieldChange("logo", value)}
-              onUploadClick={() => document.getElementById("logo-upload")?.click()}
-              processing={processing.logo}
-            />
-            <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'logo')} />
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Bill To */}
-      <section>
-        <SectionHeader icon={User} title="Bill To" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputField 
-            placeholder="Kainuo Name" 
-            value={formData.clientName} 
-            onChange={(v: string) => handleFieldChange("clientName", v)} 
-          />
-          <InputField 
-            placeholder="Email phone" 
-            value={formData.clientEmail} 
-            onChange={(v: string) => handleFieldChange("clientEmail", v)} 
+    <div className="space-y-8 pb-32 max-w-2xl mx-auto">
+      {/* 1. From Section */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">From</h3>
+        <div className="space-y-4">
+          <Input
+            id="companyName"
+            placeholder="Your Company Name"
+            value={formData.companyName || ''}
+            onChange={(e) => handleFieldChange("companyName", e.target.value)}
+            className="text-lg font-bold border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50"
           />
           <Textarea
-            placeholder="Client Address"
+            id="companyAddress"
+            placeholder="Your business address, email, phone..."
+            value={formData.companyAddress || ''}
+            onChange={(e) => handleFieldChange("companyAddress", e.target.value)}
+            className="min-h-[80px] text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50 resize-none"
+          />
+          
+          <div className="pt-2">
+            <h4 className="text-xs font-medium text-gray-400 mb-2">Company Logo</h4>
+            <div 
+              className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => document.getElementById('logo-upload')?.click()}
+            >
+              <AssetSelector
+                type="logo"
+                currentValue={formData.logo}
+                onChange={(value) => handleFieldChange("logo", value)}
+                onUploadClick={() => document.getElementById("logo-upload")?.click()}
+                processing={processing.logo}
+              />
+              <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'logo')} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Bill To Section */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Bill To</h3>
+        <div className="space-y-4">
+          <Input
+            id="clientName"
+            placeholder="Client Name"
+            value={formData.clientName}
+            onChange={(e) => handleFieldChange("clientName", e.target.value)}
+            className="text-lg font-bold border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50"
+          />
+          <Textarea
+            id="clientAddress"
+            placeholder="Client's billing address..."
             value={formData.clientAddress}
             onChange={(e) => handleFieldChange("clientAddress", e.target.value)}
-            className="md:col-span-2 bg-[#f8fafc] border-slate-200 min-h-[80px] text-slate-900 focus:bg-white transition-all shadow-none"
+            className="min-h-[80px] text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50 resize-none"
           />
         </div>
-      </section>
+      </div>
 
-      {/* 3. Description / Line Items */}
+      {/* 3. Description (Optional / Top Level) */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Description</h3>
+        <Textarea
+           placeholder="Write a project description or summary..."
+           value={formData.notes}
+           onChange={(e) => handleFieldChange("notes", e.target.value)}
+           className="min-h-[100px] border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50 resize-none"
+        />
+      </div>
+
+      {/* 4. Line Items */}
       {!isContractType && (
-        <section>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <SectionHeader icon={FileText} title="Description" />
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={addItem}
-              className="border-slate-200 text-[#6366f1] hover:bg-[#6366f1]/5 h-8 font-bold"
-            >
-              Add Item
-            </Button>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase">Items</h3>
+            <span className="text-xs text-gray-400">
+               Total: <span className="text-blue-600 font-bold text-base ml-1">
+                 HKD {formData.items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0).toFixed(2)}
+               </span>
+            </span>
           </div>
-          <div className="space-y-6">
-            {formData.items.map((item, itemIndex) => (
-              <div key={itemIndex} className="group relative bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:border-slate-300 transition-all">
-                <div className="flex gap-4">
-                  <div className="flex-1 space-y-4">
+
+          <div className="space-y-2">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-400 uppercase px-2 mb-2">
+              <div className="col-span-1">No.</div>
+              <div className="col-span-6">Description</div>
+              <div className="col-span-2 text-right">Price</div>
+              <div className="col-span-1 text-center">Qty</div>
+              <div className="col-span-2 text-right">Total</div>
+            </div>
+
+            {formData.items.map((item, index) => (
+              <div key={index} className="group relative bg-gray-50/30 rounded-lg p-2 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100 transition-all">
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-1 text-gray-400 text-sm pl-1">{index + 1}</div>
+                  <div className="col-span-6">
                     <Input
-                      placeholder="Line item description"
                       value={item.description}
-                      onChange={(e) => handleItemChange(itemIndex, "description", e.target.value)}
-                      className="bg-transparent border-none shadow-none text-base font-bold focus-visible:ring-0 p-0 h-auto"
+                      onChange={(e) => handleItemChange(index, "description", e.target.value)}
+                      placeholder="Item name"
+                      className="h-8 border-transparent bg-transparent hover:bg-white focus:bg-white px-2 shadow-none"
                     />
-                    
-                    {/* Sub-items */}
-                    <div className="pl-4 space-y-2">
-                      {item.subItems?.map((sub, subIdx) => (
-                        <div key={subIdx} className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                          <Input
-                            placeholder="Sub-item detail..."
-                            value={sub}
-                            onChange={(e) => handleSubItemChange(itemIndex, subIdx, e.target.value)}
-                            className="bg-transparent border-none shadow-none text-xs focus-visible:ring-0 p-0 h-auto text-slate-500 italic"
-                          />
-                          <button onClick={() => removeSubItem(itemIndex, subIdx)} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                      <button onClick={() => addSubItem(itemIndex)} className="text-[10px] text-[#6366f1] font-bold hover:underline">
-                        + Add Detail
-                      </button>
-                    </div>
                   </div>
-                  <div className="flex gap-3 items-start">
-                    <div className="w-16">
-                      <Label className="text-[10px] font-bold text-slate-400 uppercase">Qty</Label>
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => handleItemChange(itemIndex, "quantity", parseFloat(e.target.value) || 0)}
-                        className="bg-[#f8fafc] border-slate-200 text-center h-8 text-xs"
-                      />
-                    </div>
-                    <div className="w-24">
-                      <Label className="text-[10px] font-bold text-slate-400 uppercase">Price</Label>
-                      <Input
-                        type="number"
-                        value={item.unitPrice}
-                        onChange={(e) => handleItemChange(itemIndex, "unitPrice", parseFloat(e.target.value) || 0)}
-                        className="bg-[#f8fafc] border-slate-200 text-right h-8 text-xs"
-                      />
-                    </div>
-                    {formData.items.length > 1 && (
-                      <button onClick={() => removeItem(itemIndex)} className="mt-6 text-slate-300 hover:text-red-500">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
+                  <div className="col-span-2">
+                    <Input
+                      type="number"
+                      value={item.unitPrice}
+                      onChange={(e) => handleItemChange(index, "unitPrice", parseFloat(e.target.value) || 0)}
+                      className="h-8 text-right border-transparent bg-transparent hover:bg-white focus:bg-white px-2 shadow-none"
+                    />
+                  </div>
+                  <div className="col-span-1">
+                     <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => handleItemChange(index, "quantity", parseInt(e.target.value) || 1)}
+                      className="h-8 text-center border-transparent bg-transparent hover:bg-white focus:bg-white px-1 shadow-none"
+                    />
+                  </div>
+                  <div className="col-span-2 text-right text-sm font-medium text-gray-700 pr-2">
+                    {(item.quantity * item.unitPrice).toFixed(0)}
                   </div>
                 </div>
+                {/* Delete Button (absolute) */}
+                <button 
+                  onClick={() => removeItem(index)}
+                  className="absolute -right-2 top-1/2 -translate-y-1/2 bg-white rounded-full p-1 shadow border border-gray-100 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             ))}
           </div>
-        </section>
+
+          <Button 
+            variant="ghost" 
+            onClick={addItem}
+            className="w-full mt-4 text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-10 border-dashed border border-blue-200"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Item
+          </Button>
+        </div>
       )}
 
-      {/* 4. Terms */}
-      <section>
-        <SectionHeader icon={Layers} title="Terms" />
-        <Textarea
-          placeholder="Enter payment or contract terms..."
-          value={isContractType ? formData.contractTerms : formData.paymentTerms}
-          onChange={(e) => handleFieldChange(isContractType ? "contractTerms" : "paymentTerms", e.target.value)}
-          className="bg-[#f8fafc] border-slate-200 min-h-[120px] text-slate-900 focus:bg-white transition-all shadow-none rounded-xl"
-        />
-      </section>
-
-      {/* 5. Signature & Stamp */}
-      <section>
-        <SectionHeader icon={SignatureIcon} title="Digital Assets" />
-        <div className="grid grid-cols-2 gap-6">
-          <div 
-            className="aspect-[1.618/1] bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center p-4 cursor-pointer hover:border-[#6366f1] transition-all"
-            onClick={() => document.getElementById('signature-upload')?.click()}
-          >
-            <AssetSelector
-              type="signature"
-              currentValue={formData.signature}
-              onChange={(value) => handleFieldChange("signature", value)}
-              onUploadClick={() => document.getElementById("signature-upload")?.click()}
-              processing={processing.signature}
+      {/* 5. Terms */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Terms</h3>
+        <div className="space-y-4">
+           <Input
+            placeholder="Enter available terms..."
+            className="bg-gray-50 border-none pl-4"
+           />
+           <div className="flex gap-2 flex-wrap">
+             {["Payment due on receipt", "Net 30", "50% Deposit"].map(term => (
+               <div key={term} className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full cursor-pointer hover:bg-gray-200"
+                    onClick={() => handleFieldChange("paymentTerms", term)}>
+                 {term}
+               </div>
+             ))}
+           </div>
+           <Textarea
+              id="contractTerms"
+              value={isContractType ? formData.contractTerms : formData.paymentTerms}
+              onChange={(e) => handleFieldChange(isContractType ? "contractTerms" : "paymentTerms", e.target.value)}
+              className="min-h-[120px] text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50 resize-none"
             />
-            <input id="signature-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'signature')} />
-          </div>
-          <div 
-            className="aspect-[1.618/1] bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center p-4 cursor-pointer hover:border-[#6366f1] transition-all"
-            onClick={() => document.getElementById('stamp-upload')?.click()}
-          >
-            <AssetSelector
-              type="stamp"
-              currentValue={formData.stamp}
-              onChange={(value) => handleFieldChange("stamp", value)}
-              onUploadClick={() => document.getElementById("stamp-upload")?.click()}
-              processing={processing.stamp}
-            />
-            <input id="stamp-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'stamp')} />
-          </div>
         </div>
-      </section>
+      </div>
 
-      {/* 6. Layout Style */}
-      <section>
-        <SectionHeader icon={Plus} title="Bilingual Layout" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-3">
-            <Label className="text-xs font-bold text-slate-500 uppercase">Language Selection</Label>
-            <div className="flex gap-2">
-              {['bilingual', 'english', 'chinese'].map(lang => (
-                <button
-                  key={lang}
-                  onClick={() => handleFieldChange("languageMode", lang)}
-                  className={cn(
-                    "flex-1 py-2 text-[10px] font-bold rounded-lg border transition-all",
-                    formData.languageMode === lang ? "bg-[#6366f1] text-white border-[#6366f1] shadow-sm" : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
-                  )}
-                >
-                  {lang.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-3">
-            <Label className="text-xs font-bold text-slate-500 uppercase">Logo Size</Label>
-            <Slider
-              value={[formData.logoWidth || 128]}
-              onValueChange={(vals) => handleFieldChange("logoWidth", vals[0])}
-              min={60} max={400}
-            />
-          </div>
+      {/* 6. Bilingual Layout Selector */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Bilingual Layout</h3>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input 
+            placeholder="Search new layout" 
+            className="pl-9 border-gray-200 focus:ring-blue-500" 
+          />
         </div>
-      </section>
+        <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+           {['bilingual', 'english', 'chinese'].map(lang => (
+              <div 
+                key={lang}
+                onClick={() => handleFieldChange("languageMode", lang)}
+                className={`flex-shrink-0 w-24 h-24 rounded-lg border-2 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${
+                  formData.languageMode === lang ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-gray-50 hover:border-gray-300'
+                }`}
+              >
+                <div className="w-8 h-10 bg-white border border-gray-200 rounded shadow-sm flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-gray-400">Aa</span>
+                </div>
+                <span className="text-xs font-medium capitalize">{lang}</span>
+              </div>
+           ))}
+        </div>
+      </div>
+
+      {/* 7. Action Buttons (Bottom Fixed or relative) */}
+      <div className="flex gap-4 pt-4">
+        <Button variant="outline" className="flex-1 h-12 rounded-xl text-gray-500 border-gray-200 hover:bg-gray-50">
+          Cancel
+        </Button>
+        <Button className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-200">
+          Continue
+        </Button>
+      </div>
     </div>
   )
 }
+
