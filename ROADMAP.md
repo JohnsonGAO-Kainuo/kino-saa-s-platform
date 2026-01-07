@@ -27,12 +27,13 @@
 
 ### 2. AI 智能助手 (Phase 4 - 进行中) 🤖
 - [x] 集成 Google Gemini 2.0/3.0 Flash API
-- [x] 实现自然语言生成结构化文档 (JSON)
-- [x] 实现 AI 侧边栏 UI 与流式交互
-- [x] 实现 AI 自动填充表单 (Auto-fill)
-- [ ] **P1**: 优化 Prompt 以支持多文档类型 (Quotation vs Invoice)
-- [ ] **P1**: 增加 AI 对话上下文记忆 (多轮修改)
-- [ ] **P2**: 增加 "Apply to All" 智能同步选项
+        - [x] 实现自然语言生成结构化文档 (JSON)
+        - [x] 实现 AI 侧边栏 UI 与流式交互
+        - [x] 实现 AI 自动填充表单 (Auto-fill)
+        - [x] **P1**: 优化 Prompt 以支持多轮对话与主动引导 (Interactive Guidance)
+        - [x] **P1**: 增加 AI 对话上下文记忆 (localStorage 历史记录)
+        - [x] **P1**: 实现一键文档内容翻译 (AI-powered translation)
+        - [ ] **P2**: 增加 "Apply to All" 智能同步选项
 
 ### 3. 多资产管理 (Phase 3 - 待完善) 📂
 - [x] 数据库表结构创建 (user_assets)
