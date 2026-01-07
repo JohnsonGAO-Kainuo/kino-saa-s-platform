@@ -4,12 +4,22 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from './auth-context'
 import { supabase } from './supabase'
 
-type Language = 'en' | 'zh-TW'
+export type Language = 'en' | 'zh-TW' | 'fr' | 'ja' | 'es' | 'de' | 'ko'
+
+export const languageNames: Record<Language, string> = {
+  'en': 'English',
+  'zh-TW': '繁體中文',
+  'fr': 'Français',
+  'ja': '日本語',
+  'es': 'Español',
+  'de': 'Deutsch',
+  'ko': '한국어'
+}
 
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => Promise<void>
-  t: (en: string, zh: string) => string
+  t: (en: string, zh: string, others?: Partial<Record<Language, string>>) => string
   loading: boolean
 }
 
@@ -57,15 +67,17 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
             user_id: user.id,
             ui_language: lang,
             updated_at: new Date().toISOString(),
-          })
+          }, { onConflict: 'user_id' })
       } catch (error) {
         console.error('Failed to save language preference:', error)
       }
     }
   }
 
-  const t = (en: string, zh: string) => {
-    return language === 'zh-TW' ? zh : en
+  const t = (en: string, zh: string, others?: Partial<Record<Language, string>>) => {
+    if (language === 'zh-TW') return zh
+    if (others && others[language]) return others[language]!
+    return en
   }
 
   return (

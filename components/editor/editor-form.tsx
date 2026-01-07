@@ -11,6 +11,7 @@ import { AssetSelector } from "./asset-selector"
 import { removeImageBackground } from "@/lib/image-utils"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { languageNames, type Language } from "@/lib/language-context"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
@@ -39,7 +40,9 @@ interface FormDataType {
   contractTerms: string
   paymentTerms: string
   deliveryDate: string
-  languageMode: "bilingual" | "english" | "chinese"
+  languageMode: "single" | "bilingual"
+  primaryLanguage: Language
+  secondaryLanguage?: Language
   logoPosition: "left" | "center" | "right"
   logoWidth?: number
   templateId?: "standard" | "corporate" | "modern"
@@ -275,31 +278,50 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
         </div>
       </div>
 
-      {/* 6. Bilingual Layout Selector */}
+      {/* 6. Document Language Settings */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Bilingual Layout</h3>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input 
-            placeholder="Search new layout" 
-            className="pl-9 border-gray-200 focus:ring-blue-500" 
-          />
-        </div>
-        <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-           {['bilingual', 'english', 'chinese'].map(lang => (
-              <div 
-                key={lang}
-                onClick={() => handleFieldChange("languageMode", lang)}
-                className={`flex-shrink-0 w-24 h-24 rounded-lg border-2 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${
-                  formData.languageMode === lang ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-gray-50 hover:border-gray-300'
-                }`}
+        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Document Language</h3>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">Bilingual Mode</Label>
+              <p className="text-xs text-gray-500">Show content in two languages side-by-side</p>
+            </div>
+            <Switch 
+              checked={formData.languageMode === "bilingual"}
+              onCheckedChange={(checked) => handleFieldChange("languageMode", checked ? "bilingual" : "single")}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-400 uppercase">Primary Language</Label>
+              <select 
+                value={formData.primaryLanguage || 'en'}
+                onChange={(e) => handleFieldChange("primaryLanguage", e.target.value)}
+                className="w-full h-10 px-3 bg-gray-50 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               >
-                <div className="w-8 h-10 bg-white border border-gray-200 rounded shadow-sm flex items-center justify-center">
-                  <span className="text-[8px] font-bold text-gray-400">Aa</span>
-                </div>
-                <span className="text-xs font-medium capitalize">{lang}</span>
+                {(Object.keys(languageNames) as Language[]).map(lang => (
+                  <option key={lang} value={lang}>{languageNames[lang]}</option>
+                ))}
+              </select>
+            </div>
+
+            {formData.languageMode === "bilingual" && (
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-400 uppercase">Secondary Language</Label>
+                <select 
+                  value={formData.secondaryLanguage || 'zh-TW'}
+                  onChange={(e) => handleFieldChange("secondaryLanguage", e.target.value)}
+                  className="w-full h-10 px-3 bg-gray-50 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  {(Object.keys(languageNames) as Language[]).map(lang => (
+                    <option key={lang} value={lang}>{languageNames[lang]}</option>
+                  ))}
+                </select>
               </div>
-           ))}
+            )}
+          </div>
         </div>
       </div>
 

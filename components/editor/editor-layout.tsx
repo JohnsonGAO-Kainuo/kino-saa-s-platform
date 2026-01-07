@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
 import { Loader2 } from "lucide-react"
+import type { Language } from "@/lib/language-context"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
@@ -58,7 +59,9 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     paymentTerms: "",
     deliveryDate: "",
     paymentStatus: createPaymentStatus() as PaymentStatus,
-    languageMode: "bilingual" as "bilingual" | "english" | "chinese",
+    languageMode: "single" as "single" | "bilingual",
+    primaryLanguage: "en" as Language,
+    secondaryLanguage: "zh-TW" as Language,
     logoPosition: "left" as "left" | "center" | "right",
     logoWidth: 128,
     templateId: "standard" as "standard" | "corporate" | "modern",
@@ -93,7 +96,9 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             paymentTerms: doc.content?.paymentTerms || "",
             deliveryDate: doc.content?.deliveryDate || "",
             paymentStatus: createPaymentStatus(doc.status as any) as PaymentStatus,
-            languageMode: doc.content?.languageMode || "bilingual",
+            languageMode: doc.content?.languageMode || "single",
+            primaryLanguage: doc.content?.primaryLanguage || "en",
+            secondaryLanguage: doc.content?.secondaryLanguage || "zh-TW",
             logoPosition: doc.content?.logoPosition || "left",
             logoWidth: doc.content?.logoWidth || 128,
             templateId: doc.content?.templateId || "standard",
@@ -179,6 +184,8 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           paymentTerms: formData.paymentTerms,
           deliveryDate: formData.deliveryDate,
           languageMode: formData.languageMode,
+          primaryLanguage: formData.primaryLanguage,
+          secondaryLanguage: formData.secondaryLanguage,
           logoPosition: formData.logoPosition,
           logoWidth: formData.logoWidth,
           templateId: formData.templateId,

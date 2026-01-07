@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { useAuth } from '@/lib/auth-context'
-import { useLanguage } from '@/lib/language-context'
+import { useLanguage, languageNames, type Language } from '@/lib/language-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { User, Mail, Shield, LogOut, Bell, Globe, Moon, Loader2, ArrowLeft, Save, Check } from 'lucide-react'
@@ -146,24 +146,20 @@ export default function SettingsPage() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="text-[#6366f1] text-xs font-semibold hover:bg-[#6366f1]/5">
-                        {language === 'en' ? 'English' : '繁體中文'}
+                        {languageNames[language]}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem 
-                        onClick={() => setLanguage('en')}
-                        className="cursor-pointer flex items-center justify-between"
-                      >
-                        <span>English</span>
-                        {language === 'en' && <Check className="w-4 h-4 text-[#6366f1]" />}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => setLanguage('zh-TW')}
-                        className="cursor-pointer flex items-center justify-between"
-                      >
-                        <span>繁體中文</span>
-                        {language === 'zh-TW' && <Check className="w-4 h-4 text-[#6366f1]" />}
-                      </DropdownMenuItem>
+                      {(Object.keys(languageNames) as Language[]).map((lang) => (
+                        <DropdownMenuItem 
+                          key={lang}
+                          onClick={() => setLanguage(lang)}
+                          className="cursor-pointer flex items-center justify-between"
+                        >
+                          <span>{languageNames[lang]}</span>
+                          {language === lang && <Check className="w-4 h-4 text-[#6366f1]" />}
+                        </DropdownMenuItem>
+                      ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
