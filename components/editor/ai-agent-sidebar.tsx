@@ -40,10 +40,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
   
   const [messages, setMessages] = useState<Message[]>([])
 
-  const welcomeMessage = t(
-    `Hi! I'm your AI Business Assistant. 🚀\n\nI can help you:\n1. **Draft instantly**: Just say "Help me write a quotation for web development".\n2. **Precise edits**: After generation, you can say "Increase the price by 10%" or "Add UI design".\n3. **Identify info**: Paste client requirements or invoice content, and I'll extract it for you.\n\nHow can I help you today?`,
-    `您好！我是您的智能商務助手。🚀\n\n我可以幫您：\n1. **秒速生成**: 只要說“幫我寫一份網頁開發的報價單”，我就能為您擬好草稿。\n2. **精確修改**: 生成後如果不滿意，您可以說“把價格提高10%”或“增加一項UI設計”。\n3. **識別信息**: 您可以粘貼客戶的需求或發票內容，我會自動為您提取並填充。\n\n請問您今天要處理什麼文檔？`
-  )
+  const welcomeMessage = t('AI Welcome Message')
 
   // Load overall history
   useEffect(() => {

@@ -62,10 +62,10 @@ export default function SettingsPage() {
           <div>
             <Link href="/" className="flex items-center gap-2 text-[#4f566b] hover:text-[#1a1f36] text-sm mb-2 transition-colors">
               <ArrowLeft className="w-4 h-4" />
-              {t('Back to Dashboard', '返回主頁')}
+              {t('Back to Dashboard')}
             </Link>
-            <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight">{t('Account Settings', '帳戶設定')}</h1>
-            <p className="text-[#4f566b] text-sm mt-1">{t('Manage your personal account preferences and security.', '管理您的個人帳戶偏好和安全設定。')}</p>
+            <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight">{t('Account Settings')}</h1>
+            <p className="text-[#4f566b] text-sm mt-1">{t('Manage your personal account preferences and security.')}</p>
           </div>
           <Button 
             onClick={handleUpdateProfile} 
@@ -73,7 +73,7 @@ export default function SettingsPage() {
             className="bg-[#6366f1] hover:bg-[#5658d2] text-white gap-2 shadow-sm"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {t('Save Profile', '保存設定')}
+            {t('Save Profile')}
           </Button>
         </div>
 
@@ -82,7 +82,7 @@ export default function SettingsPage() {
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
               <User className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Account Information', '帳戶資訊')}</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Account Information')}</h2>
             </div>
             <Card className="border-border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-6">
@@ -99,17 +99,17 @@ export default function SettingsPage() {
                   <div className="flex-1 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label htmlFor="fullName" className="text-xs font-medium text-muted-foreground uppercase">{t('Full Name', '姓名')}</Label>
+                        <Label htmlFor="fullName" className="text-xs font-medium text-muted-foreground uppercase">{t('Full Name')}</Label>
                         <Input 
                           id="fullName"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          placeholder={t('Your Name', '您的姓名')}
+                          placeholder={t('Your Name')}
                           className="bg-white border-[#e6e9ef]"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground uppercase">{t('Email Address', '電郵地址')}</Label>
+                        <Label className="text-xs font-medium text-muted-foreground uppercase">{t('Email Address')}</Label>
                         <div className="flex items-center h-10 px-3 bg-slate-50 border border-[#e6e9ef] rounded-md text-sm text-[#4f566b]">
                           <Mail className="w-3.5 h-3.5 mr-2" />
                           {user?.email}
@@ -117,7 +117,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     <p className="text-[11px] text-[#16a34a] font-medium bg-green-50 px-2 py-0.5 rounded-full inline-block">
-                      {t('Google Account Connected', 'Google 帳戶已連接')}
+                      {t('Google Account Connected')}
                     </p>
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export default function SettingsPage() {
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
               <Bell className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Preferences', '偏好設定')}</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Preferences')}</h2>
             </div>
             <Card className="border-border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-0 divide-y divide-[#f7f9fc]">
@@ -139,8 +139,8 @@ export default function SettingsPage() {
                       <Globe className="w-4 h-4 text-slate-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[#1a1f36]">{t('Interface Language', '界面語言')}</p>
-                      <p className="text-xs text-[#4f566b]">{t('System display language', '系統顯示語言')}</p>
+                      <p className="text-sm font-medium text-[#1a1f36]">{t('Interface Language')}</p>
+                      <p className="text-xs text-[#4f566b]">{t('System display language')}</p>
                     </div>
                   </div>
                   <DropdownMenu>
@@ -170,11 +170,11 @@ export default function SettingsPage() {
                       <Moon className="w-4 h-4 text-slate-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[#1a1f36]">{t('Appearance', '外觀')}</p>
-                      <p className="text-xs text-[#4f566b]">{t('Choose between light and dark themes', '選擇淺色或深色主題')}</p>
+                      <p className="text-sm font-medium text-[#1a1f36]">{t('Appearance')}</p>
+                      <p className="text-xs text-[#4f566b]">{t('Choose between light and dark themes')}</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" className="text-[#6366f1] text-xs font-semibold">{t('Light Mode', '淺色模式')}</Button>
+                  <Button variant="ghost" size="sm" className="text-[#6366f1] text-xs font-semibold">{t('Light Mode')}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -184,13 +184,13 @@ export default function SettingsPage() {
           <section className="space-y-4 pt-4">
             <div className="flex items-center gap-2 text-red-500 mb-2 px-1">
               <Shield className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Security & Session', '安全與登出')}</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Security & Session')}</h2>
             </div>
             <Card className="border-red-100 shadow-sm bg-red-50/30">
               <CardContent className="p-6 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-[#1a1f36]">{t('Sign out from this device', '登出此裝置')}</p>
-                  <p className="text-xs text-red-600/70 mt-0.5">{t('Your data is safely synced to the cloud.', '您的資料已安全同步至雲端。')}</p>
+                  <p className="text-sm font-bold text-[#1a1f36]">{t('Sign out from this device')}</p>
+                  <p className="text-xs text-red-600/70 mt-0.5">{t('Your data is safely synced to the cloud.')}</p>
                 </div>
                 <Button 
                   onClick={handleSignOut}
@@ -199,7 +199,7 @@ export default function SettingsPage() {
                   className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 bg-white shadow-sm"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
-                  {t('Sign Out', '登出')}
+                  {t('Sign Out')}
                 </Button>
               </CardContent>
             </Card>

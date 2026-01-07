@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from './auth-context'
 import { supabase } from './supabase'
+import { getTranslation } from './translations'
 
 export type Language = 'en' | 'zh-TW' | 'fr' | 'ja' | 'es' | 'de' | 'ko'
 
@@ -19,14 +20,14 @@ export const languageNames: Record<Language, string> = {
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => Promise<void>
-  t: (en: string, zh: string, others?: Partial<Record<Language, string>>) => string
+  t: (key: string) => string
   loading: boolean
 }
 
 const LanguageContext = createContext<LanguageContextType>({
   language: 'en',
   setLanguage: async () => {},
-  t: (en: string) => en,
+  t: (key: string) => key,
   loading: true,
 })
 
@@ -74,10 +75,8 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     }
   }
 
-  const t = (en: string, zh: string, others?: Partial<Record<Language, string>>) => {
-    if (language === 'zh-TW') return zh
-    if (others && others[language]) return others[language]!
-    return en
+  const t = (key: string) => {
+    return getTranslation(key, language)
   }
 
   return (
