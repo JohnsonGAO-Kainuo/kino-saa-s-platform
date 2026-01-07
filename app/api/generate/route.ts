@@ -32,13 +32,13 @@ export async function POST(req: Request) {
       return Response.json({ error: 'DeepSeek API Key is missing. Please add DEEPSEEK_API_KEY to environment variables.' }, { status: 500 });
     }
 
-    // DeepSeek is OpenAI-compatible (requires /v1 suffix)
+    // DeepSeek is OpenAI-compatible
     const deepseek = createOpenAI({
-      baseURL: 'https://api.deepseek.com/v1',
+      baseURL: 'https://api.deepseek.com',
       apiKey: apiKey,
     });
     
-    console.log('[API] DeepSeek client initialized with baseURL: https://api.deepseek.com/v1');
+    console.log('[API] DeepSeek client initialized with baseURL: https://api.deepseek.com');
 
     // Dynamic Prompt Engineering
     let roleDescription = "";
@@ -63,32 +63,27 @@ export async function POST(req: Request) {
         focusArea = "追求清晰和专业。";
     }
 
-    console.log('[API] Attempting to call DeepSeek with model: deepseek-chat');
+    console.log('[API] Calling generateObject with mode: json');
     
     const result = await generateObject({
       model: deepseek('deepseek-chat'),
       schema: documentSchema,
-      prompt: `
-        角色: ${roleDescription}
-        产品: Kino SaaS (智能文档生成平台)
-        
-        任务:
-        根据用户的请求，为一份 **${documentType.toUpperCase()}** 生成专业的商务内容: "${prompt}"
-        
-        上下文信息:
-        ${currentContext ? `当前文档内容: ${JSON.stringify(currentContext)}` : '新创建的空文档。'}
-        
-        生成指南:
-        1. **${focusArea}**
-        2. **智能扩展**: 如果用户请求模糊（如"做个网站"），自动拆解为专业细项（如"UI设计"、"前端开发"、"后端API"）。
-        3. **专业定价**: 如果未指定价格，请根据香港市场行情估算合理的 **专业/溢价** 水平 (单位: HKD)。
-        4. **语言风格**:
-           - 如果是中文: 使用 **繁体中文 (香港商业习惯)**。使用专业词汇如 "訂金"、"餘款"、"茲收到"。
-           - 如果是英文: 使用正式的 Business English。
-        5. **条款与备注**: 生成与 ${documentType} 强相关的专业条款，不要使用模棱两可的废话。
-        
-        重要: 必须返回有效的 JSON 对象。
-      `,
+      mode: 'json',
+      system: `你是一位专业的商务助手，擅长编写 ${documentType}。
+角色: ${roleDescription}
+产品: Kino SaaS (智能文档生成平台)
+
+生成指南:
+1. **${focusArea}**
+2. **智能扩展**: 如果用户请求模糊（如"做个网站"），自动拆解为专业细项（如"UI设计"、"前端开发"、"后端API"）。
+3. **专业定价**: 如果未指定价格，请根据香港市场行情估算合理的 **专业/溢价** 水平 (单位: HKD)。
+4. **语言风格**:
+   - 如果是中文: 使用 **繁体中文 (香港商业习惯)**。使用专业词汇如 "訂金"、"餘款"、"茲收到"。
+   - 如果是英文: 使用正式的 Business English。
+5. **条款与备注**: 生成与 ${documentType} 强相关的专业条款，不要使用模棱两可的废话。`,
+      prompt: `根据用户的请求生成内容: "${prompt}"
+      
+${currentContext ? `当前文档上下文: ${JSON.stringify(currentContext)}` : ''}`,
     });
 
     console.log('[API] DeepSeek generation successful:', result.object);
