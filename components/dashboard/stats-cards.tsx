@@ -1,8 +1,11 @@
+"use client"
+
 import { FileText, FileSignature, Receipt, Files } from "lucide-react"
 import Link from "next/link"
+import { useLanguage } from "@/lib/language-context"
 
 interface StatCardProps {
-  label: string
+  labelKey: string
   value: string | number
   icon: any
   color: "blue" | "orange" | "green" | "purple"
@@ -10,11 +13,13 @@ interface StatCardProps {
 }
 
 export function StatsCards({ stats }: { stats: { total: number, quotations: number, contracts: number, invoices: number } }) {
+  const { t } = useLanguage()
+  
   const cards: StatCardProps[] = [
-    { label: "Total Documents", value: stats.total, icon: Files, color: "blue", href: "/documents" },
-    { label: "Quotations", value: stats.quotations, icon: FileText, color: "orange", href: "/documents?type=quotation" },
-    { label: "Contracts", value: stats.contracts, icon: FileSignature, color: "green", href: "/documents?type=contract" },
-    { label: "Invoices", value: stats.invoices, icon: Receipt, color: "purple", href: "/documents?type=invoice" },
+    { labelKey: "Total Documents", value: stats.total, icon: Files, color: "blue", href: "/documents" },
+    { labelKey: "Quotations", value: stats.quotations, icon: FileText, color: "orange", href: "/documents?type=quotation" },
+    { labelKey: "Contracts", value: stats.contracts, icon: FileSignature, color: "green", href: "/documents?type=contract" },
+    { labelKey: "Invoices", value: stats.invoices, icon: Receipt, color: "purple", href: "/documents?type=invoice" },
   ]
 
   const colorStyles = {
@@ -41,7 +46,7 @@ export function StatsCards({ stats }: { stats: { total: number, quotations: numb
         >
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-white/80 text-sm font-medium mb-1">{card.label}</p>
+              <p className="text-white/80 text-sm font-medium mb-1">{t(card.labelKey)}</p>
               <h3 className="text-3xl font-bold">{card.value}</h3>
             </div>
             <div className={`p-2 rounded-xl ${iconStyles[card.color]} backdrop-blur-sm`}>
@@ -50,9 +55,9 @@ export function StatsCards({ stats }: { stats: { total: number, quotations: numb
           </div>
           <div className="mt-4 flex items-center text-white/70 text-xs">
             <span className="bg-white/20 px-2 py-0.5 rounded text-white mr-2">
-              View All
+              {t('View All')}
             </span>
-            <span>click to manage</span>
+            <span>{t('click to manage')}</span>
           </div>
         </Link>
       ))}

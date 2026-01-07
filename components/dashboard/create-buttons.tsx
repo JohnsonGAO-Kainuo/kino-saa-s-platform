@@ -2,9 +2,11 @@
 
 import { Plus, FileText, FileSignature, Receipt } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useLanguage } from "@/lib/language-context"
 
 export function CreateButtons() {
   const router = useRouter()
+  const { t } = useLanguage()
 
   const handleCreate = (type: string) => {
     // In a real app, this might create a draft ID first or just navigate
@@ -24,8 +26,8 @@ export function CreateButtons() {
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm group-hover:scale-110 transition-transform">
             <Plus className="w-5 h-5 text-white" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-1 leading-tight">Quotation</h3>
-          <p className="text-blue-100 text-xs line-clamp-2">Draft a new proposal</p>
+          <h3 className="text-lg font-bold text-white mb-1 leading-tight">{t('Quotation')}</h3>
+          <p className="text-blue-100 text-xs line-clamp-2">{t('Draft a new proposal')}</p>
         </div>
       </button>
 
@@ -40,8 +42,8 @@ export function CreateButtons() {
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm group-hover:scale-110 transition-transform">
             <Plus className="w-5 h-5 text-white" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-1 leading-tight">Contract</h3>
-          <p className="text-emerald-100 text-xs line-clamp-2">Prepare a legal agreement</p>
+          <h3 className="text-lg font-bold text-white mb-1 leading-tight">{t('Contract')}</h3>
+          <p className="text-emerald-100 text-xs line-clamp-2">{t('Prepare a legal agreement')}</p>
         </div>
       </button>
 
@@ -56,8 +58,8 @@ export function CreateButtons() {
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm group-hover:scale-110 transition-transform">
             <Plus className="w-5 h-5 text-white" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-1 leading-tight">Invoice</h3>
-          <p className="text-red-100 text-xs line-clamp-2">Bill for completed work</p>
+          <h3 className="text-lg font-bold text-white mb-1 leading-tight">{t('Invoice')}</h3>
+          <p className="text-red-100 text-xs line-clamp-2">{t('Bill for completed work')}</p>
         </div>
       </button>
 
@@ -72,8 +74,8 @@ export function CreateButtons() {
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm group-hover:scale-110 transition-transform">
             <Plus className="w-5 h-5 text-white" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-1 leading-tight">Receipt</h3>
-          <p className="text-purple-100 text-xs line-clamp-2">Issue a payment proof</p>
+          <h3 className="text-lg font-bold text-white mb-1 leading-tight">{t('Receipt')}</h3>
+          <p className="text-purple-100 text-xs line-clamp-2">{t('Issue a payment proof')}</p>
         </div>
       </button>
     </div>

@@ -162,6 +162,14 @@ export const translations: Record<string, Record<Language, string>> = {
   'Document saved successfully': { en: 'Document saved successfully', 'zh-TW': '文件保存成功', fr: 'Document enregistré avec succès', ja: 'ドキュメントが正常に保存されました', es: 'Documento guardado exitosamente', de: 'Dokument erfolgreich gespeichert', ko: '문서가 성공적으로 저장되었습니다' },
   'Failed to save document': { en: 'Failed to save document', 'zh-TW': '保存文件失敗', fr: 'Échec de l\'enregistrement du document', ja: 'ドキュメントの保存に失敗しました', es: 'Error al guardar documento', de: 'Dokument konnte nicht gespeichert werden', ko: '문서 저장 실패' },
   
+  // Create Buttons Descriptions
+  'Draft a new proposal': { en: 'Draft a new proposal', 'zh-TW': '起草新提案', fr: 'Rédiger une nouvelle proposition', ja: '新しい提案書を作成', es: 'Redactar una nueva propuesta', de: 'Neues Angebot erstellen', ko: '새 제안서 작성' },
+  'Prepare a legal agreement': { en: 'Prepare a legal agreement', 'zh-TW': '準備法律協議', fr: 'Préparer un accord légal', ja: '法的合意書を準備', es: 'Preparar un acuerdo legal', de: 'Rechtsvereinbarung vorbereiten', ko: '법적 계약서 준비' },
+  'Bill for completed work': { en: 'Bill for completed work', 'zh-TW': '完成工作的帳單', fr: 'Facturer le travail terminé', ja: '完了した作業の請求', es: 'Facturar trabajo completado', de: 'Abrechnung für abgeschlossene Arbeit', ko: '완료된 작업에 대한 청구' },
+  'Issue a payment proof': { en: 'Issue a payment proof', 'zh-TW': '發出付款證明', fr: 'Émettre une preuve de paiement', ja: '支払証明書を発行', es: 'Emitir un comprobante de pago', de: 'Zahlungsnachweis ausstellen', ko: '결제 증명서 발행' },
+  'View All': { en: 'View All', 'zh-TW': '查看全部', fr: 'Voir tout', ja: 'すべて表示', es: 'Ver todo', de: 'Alle anzeigen', ko: '모두 보기' },
+  'click to manage': { en: 'click to manage', 'zh-TW': '點擊管理', fr: 'cliquer pour gérer', ja: 'クリックして管理', es: 'clic para gestionar', de: 'Klicken zum Verwalten', ko: '관리하려면 클릭' },
+  
   // Misc
   'Your data is safely synced to the cloud.': { en: 'Your data is safely synced to the cloud.', 'zh-TW': '您的資料已安全同步至雲端。', fr: 'Vos données sont synchronisées en toute sécurité dans le cloud.', ja: 'データはクラウドに安全に同期されています。', es: 'Tus datos se sincronizan de forma segura en la nube.', de: 'Ihre Daten werden sicher in der Cloud synchronisiert.', ko: '데이터가 클라우드에 안전하게 동기화되었습니다.' },
   'Google Account Connected': { en: 'Google Account Connected', 'zh-TW': 'Google 帳戶已連接', fr: 'Compte Google connecté', ja: 'Googleアカウント接続済み', es: 'Cuenta de Google conectada', de: 'Google-Konto verbunden', ko: 'Google 계정 연결됨' },
