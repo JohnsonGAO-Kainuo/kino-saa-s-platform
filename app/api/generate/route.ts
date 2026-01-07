@@ -1,44 +1,33 @@
-import { createOpenAI } from '@ai-sdk/openai';
-import { generateObject } from 'ai';
 import { z } from 'zod';
 
 // Define the schema that matches our FormDataType
 const itemSchema = z.object({
-  description: z.string().describe('Description of the service or product'),
-  subItems: z.array(z.string()).optional().describe('Detailed breakdown or bullet points for this item'),
+  description: z.string(),
+  subItems: z.array(z.string()).optional(),
   quantity: z.number().default(1),
-  unitPrice: z.number().describe('Price per unit in local currency')
+  unitPrice: z.number()
 });
 
 const documentSchema = z.object({
-  clientName: z.string().describe('Name of the client company or individual'),
-  clientEmail: z.string().optional().describe('Email address of the client'),
-  clientAddress: z.string().optional().describe('Physical address of the client'),
-  items: z.array(itemSchema).describe('List of line items for the document'),
-  notes: z.string().optional().describe('Any additional notes, thank you messages, or project summaries'),
-  contractTerms: z.string().optional().describe('Specific terms for the contract if applicable'),
-  paymentTerms: z.string().optional().describe('Payment conditions (e.g., 50% deposit, Net 30)'),
-  deliveryDate: z.string().optional().describe('Expected delivery or completion date'),
-  currency: z.string().default('HKD').describe('Currency code')
+  clientName: z.string(),
+  clientEmail: z.string().optional(),
+  clientAddress: z.string().optional(),
+  items: z.array(itemSchema),
+  notes: z.string().optional(),
+  contractTerms: z.string().optional(),
+  paymentTerms: z.string().optional(),
+  deliveryDate: z.string().optional(),
+  currency: z.string().default('HKD')
 });
 
 export async function POST(req: Request) {
   try {
     const { prompt, documentType, currentContext } = await req.json();
-
     const apiKey = process.env.DEEPSEEK_API_KEY;
     
     if (!apiKey) {
-      return Response.json({ error: 'DeepSeek API Key is missing. Please add DEEPSEEK_API_KEY to environment variables.' }, { status: 500 });
+      return Response.json({ error: 'DeepSeek API Key is missing.' }, { status: 500 });
     }
-
-    // DeepSeek is OpenAI-compatible (using /v1 for better compatibility)
-    const deepseek = createOpenAI({
-      baseURL: 'https://api.deepseek.com/v1',
-      apiKey: apiKey,
-    });
-    
-    console.log('[API] DeepSeek client initialized with baseURL: https://api.deepseek.com/v1');
 
     // Dynamic Prompt Engineering
     let roleDescription = "";
@@ -63,15 +52,11 @@ export async function POST(req: Request) {
         focusArea = "追求清晰和专业。";
     }
 
-    console.log('[API] Calling generateObject with mode: json');
-    
-    const result = await generateObject({
-      model: deepseek('deepseek-chat'),
-      schema: documentSchema,
-      mode: 'json',
-      system: `你是一位专业的商务助手，擅长编写 ${documentType}。
+    const systemPrompt = `你是一位专业的商务助手，擅长编写 ${documentType}。
 角色: ${roleDescription}
 产品: Kino SaaS (智能文档生成平台)
+
+任务: 根据用户的请求生成结构化的 JSON 数据。
 
 生成指南:
 1. **${focusArea}**
@@ -80,33 +65,79 @@ export async function POST(req: Request) {
 4. **语言风格**:
    - 如果是中文: 使用 **繁体中文 (香港商业习惯)**。使用专业词汇如 "訂金"、"餘款"、"茲收到"。
    - 如果是英文: 使用正式的 Business English。
-5. **条款与备注**: 生成与 ${documentType} 强相关的专业条款，不要使用模棱两可的废话。`,
-      prompt: `根据用户的请求生成内容: "${prompt}"
-      
-${currentContext ? `当前文档上下文: ${JSON.stringify(currentContext)}` : ''}`,
+5. **条款与备注**: 生成与 ${documentType} 强相关的专业条款，不要使用模棱两可的废话。
+
+必须返回以下格式的 JSON 对象:
+{
+  "clientName": "...",
+  "clientEmail": "...",
+  "clientAddress": "...",
+  "items": [{"description": "...", "subItems": ["...", "..."], "quantity": 1, "unitPrice": 1000}],
+  "notes": "...",
+  "contractTerms": "...",
+  "paymentTerms": "...",
+  "deliveryDate": "...",
+  "currency": "HKD"
+}`;
+
+    const userPrompt = `根据用户的请求生成内容: "${prompt}"
+${currentContext ? `当前文档上下文: ${JSON.stringify(currentContext)}` : ''}`;
+
+    console.log('[API] Calling DeepSeek API directly via fetch...');
+
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.7
+      })
     });
 
-    console.log('[API] DeepSeek generation successful:', result.object);
-    return Response.json(result.object);
-  } catch (error: any) {
-    console.error('[API] AI Generation Error Full Details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-      cause: error.cause,
-      fullError: error
-    });
-    
-    // Try to extract more specific error info
-    let errorMessage = error.message || 'Unknown error';
-    if (error.cause?.message) {
-      errorMessage += ` (Cause: ${error.cause.message})`;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[API] DeepSeek API Direct Call Failed:', response.status, errorText);
+      return Response.json({ 
+        error: `DeepSeek API Error: ${response.status} ${response.statusText}`,
+        details: errorText
+      }, { status: response.status });
     }
-    
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+
+    if (!content) {
+      return Response.json({ error: 'DeepSeek returned an empty response.' }, { status: 500 });
+    }
+
+    try {
+      const parsedContent = JSON.parse(content);
+      // Validate with zod
+      const validatedContent = documentSchema.parse(parsedContent);
+      console.log('[API] Successfully generated and validated content');
+      return Response.json(validatedContent);
+    } catch (parseError: any) {
+      console.error('[API] Failed to parse or validate JSON:', parseError);
+      return Response.json({ 
+        error: 'AI generated invalid data format.',
+        details: parseError.message,
+        rawContent: content
+      }, { status: 500 });
+    }
+
+  } catch (error: any) {
+    console.error('[API] Unexpected error in /api/generate:', error);
     return Response.json({ 
-      error: `AI Generation Error: ${errorMessage}`,
-      details: error.stack,
-      apiKey: process.env.DEEPSEEK_API_KEY ? 'Present (hidden)' : 'Missing'
+      error: `Internal Server Error: ${error.message}`,
+      stack: error.stack
     }, { status: 500 });
   }
 }
