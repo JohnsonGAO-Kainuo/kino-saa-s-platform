@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Sparkles, Send, X, Maximize2, Minimize2, Loader2, Bot, User, MessageSquare, Languages, History, ChevronLeft } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { toast } from "sonner"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Message {
   role: "user" | "assistant"
@@ -271,7 +273,9 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
                   <span className="text-[14px] font-bold text-[#1a1f36] truncate pr-4">{session.title}</span>
                   <span className="text-[10px] text-[#a3acb9]">{new Date(session.timestamp).toLocaleDateString()}</span>
                 </div>
-                <p className="text-[12px] text-[#4f566b] line-clamp-2 italic">{session.messages[session.messages.length - 1]?.content}</p>
+                <p className="text-[12px] text-[#4f566b] line-clamp-2 italic">
+                  {session.messages[session.messages.length - 1]?.content.replace(/\*\*|\*|_|#|`/g, '')}
+                </p>
               </button>
             )) : (
               <div className="flex flex-col items-center justify-center py-20 text-[#a3acb9]">
@@ -289,7 +293,19 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
                     {m.role === "user" ? <User className="w-4 h-4 text-[#4f566b]" /> : <Bot className="w-4 h-4 text-white" />}
                   </div>
                   <div className={`p-3 rounded-2xl text-[13px] leading-relaxed shadow-sm ${m.role === "user" ? "bg-white border-[#e6e9ef] text-[#1a1f36] rounded-tr-none" : "bg-[#6366f1] text-white rounded-tl-none"}`}>
-                    {m.content}
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>,
+                        ul: ({children}) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
+                        ol: ({children}) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
+                        li: ({children}) => <li className="marker:text-inherit">{children}</li>,
+                        strong: ({children}) => <strong className={`font-bold ${m.role === 'assistant' ? 'text-white border-b border-white/20' : 'text-[#1a1f36]'}`}>{children}</strong>,
+                        code: ({children}) => <code className="bg-black/10 px-1 rounded font-mono text-[11px]">{children}</code>
+                      }}
+                    >
+                      {m.content}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </div>
