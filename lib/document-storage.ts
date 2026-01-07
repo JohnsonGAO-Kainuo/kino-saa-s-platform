@@ -35,11 +35,12 @@ export class DocumentStorage {
     return data
   }
 
-  async getAllDocuments(filters?: { type?: DocumentType; status?: DocumentStatus }): Promise<Document[]> {
+  async getAllDocuments(filters?: { type?: DocumentType; status?: DocumentStatus; limit?: number }): Promise<Document[]> {
     let query = supabase.from('documents').select('*')
 
     if (filters?.type) query = query.eq('doc_type', filters.type)
     if (filters?.status) query = query.eq('status', filters.status)
+    if (filters?.limit) query = query.limit(filters.limit)
 
     const { data, error } = await query.order('updated_at', { ascending: false })
 
@@ -49,6 +50,24 @@ export class DocumentStorage {
     }
 
     return data || []
+  }
+
+  async getDocumentStats(): Promise<{ total: number; quotations: number; contracts: number; invoices: number }> {
+    const { data, error } = await supabase.from('documents').select('doc_type')
+
+    if (error) {
+      console.error('Error getting document stats:', error)
+      return { total: 0, quotations: 0, contracts: 0, invoices: 0 }
+    }
+
+    const stats = {
+      total: data.length,
+      quotations: data.filter(d => d.doc_type === 'quotation').length,
+      contracts: data.filter(d => d.doc_type === 'contract').length,
+      invoices: data.filter(d => d.doc_type === 'invoice').length,
+    }
+
+    return stats
   }
 
   async deleteDocument(id: string): Promise<boolean> {

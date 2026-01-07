@@ -13,16 +13,22 @@ import { Button } from "@/components/ui/button"
 
 export default function DashboardPage() {
   const [documents, setDocuments] = useState<Document[]>([])
+  const [stats, setStats] = useState({ total: 0, quotations: 0, contracts: 0, invoices: 0 })
   const [loading, setLoading] = useState(true)
   const [agentOpen, setAgentOpen] = useState(false)
 
   useEffect(() => {
-    async function loadDocuments() {
-      const docs = await documentStorage.getAllDocuments()
-      setDocuments(docs)
+    async function loadDashboardData() {
+      setLoading(true)
+      const [recentDocs, documentStats] = await Promise.all([
+        documentStorage.getAllDocuments({ limit: 5 }),
+        documentStorage.getDocumentStats()
+      ])
+      setDocuments(recentDocs)
+      setStats(documentStats)
       setLoading(false)
     }
-    loadDocuments()
+    loadDashboardData()
   }, [])
 
   const handleDocumentGenerated = (content: any) => {
@@ -35,14 +41,6 @@ export default function DashboardPage() {
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     )
-  }
-
-  // Calculate stats
-  const stats = {
-    total: documents.length,
-    quotations: documents.filter(d => d.doc_type === 'quotation').length,
-    contracts: documents.filter(d => d.doc_type === 'contract').length,
-    invoices: documents.filter(d => d.doc_type === 'invoice').length
   }
 
   return (
@@ -79,12 +77,12 @@ export default function DashboardPage() {
           <h2 className="text-xl font-bold text-slate-800">Quick Actions</h2>
           <CreateButtons />
           
-          {/* Drafts List could go here if needed, keeping it simple for now to match design */}
+          {/* Recent Documents Table or Grid could go here */}
         </div>
 
         {/* Right Sidebar - Recent Activity (1/3 width) */}
         <div className="space-y-6">
-          <RecentActivity />
+          <RecentActivity documents={documents} />
         </div>
       </div>
 
