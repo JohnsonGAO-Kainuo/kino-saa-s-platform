@@ -124,6 +124,23 @@ export const translations: Record<string, Record<Language, string>> = {
   'Translate Content': { en: 'Translate Content', 'zh-TW': '翻譯內容', fr: 'Traduire le contenu', ja: 'コンテンツを翻訳', es: 'Traducir contenido', de: 'Inhalt übersetzen', ko: '내용 번역' },
   'History': { en: 'History', 'zh-TW': '歷史記錄', fr: 'Historique', ja: '履歴', es: 'Historial', de: 'Verlauf', ko: '기록' },
   'New Chat': { en: 'New Chat', 'zh-TW': '新對話', fr: 'Nouvelle discussion', ja: '新しいチャット', es: 'Nuevo chat', de: 'Neuer Chat', ko: '새 채팅' },
+  'Need help? Ask AI': { en: 'Need help? Ask AI', 'zh-TW': '需要幫助？問問 AI', fr: 'Besoin d\'aide ? Demandez à l\'IA', ja: 'お困りですか？AIに聞く', es: '¿Necesitas ayuda? Pregunta a la IA', de: 'Brauchen Sie Hilfe? Fragen Sie die KI', ko: '도움이 필요하세요? AI에게 물어보세요' },
+  'Thinking...': { en: 'Thinking...', 'zh-TW': '正在思考...', fr: 'Réflexion...', ja: '思考中...', es: 'Pensando...', de: 'Denken...', ko: '생각 중...' },
+  'Translated!': { en: 'Translated!', 'zh-TW': '翻譯完成！', fr: 'Traduit !', ja: '翻訳しました！', es: '¡Traducido!', de: 'Übersetzt!', ko: '번역되었습니다!' },
+  'Chat History': { en: 'Chat History', 'zh-TW': '歷史記錄', fr: 'Historique des discussions', ja: 'チャット履歴', es: 'Historial de chat', de: 'Chatverlauf', ko: '채팅 기록' },
+  'AI Intelligence': { en: 'AI Intelligence', 'zh-TW': 'AI 智能助手', fr: 'Intelligence IA', ja: 'AIインテリジェンス', es: 'Inteligencia IA', de: 'KI-Intelligenz', ko: 'AI 인공지능' },
+  'Smart Agent Active': { en: 'Smart Agent Active', 'zh-TW': '智能助手已就緒', fr: 'Agent intelligent actif', ja: 'スマートエージェントがアクティブ', es: 'Agente inteligente activo', de: 'Smarter Agent aktiv', ko: '스마트 에이전트 활성' },
+  'No history yet': { en: 'No history yet', 'zh-TW': '暫無歷史記錄', fr: 'Pas encore d\'historique', ja: '履歴がありません', es: 'Aún no hay historial', de: 'Noch kein Verlauf', ko: '기록이 없습니다' },
+  'Ask AI to draft or edit...': { en: 'Ask AI to draft or edit...', 'zh-TW': '讓 AI 幫您編寫或修改...', fr: 'Demander à l\'IA de rédiger ou modifier...', ja: '下書きや編集をAIに依頼...', es: 'Pide a la IA que redacte o edite...', de: 'KI zum Entwerfen oder Bearbeiten bitten...', ko: 'AI에게 초안 작성 또는 편집 요청...' },
+  'Press Enter to send. Use Shift+Enter for new line.': { 
+    en: 'Press Enter to send. Use Shift+Enter for new line.', 
+    'zh-TW': '按下 Enter 發送，Shift+Enter 換行。', 
+    fr: 'Appuyez sur Entrée pour envoyer. Maj+Entrée pour une nouvelle ligne.', 
+    ja: 'Enterで送信。Shift+Enterで改行。', 
+    es: 'Presiona Enter para enviar. Shift+Enter para nueva línea.', 
+    de: 'Enter zum Senden drücken. Umschalt+Enter für neue Zeile.', 
+    ko: 'Enter를 눌러 전송하세요. 줄바꿈은 Shift+Enter입니다.' 
+  },
   
   // Status & Messages
   'Draft': { en: 'Draft', 'zh-TW': '草稿', fr: 'Brouillon', ja: '下書き', es: 'Borrador', de: 'Entwurf', ko: '초안' },

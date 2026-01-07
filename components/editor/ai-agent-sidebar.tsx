@@ -26,10 +26,11 @@ interface AIAgentSidebarProps {
   onDocumentGenerated: (content: any) => void
   isOpen: boolean
   onToggle: (open: boolean) => void
+  onExpandChange?: (expanded: boolean) => void
   docId?: string | null
 }
 
-export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, onToggle, initialContext, docId }: AIAgentSidebarProps & { initialContext?: any }) {
+export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, onToggle, onExpandChange, initialContext, docId }: AIAgentSidebarProps & { initialContext?: any }) {
   const { language, t } = useLanguage()
   const [isExpanded, setIsExpanded] = useState(false)
   const [input, setInput] = useState("")
@@ -101,7 +102,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
     const newId = Date.now().toString()
     const newSession: ChatSession = {
       id: newId,
-      title: t(`New ${currentDocType}`, `新的 ${currentDocType}`),
+      title: t("New Chat"),
       timestamp: Date.now(),
       messages: [{ role: "assistant", content: welcomeMessage }],
       docId: docId
@@ -160,7 +161,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
       const responseData = await response.json()
       if (responseData.action === 'update_document' && responseData.data) {
         onDocumentGenerated(responseData.data)
-        setMessages(prev => [...prev, { role: "assistant", content: t("Translated!", "翻譯完成！") }])
+        setMessages(prev => [...prev, { role: "assistant", content: t("Translated!") }])
       }
     } catch (e) {
       toast.error("Translation failed")
@@ -214,9 +215,34 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
     }
   }
 
+  const handleExpandToggle = () => {
+    const nextState = !isExpanded
+    setIsExpanded(nextState)
+    onExpandChange?.(nextState)
+  }
+
   return (
-    <div className={`fixed right-0 top-[64px] h-[calc(100vh-64px)] bg-white border-l border-[#e6e9ef] shadow-xl transition-all duration-500 ease-in-out z-40 flex flex-col ${isExpanded ? "w-[500px]" : "w-[400px]"}`}>
-      <div className="p-4 border-b border-[#f7f9fc] flex items-center justify-between bg-white">
+    <>
+      {/* Floating Toggle Button (Visible when closed) */}
+      {!isOpen && (
+        <Button
+          onClick={() => onToggle(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-[#6366f1] text-white shadow-2xl hover:bg-[#5658d2] z-50 group transition-all hover:scale-110 active:scale-95"
+          size="icon"
+        >
+          <div className="relative">
+            <Bot className="w-7 h-7" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#6366f1] animate-pulse" />
+          </div>
+          <span className="absolute right-16 bg-white text-[#1a1f36] px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl border border-[#e6e9ef] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            {t("Need help? Ask AI", "需要幫助？問問 AI")}
+          </span>
+        </Button>
+      )}
+
+      {/* Sidebar Container */}
+      <div className={`fixed right-0 top-[64px] h-[calc(100vh-64px)] bg-white border-l border-[#e6e9ef] shadow-xl transition-all duration-500 ease-in-out z-40 flex flex-col ${isExpanded ? "w-[500px]" : "w-[400px]"} ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className="p-4 border-b border-[#f7f9fc] flex items-center justify-between bg-white">
         <div className="flex items-center gap-2">
           {view === 'history' ? (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setView('chat')}>
@@ -229,12 +255,12 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
           )}
           <div>
             <h3 className="text-sm font-bold text-[#1a1f36]">
-              {view === 'history' ? t("Chat History", "歷史記錄") : t("AI Intelligence", "AI 智能助手")}
+              {view === 'history' ? t("Chat History") : t("AI Intelligence")}
             </h3>
             {view === 'chat' && (
               <p className="text-[11px] text-[#4f566b] flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                {t("Smart Agent Active", "智能助手已就緒")}
+                {t("Smart Agent Active")}
               </p>
             )}
           </div>
@@ -252,7 +278,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
               </Button>
             </>
           )}
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-[#4f566b]" onClick={() => setIsExpanded(!isExpanded)}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-[#4f566b]" onClick={handleExpandToggle}>
             {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-[#4f566b]" onClick={() => onToggle(false)}>
@@ -277,7 +303,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
             )) : (
               <div className="flex flex-col items-center justify-center py-20 text-[#a3acb9]">
                 <History className="w-12 h-12 mb-4 opacity-20" />
-                <p className="text-sm">{t("No history yet", "暫無歷史記錄")}</p>
+                <p className="text-sm">{t("No history yet")}</p>
               </div>
             )}
           </div>
@@ -311,7 +337,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
               <div className="flex justify-start">
                 <div className="flex gap-3 items-center text-[#4f566b] text-[12px] bg-slate-100/50 px-3 py-1.5 rounded-full border border-slate-100">
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  {t("Thinking...", "正在思考...")}
+                  {t("Thinking...")}
                 </div>
               </div>
             )}
@@ -326,14 +352,15 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              placeholder={t("Ask AI to draft or edit...", "讓 AI 幫您編寫或修改...")}
+              placeholder={t("Ask AI to draft or edit...")}
               className="w-full bg-[#f7f9fc] border border-[#e6e9ef] rounded-xl px-4 py-3 pr-12 text-[13px] focus:ring-2 focus:ring-[#6366f1]/20 outline-none h-[100px] resize-none"
             />
             <button onClick={handleSend} disabled={!input.trim() || isLoading} className="absolute right-3 bottom-3 p-2 bg-[#6366f1] text-white rounded-lg disabled:bg-slate-200 shadow-sm"><Send className="w-4 h-4" /></button>
           </div>
-          <p className="mt-2 text-[10px] text-center text-[#a3acb9]">{t("Press Enter to send. Use Shift+Enter for new line.", "按下 Enter 發送，Shift+Enter 換行。")}</p>
+          <p className="mt-2 text-[10px] text-center text-[#a3acb9]">{t("Press Enter to send. Use Shift+Enter for new line.")}</p>
         </div>
       )}
     </div>
+    </>
   )
 }

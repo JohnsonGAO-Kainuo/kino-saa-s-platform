@@ -25,6 +25,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const [loading, setLoading] = useState(true)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [agentOpen, setAgentOpen] = useState(false)
+  const [agentExpanded, setAgentExpanded] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
   const docId = searchParams.get("id")
@@ -288,7 +289,9 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
         {/* Main Content Area - Slides left when agent opens */}
         <div 
           className={`flex-1 overflow-hidden transition-all duration-500 ease-in-out ${
-            agentOpen ? 'mr-[400px]' : 'mr-0'
+            agentOpen 
+              ? agentExpanded ? 'mr-[500px]' : 'mr-[400px]' 
+              : 'mr-0'
           }`}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
@@ -327,6 +330,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           onDocumentGenerated={handleDocumentGenerated}
           isOpen={agentOpen}
           onToggle={(val) => setAgentOpen(val)}
+          onExpandChange={setAgentExpanded}
           initialContext={formData}
           docId={docId}
         />
