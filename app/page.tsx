@@ -12,6 +12,8 @@ import { Document } from "@/lib/types"
 import { Loader2 } from "lucide-react"
 import { AIAgentSidebar } from "@/components/editor/ai-agent-sidebar"
 
+import { DashboardLayout } from "@/components/layout/dashboard-layout"
+
 export default function DashboardPage() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,32 +53,73 @@ export default function DashboardPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] text-foreground">
-      <DashboardHeader />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <DashboardLayout>
+      <div className="p-8">
         {/* Welcome Header */}
-        <div className="mb-10">
-          <h1 className="text-[28px] font-bold text-[#1a1f36] tracking-tight">Good morning</h1>
-          <p className="text-[#4f566b] text-[15px] mt-1">Here's what's happening with your documents today.</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-[#1a1f36]">Dashboard</h1>
+          </div>
+          <div className="flex gap-4">
+            <DashboardHeader />
+          </div>
         </div>
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column (8 units) */}
-          <div className="lg:col-span-8 space-y-8">
-            <DocumentStats />
-            <QuickActions />
-            <DraftDocuments drafts={drafts} />
-          </div>
+        <div className="space-y-8">
+          <DocumentStats />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column (8 units) */}
+            <div className="lg:col-span-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <SubscriptionCard />
+                <QuickActions />
+              </div>
+              <DraftDocuments drafts={drafts} />
+              <RecentActivity />
+            </div>
 
-          {/* Right Column (4 units) */}
-          <div className="lg:col-span-4 space-y-8">
-            <SubscriptionCard />
-            <RecentActivity />
+            {/* Right Column (4 units) - Preview Area like design */}
+            <div className="lg:col-span-4">
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm sticky top-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="font-bold text-slate-800">Preview</h3>
+                  <span className="bg-red-50 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded border border-red-100 uppercase tracking-widest">Unpaid</span>
+                </div>
+                
+                {/* Simplified Document Preview Mock */}
+                <div className="aspect-[1/1.4] bg-slate-50 rounded-lg border border-dashed border-slate-200 flex flex-col p-6 overflow-hidden">
+                  <div className="w-12 h-12 bg-slate-200 rounded mb-6" />
+                  <div className="space-y-2 mb-8">
+                    <div className="w-full h-4 bg-slate-200 rounded" />
+                    <div className="w-2/3 h-4 bg-slate-200 rounded" />
+                  </div>
+                  <div className="space-y-3">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="flex justify-between">
+                        <div className="w-1/2 h-3 bg-slate-200 rounded" />
+                        <div className="w-1/4 h-3 bg-slate-200 rounded" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-auto pt-6 border-t border-slate-200">
+                    <div className="flex justify-between font-bold">
+                      <div className="w-1/4 h-4 bg-slate-200 rounded" />
+                      <div className="w-1/3 h-4 bg-slate-200 rounded" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <button className="flex-1 bg-slate-100 text-slate-600 font-medium py-2 rounded-lg text-sm hover:bg-slate-200 transition-colors">Edit</button>
+                  <button className="flex-1 bg-[#6366f1] text-white font-medium py-2 rounded-lg text-sm hover:bg-[#5658d2] transition-colors">Send</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Global Integrated AI Sidebar */}
       <AIAgentSidebar 
@@ -85,6 +128,6 @@ export default function DashboardPage() {
         isOpen={agentOpen}
         onToggle={setAgentOpen}
       />
-    </div>
+    </DashboardLayout>
   )
 }

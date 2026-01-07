@@ -1,34 +1,31 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DashboardLayout } from "@/components/layout/dashboard-layout"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import { useAuth } from '@/lib/auth-context'
 import { useLanguage } from '@/lib/language-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { User, Mail, Shield, LogOut, Bell, Globe, Moon, Loader2, ArrowLeft, Save, Check } from 'lucide-react'
-import Link from 'next/link'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { User, Shield, Globe, Moon, Loader2, Save, UserCircle, Settings as SettingsIcon } from 'lucide-react'
+import { cn } from "@/lib/utils"
 
 export default function SettingsPage() {
   const { user } = useAuth()
   const { language, setLanguage, t } = useLanguage()
-  const [loading, setLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'security'>('profile')
   const [saving, setSaving] = useState(false)
   const [fullName, setFullName] = useState('')
+  const [username, setUsername] = useState('')
 
   useEffect(() => {
     if (user?.user_metadata?.full_name) {
       setFullName(user.user_metadata.full_name)
+      setUsername(user.email?.split('@')[0] || '')
     }
   }, [user])
 
@@ -47,170 +44,194 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSignOut = async () => {
-    setLoading(true)
-    await supabase.auth.signOut()
-    window.location.href = '/login'
-  }
+  const tabs = [
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'preferences', label: 'Preferences', icon: Globe },
+    { id: 'security', label: 'Security', icon: Shield },
+  ]
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc]">
-      <DashboardHeader />
-      
-      <main className="max-w-4xl mx-auto px-4 py-10">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <Link href="/" className="flex items-center gap-2 text-[#4f566b] hover:text-[#1a1f36] text-sm mb-2 transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-              {t('Back to Dashboard', '返回主頁')}
-            </Link>
-            <h1 className="text-2xl font-bold text-[#1a1f36] tracking-tight">{t('Account Settings', '帳戶設定')}</h1>
-            <p className="text-[#4f566b] text-sm mt-1">{t('Manage your personal account preferences and security.', '管理您的個人帳戶偏好和安全設定。')}</p>
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto px-8 py-8">
+        <h1 className="text-3xl font-bold text-slate-900 mb-8">Settings</h1>
+        
+        <div className="flex gap-8 items-start">
+          {/* Internal Sidebar */}
+          <div className="w-64 space-y-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+                  activeTab === tab.id 
+                    ? "bg-white text-[#6366f1] shadow-sm border border-slate-200" 
+                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                )}
+              >
+                <tab.icon className={cn("w-4 h-4", activeTab === tab.id ? "text-[#6366f1]" : "text-slate-400")} />
+                {tab.label}
+              </button>
+            ))}
           </div>
-          <Button 
-            onClick={handleUpdateProfile} 
-            disabled={saving}
-            className="bg-[#6366f1] hover:bg-[#5658d2] text-white gap-2 shadow-sm"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {t('Save Profile', '保存設定')}
-          </Button>
-        </div>
 
-        <div className="space-y-6">
-          {/* Account Overview */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
-              <User className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Account Information', '帳戶資訊')}</h2>
-            </div>
-            <Card className="border-border shadow-sm bg-white overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-8">
-                  <div className="w-20 h-20 rounded-full bg-[#6366f1]/10 flex items-center justify-center border-2 border-white shadow-sm shrink-0">
-                    {user?.user_metadata?.avatar_url ? (
-                      <img src={user.user_metadata.avatar_url} className="w-full h-full rounded-full object-cover" alt="Avatar" />
-                    ) : (
-                      <span className="text-2xl font-bold text-[#6366f1]">
-                        {user?.email?.[0].toUpperCase()}
-                      </span>
-                    )}
+          {/* Main Settings Content */}
+          <div className="flex-1 space-y-8">
+            {activeTab === 'profile' && (
+              <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                <CardContent className="p-8">
+                  <div className="flex items-center gap-6 mb-10">
+                    <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center border-4 border-white shadow-sm overflow-hidden">
+                      {user?.user_metadata?.avatar_url ? (
+                        <img src={user.user_metadata.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
+                      ) : (
+                        <UserCircle className="w-12 h-12 text-slate-300" />
+                      )}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-slate-900">Welcome back, {fullName || username}</h2>
+                      <p className="text-slate-500">Manage your profile information</p>
+                    </div>
                   </div>
-                  <div className="flex-1 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="fullName" className="text-xs font-medium text-muted-foreground uppercase">{t('Full Name', '姓名')}</Label>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 font-semibold">Name</Label>
                         <Input 
-                          id="fullName"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          placeholder={t('Your Name', '您的姓名')}
-                          className="bg-white border-[#e6e9ef]"
+                          className="border-slate-200 h-10"
                         />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground uppercase">{t('Email Address', '電郵地址')}</Label>
-                        <div className="flex items-center h-10 px-3 bg-slate-50 border border-[#e6e9ef] rounded-md text-sm text-[#4f566b]">
-                          <Mail className="w-3.5 h-3.5 mr-2" />
-                          {user?.email}
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 font-semibold">Username</Label>
+                        <Input 
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          className="border-slate-200 h-10"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 font-semibold">Email</Label>
+                        <Input 
+                          value={user?.email || ''}
+                          disabled
+                          className="border-slate-200 h-10 bg-slate-50"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 font-semibold">Language</Label>
+                        <select 
+                          value={language}
+                          onChange={(e) => setLanguage(e.target.value as any)}
+                          className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm"
+                        >
+                          <option value="en">English (US)</option>
+                          <option value="zh-TW">繁體中文</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-12 pt-8 border-t border-slate-100">
+                    <h3 className="font-bold text-slate-800 mb-6">Asset Library</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="bg-gradient-to-br from-[#8b5cf6] to-[#6366f1] rounded-2xl p-6 text-white h-32 flex flex-col justify-between">
+                        <span className="font-bold text-sm">Logo</span>
+                        <div className="flex justify-between items-end">
+                          <span className="text-xs opacity-80">Upload</span>
+                          <button className="bg-white/20 p-2 rounded-full"><Save className="w-4 h-4" /></button>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-[#10b981] to-[#059669] rounded-2xl p-6 text-white h-32 flex flex-col justify-between">
+                        <span className="font-bold text-sm">Stamps</span>
+                        <div className="flex justify-between items-end">
+                          <span className="text-xs opacity-80">Upload</span>
+                          <button className="bg-white/20 p-2 rounded-full"><Save className="w-4 h-4" /></button>
                         </div>
                       </div>
                     </div>
-                    <p className="text-[11px] text-[#16a34a] font-medium bg-green-50 px-2 py-0.5 rounded-full inline-block">
-                      {t('Google Account Connected', 'Google 帳戶已連接')}
-                    </p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
 
-          {/* Preferences */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 text-[#4f566b] mb-2 px-1">
-              <Bell className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Preferences', '偏好設定')}</h2>
-            </div>
-            <Card className="border-border shadow-sm bg-white overflow-hidden">
-              <CardContent className="p-0 divide-y divide-[#f7f9fc]">
-                <div className="p-4 flex items-center justify-between hover:bg-[#fcfdfe] transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <Globe className="w-4 h-4 text-slate-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#1a1f36]">{t('Interface Language', '界面語言')}</p>
-                      <p className="text-xs text-[#4f566b]">{t('System display language', '系統顯示語言')}</p>
-                    </div>
+                  <div className="mt-8 flex justify-end">
+                    <Button 
+                      onClick={handleUpdateProfile} 
+                      disabled={saving}
+                      className="bg-[#6366f1] hover:bg-[#5658d2] text-white px-8"
+                    >
+                      {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                      Save Profile
+                    </Button>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-[#6366f1] text-xs font-semibold hover:bg-[#6366f1]/5">
-                        {language === 'en' ? 'English' : '繁體中文'}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem 
-                        onClick={() => setLanguage('en')}
-                        className="cursor-pointer flex items-center justify-between"
-                      >
-                        <span>English</span>
-                        {language === 'en' && <Check className="w-4 h-4 text-[#6366f1]" />}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => setLanguage('zh-TW')}
-                        className="cursor-pointer flex items-center justify-between"
-                      >
-                        <span>繁體中文</span>
-                        {language === 'zh-TW' && <Check className="w-4 h-4 text-[#6366f1]" />}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                
-                <div className="p-4 flex items-center justify-between hover:bg-[#fcfdfe] transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <Moon className="w-4 h-4 text-slate-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#1a1f36]">{t('Appearance', '外觀')}</p>
-                      <p className="text-xs text-[#4f566b]">{t('Choose between light and dark themes', '選擇淺色或深色主題')}</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-[#6366f1] text-xs font-semibold">{t('Light Mode', '淺色模式')}</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Danger Zone */}
-          <section className="space-y-4 pt-4">
-            <div className="flex items-center gap-2 text-red-500 mb-2 px-1">
-              <Shield className="w-4 h-4" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('Security & Session', '安全與登出')}</h2>
-            </div>
-            <Card className="border-red-100 shadow-sm bg-red-50/30">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-[#1a1f36]">{t('Sign out from this device', '登出此裝置')}</p>
-                  <p className="text-xs text-red-600/70 mt-0.5">{t('Your data is safely synced to the cloud.', '您的資料已安全同步至雲端。')}</p>
-                </div>
-                <Button 
-                  onClick={handleSignOut}
-                  disabled={loading}
-                  variant="outline" 
-                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 bg-white shadow-sm"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
-                  {t('Sign Out', '登出')}
-                </Button>
-              </CardContent>
-            </Card>
-          </section>
+            {activeTab === 'preferences' && (
+              <Card className="bg-white border-slate-200 shadow-sm">
+                <CardContent className="p-8">
+                  <h2 className="text-xl font-bold text-slate-900 mb-8">Preferences</h2>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between py-4 border-b border-slate-100">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-slate-100 rounded-lg"><Moon className="w-5 h-5 text-slate-600" /></div>
+                        <div>
+                          <p className="font-bold text-slate-800">Theme</p>
+                          <p className="text-xs text-slate-500">Dark mode and appearance</p>
+                        </div>
+                      </div>
+                      <Switch />
+                    </div>
+                    <div className="flex items-center justify-between py-4 border-b border-slate-100">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-slate-100 rounded-lg"><Globe className="w-5 h-5 text-slate-600" /></div>
+                        <div>
+                          <p className="font-bold text-slate-800">Language</p>
+                          <p className="text-xs text-slate-500">System display language</p>
+                        </div>
+                      </div>
+                      <Switch />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'security' && (
+              <Card className="bg-white border-slate-200 shadow-sm">
+                <CardContent className="p-8">
+                  <h2 className="text-xl font-bold text-slate-900 mb-8">Security</h2>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between py-4 border-b border-slate-100">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-slate-100 rounded-lg"><Shield className="w-5 h-5 text-slate-600" /></div>
+                        <div>
+                          <p className="font-bold text-slate-800">Theme</p>
+                          <p className="text-xs text-slate-500">Dark mode and appearance</p>
+                        </div>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between py-4 border-b border-slate-100">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-slate-100 rounded-lg"><Globe className="w-5 h-5 text-slate-600" /></div>
+                        <div>
+                          <p className="font-bold text-slate-800">Language</p>
+                          <p className="text-xs text-slate-500">System display language</p>
+                        </div>
+                      </div>
+                      <Switch />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
-
