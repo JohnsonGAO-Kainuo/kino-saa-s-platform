@@ -32,6 +32,7 @@ interface FormDataType {
   logo: string | null
   signature: string | null
   stamp: string | null
+  clientSignature?: string | null
   contractTerms: string
   paymentTerms: string
   deliveryDate: string
@@ -44,6 +45,7 @@ interface FormDataType {
   templateId?: "standard" | "corporate" | "modern"
   signatureOffset?: { x: number; y: number }
   stampOffset?: { x: number; y: number }
+  clientSignatureOffset?: { x: number; y: number }
 }
 
 interface DocumentPreviewProps {
@@ -228,12 +230,21 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
       </thead>
       <tbody>
         {formData.items.map((item, index) => (
-          <tr key={index} className={styles.itemRow}>
-            <td className="py-3 text-xs text-gray-900 font-semibold">{item.description || "—"}</td>
-            <td className="text-right py-3 text-xs text-gray-800">{item.quantity}</td>
-            <td className="text-right py-3 text-xs text-gray-800">${item.unitPrice.toFixed(2)}</td>
-            <td className="text-right py-3 font-semibold text-xs text-gray-900">${(item.quantity * item.unitPrice).toFixed(2)}</td>
-          </tr>
+          <React.Fragment key={index}>
+            <tr className={styles.itemRow}>
+              <td className="py-3 text-xs text-gray-900 font-semibold">{item.description || "—"}</td>
+              <td className="text-right py-3 text-xs text-gray-800">{item.quantity}</td>
+              <td className="text-right py-3 text-xs text-gray-800">${item.unitPrice.toFixed(2)}</td>
+              <td className="text-right py-3 font-semibold text-xs text-gray-900">${(item.quantity * item.unitPrice).toFixed(2)}</td>
+            </tr>
+            {item.subItems && item.subItems.length > 0 && item.subItems.map((subItem, sIndex) => (
+              <tr key={`${index}-${sIndex}`} className="border-b border-gray-100 bg-gray-50/20">
+                <td colSpan={4} className="py-1 pl-6 text-[11px] text-gray-500">
+                  • {subItem}
+                </td>
+              </tr>
+            ))}
+          </React.Fragment>
         ))}
       </tbody>
     </table>
@@ -244,6 +255,32 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
     const stampY = formData.stampOffset?.y || 0
     const sigX = formData.signatureOffset?.x || 0
     const sigY = formData.signatureOffset?.y || 0
+    const clientSigX = formData.clientSignatureOffset?.x || 0
+    const clientSigY = formData.clientSignatureOffset?.y || 0
+
+    // Quotation usually has no signature
+    if (documentType === "quotation") {
+      return (
+        <div className="pt-8 mt-12 border-t-2 border-gray-800">
+          <div className="flex justify-end">
+            <div className="w-64 space-y-1">
+              <div className="flex justify-between py-1 text-xs">
+                <span className="font-bold text-gray-900">{t({ en: "SUBTOTAL", 'zh-TW': "小計" })}:</span>
+                <span className="text-gray-900">${totalAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between py-2 font-bold text-gray-900 border-t-2 border-gray-800 mt-2">
+                <span className="text-sm">{t({ en: "TOTAL", 'zh-TW': "總計" })}:</span>
+                <span className="text-sm">${totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-12 text-center border-t border-gray-100 pt-4">
+            <p className="text-[11px] text-gray-400 italic">{t({ en: "Thank you for your business!", 'zh-TW': "多謝惠顧！" })}</p>
+            <p className="text-[10px] text-gray-300 mt-2">{t({ en: "End of Document", 'zh-TW': "文件完" })}</p>
+          </div>
+        </div>
+      )
+    }
 
     return (
       <div className="pt-8 mt-12 border-t-2 border-gray-800">
@@ -258,18 +295,46 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
               <span className="text-sm">${totalAmount.toFixed(2)}</span>
             </div>
           </div>
-          <div className="relative flex flex-col items-center min-w-[240px]">
-            <div className="h-28 flex items-center justify-center relative w-full mb-2">
-              <div className="absolute right-4 top-0 opacity-80" style={{ transform: `translate(${stampX}px, ${stampY}px)` }}>
-                {formData.stamp ? <img src={formData.stamp} alt="Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" /> : companySettings?.stamp_url && <img src={companySettings.stamp_url} alt="Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />}
+          
+          <div className="flex gap-12">
+            {/* Issuer Signature & Stamp */}
+            <div className="relative flex flex-col items-center min-w-[200px]">
+              <div className="h-28 flex items-center justify-center relative w-full mb-2">
+                {(formData.stamp || companySettings?.stamp_url) && (
+                  <div className="absolute right-0 top-0 opacity-80" style={{ transform: `translate(${stampX}px, ${stampY}px)` }}>
+                    <img src={formData.stamp || companySettings?.stamp_url} alt="Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />
+                  </div>
+                )}
+                {(formData.signature || companySettings?.signature_url) && (
+                  <div className="z-10" style={{ transform: `translate(${sigX}px, ${sigY}px)` }}>
+                    <img src={formData.signature || companySettings?.signature_url} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
+                  </div>
+                )}
               </div>
-              <div className="z-10" style={{ transform: `translate(${sigX}px, ${sigY}px)` }}>
-                {formData.signature ? <img src={formData.signature} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" /> : companySettings?.signature_url && <img src={companySettings.signature_url} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />}
+              <div className="w-full border-t border-gray-900 pt-2 text-center">
+                <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900">
+                  {documentType === "contract" ? t({ en: "PARTY A (ISSUER)", 'zh-TW': "甲方 (發件人)" }) : t({ en: "AUTHORIZED SIGNATURE & CHOP", 'zh-TW': "授權簽名及公司蓋章" })}
+                </p>
               </div>
             </div>
-            <div className="w-full border-t border-gray-900 pt-2 text-center">
-              <p className="font-bold text-[11px] uppercase tracking-tight text-gray-900">{t({ en: "AUTHORIZED SIGNATURE & CHOP", 'zh-TW': "授權簽名及公司蓋章" })}</p>
-            </div>
+
+            {/* Client Signature (Contract Only) */}
+            {documentType === "contract" && (
+              <div className="relative flex flex-col items-center min-w-[200px]">
+                <div className="h-28 flex items-center justify-center relative w-full mb-2">
+                  {formData.clientSignature && (
+                    <div style={{ transform: `translate(${clientSigX}px, ${clientSigY}px)` }}>
+                      <img src={formData.clientSignature} alt="Client Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
+                    </div>
+                  )}
+                </div>
+                <div className="w-full border-t border-gray-900 pt-2 text-center">
+                  <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900">
+                    {t({ en: "PARTY B (CLIENT)", 'zh-TW': "乙方 (客戶)" })}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="mt-12 text-center border-t border-gray-100 pt-4">

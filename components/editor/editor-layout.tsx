@@ -57,6 +57,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     logo: null as string | null,
     signature: null as string | null,
     stamp: null as string | null,
+    clientSignature: null as string | null,
     contractTerms: "",
     paymentTerms: "",
     deliveryDate: "",
@@ -69,6 +70,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     templateId: "standard" as "standard" | "corporate" | "modern",
     signatureOffset: { x: 0, y: 0 },
     stampOffset: { x: 0, y: 0 },
+    clientSignatureOffset: { x: 0, y: 0 },
   })
 
   // Load document or default settings
@@ -94,6 +96,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             logo: doc.content?.logo || null,
             signature: doc.signature_url || null,
             stamp: doc.content?.stamp || null,
+            clientSignature: doc.content?.clientSignature || null,
             contractTerms: doc.content?.contractTerms || "",
             paymentTerms: doc.content?.paymentTerms || "",
             deliveryDate: doc.content?.deliveryDate || "",
@@ -106,6 +109,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             templateId: doc.content?.templateId || "standard",
             signatureOffset: doc.content?.signatureOffset || { x: 0, y: 0 },
             stampOffset: doc.content?.stampOffset || { x: 0, y: 0 },
+            clientSignatureOffset: doc.content?.clientSignatureOffset || { x: 0, y: 0 },
           })
           setActiveTab(doc.doc_type)
           currentDocId.current = doc.id
@@ -242,6 +246,9 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
       if (generatedContent.paymentTerms) newData.paymentTerms = generatedContent.paymentTerms;
       if (generatedContent.deliveryDate) newData.deliveryDate = generatedContent.deliveryDate;
       if (generatedContent.currency) newData.currency = generatedContent.currency;
+      if (generatedContent.signature) newData.signature = generatedContent.signature;
+      if (generatedContent.stamp) newData.stamp = generatedContent.stamp;
+      if (generatedContent.clientSignature) newData.clientSignature = generatedContent.clientSignature;
 
       // Ensure items are updated correctly
       if (generatedContent.items && Array.isArray(generatedContent.items) && generatedContent.items.length > 0) {
