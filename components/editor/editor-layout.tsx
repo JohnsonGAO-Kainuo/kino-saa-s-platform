@@ -15,7 +15,7 @@ import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
 import { Loader2 } from "lucide-react"
-import type { Language } from "@/lib/language-context"
+import { useLanguage, type Language } from "@/lib/language-context"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
@@ -30,6 +30,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const router = useRouter()
   const docId = searchParams.get("id")
   const { user } = useAuth()
+  const { t } = useLanguage()
   
   // Use a ref to store the current docId to avoid stale closures in auto-save
   const currentDocId = useRef<string | null>(docId)
@@ -227,17 +228,37 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   }, [formData, handleSave, user, loading])
 
   const handleDocumentGenerated = (generatedContent: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      clientName: generatedContent.clientName || prev.clientName,
-      clientEmail: generatedContent.clientEmail || prev.clientEmail,
-      clientAddress: generatedContent.clientAddress || prev.clientAddress,
-      items: generatedContent.items || prev.items,
-      notes: generatedContent.notes || prev.notes,
-      contractTerms: generatedContent.contractTerms || prev.contractTerms,
-      paymentTerms: generatedContent.paymentTerms || prev.paymentTerms,
-      deliveryDate: generatedContent.deliveryDate || prev.deliveryDate,
-    }))
+    console.log("AI Generated Content Received:", JSON.stringify(generatedContent, null, 2));
+    
+    setFormData((prev) => {
+      // Create a fresh object to ensure state update
+      const newData = { ...prev };
+
+      if (generatedContent.clientName) newData.clientName = generatedContent.clientName;
+      if (generatedContent.clientEmail) newData.clientEmail = generatedContent.clientEmail;
+      if (generatedContent.clientAddress) newData.clientAddress = generatedContent.clientAddress;
+      if (generatedContent.notes) newData.notes = generatedContent.notes;
+      if (generatedContent.contractTerms) newData.contractTerms = generatedContent.contractTerms;
+      if (generatedContent.paymentTerms) newData.paymentTerms = generatedContent.paymentTerms;
+      if (generatedContent.deliveryDate) newData.deliveryDate = generatedContent.deliveryDate;
+      if (generatedContent.currency) newData.currency = generatedContent.currency;
+
+      // Ensure items are updated correctly
+      if (generatedContent.items && Array.isArray(generatedContent.items) && generatedContent.items.length > 0) {
+        console.log("Updating items with:", generatedContent.items);
+        newData.items = generatedContent.items.map((item: any) => ({
+          id: crypto.randomUUID(), // Always give new items unique IDs
+          description: item.description || "",
+          quantity: Number(item.quantity) || 1,
+          unitPrice: Number(item.unitPrice) || 0,
+          subItems: Array.isArray(item.subItems) ? item.subItems : []
+        }));
+      }
+
+      return newData;
+    });
+
+    toast.success(t("Document updated by AI!", "文件已由 AI 更新！"));
   }
 
   const handlePaymentStatusChange = (newStatus: PaymentStatus) => {

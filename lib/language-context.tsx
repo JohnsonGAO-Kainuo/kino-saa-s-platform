@@ -5,16 +5,11 @@ import { useAuth } from './auth-context'
 import { supabase } from './supabase'
 import { getTranslation } from './translations'
 
-export type Language = 'en' | 'zh-TW' | 'fr' | 'ja' | 'es' | 'de' | 'ko'
+export type Language = 'en' | 'zh-TW'
 
 export const languageNames: Record<Language, string> = {
   'en': 'English',
-  'zh-TW': '繁體中文',
-  'fr': 'Français',
-  'ja': '日本語',
-  'es': 'Español',
-  'de': 'Deutsch',
-  'ko': '한국어'
+  'zh-TW': '繁體中文'
 }
 
 interface LanguageContextType {

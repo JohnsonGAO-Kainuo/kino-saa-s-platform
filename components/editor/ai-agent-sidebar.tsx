@@ -184,7 +184,8 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
         body: JSON.stringify({
           prompt: userMessage,
           documentType: currentDocType,
-          currentContext: initialContext || null
+          currentContext: initialContext || null,
+          uiLanguage: language
         })
       });
 
