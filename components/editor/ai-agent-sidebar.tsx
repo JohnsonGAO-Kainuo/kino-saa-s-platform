@@ -242,7 +242,7 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
       )}
 
       {/* Sidebar Container */}
-      <div className={`fixed right-0 top-[64px] h-[calc(100vh-64px)] bg-white border-l border-[#e6e9ef] shadow-xl transition-all duration-500 ease-in-out z-40 flex flex-col ${isExpanded ? "w-[500px]" : "w-[400px]"} ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`fixed right-0 top-[64px] h-[calc(100vh-64px)] bg-white border-l border-[#e6e9ef] shadow-xl transition-all duration-500 ease-in-out z-40 flex flex-col ${isExpanded ? "w-full md:w-[500px]" : "w-full md:w-[400px]"} ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
         <div className="p-4 border-b border-[#f7f9fc] flex items-center justify-between bg-white">
         <div className="flex items-center gap-2">
           {view === 'history' ? (

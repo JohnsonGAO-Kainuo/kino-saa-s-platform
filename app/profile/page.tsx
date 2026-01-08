@@ -233,16 +233,16 @@ export default function ProfilePage() {
   const defaultStamp = stamps.find(a => a.is_default) || stamps[0]
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] p-8 text-slate-900">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#f7f9fc] p-4 md:p-8 text-slate-900">
+      <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
         
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('Business Profile', '企業資料')}</h1>
-            <p className="text-gray-500 mt-1">{t('Manage your business identity and assets', '管理您的企業身份與資產')}</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">{t('Business Profile', '企業資料')}</h1>
+            <p className="text-gray-500 text-xs md:text-sm mt-1">{t('Manage your business identity and assets', '管理您的企業身份與資產')}</p>
           </div>
-          <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200">
+          <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 w-full sm:w-auto h-11 md:h-10">
             {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
             {t('Save Changes', '保存變更')}
           </Button>

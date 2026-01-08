@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth-context"
 import { LanguageProvider } from "@/lib/language-context"
 import { Toaster } from "@/components/ui/sonner"
 import { Sidebar } from "@/components/layout/sidebar"
+import { MobileNav } from "@/components/layout/mobile-nav"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -28,8 +29,9 @@ export default function RootLayout({
       <body className={`font-sans antialiased bg-[#f7f9fc] text-foreground`}>
         <AuthProvider>
           <LanguageProvider>
-            <div className="flex min-h-screen">
+            <div className="flex flex-col md:flex-row min-h-screen">
               <Sidebar />
+              <MobileNav />
               <main className="flex-1 md:pl-64 transition-all duration-300 ease-in-out w-full">
                 {children}
               </main>

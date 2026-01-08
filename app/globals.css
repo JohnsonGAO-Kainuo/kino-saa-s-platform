@@ -143,9 +143,23 @@
 
 @media (max-width: 768px) {
   .a4-paper-container {
-    width: 100%;
-    min-height: auto;
-    transform: none;
-    padding: 15mm 10mm;
+    width: 210mm; /* Keep fixed width */
+    min-height: 297mm;
+    transform: scale(0.42); /* Scale down significantly for mobile */
+    transform-origin: top center;
+    margin-bottom: -150mm; /* Negative margin to compensate for scale overflow */
+  }
+  
+  #document-preview-container {
+    padding: 1rem 0;
+    overflow-x: hidden;
+    height: 500px; /* Limit height on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .a4-paper-container {
+    transform: scale(0.35);
+    margin-bottom: -180mm;
   }
 }

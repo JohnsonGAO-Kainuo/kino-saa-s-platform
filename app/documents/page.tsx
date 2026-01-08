@@ -89,15 +89,15 @@ function DocumentsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] p-8 text-slate-900">
-      <header className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-[#f7f9fc] p-4 md:p-8 text-slate-900">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">My Documents</h1>
-          <p className="text-slate-500 mt-1">Manage and track all your generated documents</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">My Documents</h1>
+          <p className="text-slate-500 text-sm mt-1">Manage and track all your generated documents</p>
         </div>
-        <div className="flex gap-3">
-          <Link href="/editor?type=quotation">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Link href="/editor?type=quotation" className="w-full sm:w-auto">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 h-11 md:h-10">
               <Plus className="w-4 h-4" /> Create New
             </Button>
           </Link>
@@ -105,13 +105,13 @@ function DocumentsContent() {
       </header>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-100">
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
+        <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-100 overflow-x-auto no-scrollbar">
           {["all", "quotation", "contract", "invoice"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === tab 
                   ? "bg-blue-50 text-blue-600 shadow-sm" 
                   : "text-slate-500 hover:text-slate-800"
@@ -128,7 +128,7 @@ function DocumentsContent() {
             placeholder="Search documents or clients..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white border-none shadow-sm focus-visible:ring-blue-500" 
+            className="pl-10 bg-white border-none shadow-sm h-11 md:h-10 focus-visible:ring-blue-500" 
           />
         </div>
       </div>
@@ -150,15 +150,17 @@ function DocumentsContent() {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-bold text-slate-900 truncate">{doc.title || "Untitled Document"}</h3>
-                      {getStatusBadge(doc.status || "draft")}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-0.5">
+                      <h3 className="font-bold text-slate-900 truncate text-sm md:text-base">{doc.title || "Untitled Document"}</h3>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(doc.status || "draft")}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] md:text-xs text-slate-500">
                       <span className="flex items-center gap-1 font-medium text-slate-700">
                         {doc.client_name || "No Client"}
                       </span>
-                      <span>•</span>
+                      <span className="hidden sm:inline-block">•</span>
                       <span>Updated {format(new Date(doc.updated_at), "MMM d, yyyy")}</span>
                     </div>
                   </div>

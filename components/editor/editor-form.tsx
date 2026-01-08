@@ -109,17 +109,17 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
   const isContractType = documentType === "contract"
 
   return (
-    <div className="space-y-8 pb-32 max-w-2xl mx-auto">
+    <div className="space-y-6 md:space-y-8 pb-32 max-w-2xl mx-auto">
       {/* 1. From Section */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">From</h3>
+      <div className="bg-white rounded-xl md:rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
+        <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase mb-4">From</h3>
         <div className="space-y-4">
           <Input
             id="companyName"
             placeholder="Your Company Name"
             value={formData.companyName || ''}
             onChange={(e) => handleFieldChange("companyName", e.target.value)}
-            className="text-lg font-bold border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50"
+            className="text-base md:text-lg font-bold border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50 h-11 md:h-12"
           />
           <Textarea
             id="companyAddress"
@@ -130,9 +130,9 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
           />
           
           <div className="pt-2">
-            <h4 className="text-xs font-medium text-gray-400 mb-2">Company Logo</h4>
+            <h4 className="text-[10px] md:text-xs font-medium text-gray-400 mb-2 uppercase">Company Logo</h4>
             <div 
-              className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+              className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors min-h-[100px]"
               onClick={() => document.getElementById('logo-upload')?.click()}
             >
               <AssetSelector
@@ -149,15 +149,15 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
       </div>
 
       {/* 2. Bill To Section */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Bill To</h3>
+      <div className="bg-white rounded-xl md:rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
+        <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase mb-4">Bill To</h3>
         <div className="space-y-4">
           <Input
             id="clientName"
             placeholder="Client Name"
             value={formData.clientName}
             onChange={(e) => handleFieldChange("clientName", e.target.value)}
-            className="text-lg font-bold border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50"
+            className="text-base md:text-lg font-bold border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50 h-11 md:h-12"
           />
           <Textarea
             id="clientAddress"
@@ -170,25 +170,25 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
       </div>
 
       {/* 3. Description (Optional / Top Level) */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Description</h3>
+      <div className="bg-white rounded-xl md:rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
+        <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase mb-4">Description</h3>
         <Textarea
            placeholder="Write a project description or summary..."
            value={formData.notes}
            onChange={(e) => handleFieldChange("notes", e.target.value)}
-           className="min-h-[100px] border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50 resize-none"
+           className="min-h-[100px] border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-50/50 resize-none text-sm"
         />
       </div>
 
       {/* 3b. Branding & Assets */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-6">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase">Branding & Assets</h3>
+      <div className="bg-white rounded-xl md:rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm space-y-6">
+        <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase">Branding & Assets</h3>
         
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <Label className="text-xs text-gray-400 uppercase">Signature</Label>
+            <Label className="text-[10px] md:text-xs text-gray-400 uppercase">Signature</Label>
             <div 
-              className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+              className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors min-h-[100px]"
               onClick={() => document.getElementById('signature-upload')?.click()}
             >
               <AssetSelector
@@ -202,7 +202,7 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
             </div>
             {formData.signature && (
               <div className="space-y-2">
-                <Label className="text-[10px] text-gray-400">Position Offset</Label>
+                <Label className="text-[10px] text-gray-400 uppercase">Position Offset</Label>
                 <div className="flex gap-4">
                   <div className="flex-1">
                     <span className="text-[10px] text-gray-400">X: {formData.signatureOffset?.x || 0}</span>
@@ -226,9 +226,9 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
           </div>
 
           <div className="space-y-4">
-            <Label className="text-xs text-gray-400 uppercase">Stamp / Chop</Label>
+            <Label className="text-[10px] md:text-xs text-gray-400 uppercase">Stamp / Chop</Label>
             <div 
-              className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+              className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors min-h-[100px]"
               onClick={() => document.getElementById('stamp-upload')?.click()}
             >
               <AssetSelector
@@ -242,7 +242,7 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
             </div>
             {formData.stamp && (
               <div className="space-y-2">
-                <Label className="text-[10px] text-gray-400">Position Offset</Label>
+                <Label className="text-[10px] text-gray-400 uppercase">Position Offset</Label>
                 <div className="flex gap-4">
                   <div className="flex-1">
                     <span className="text-[10px] text-gray-400">X: {formData.stampOffset?.x || 0}</span>
@@ -268,10 +268,10 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
 
         {documentType === "contract" && (
           <div className="pt-4 border-t border-gray-100">
-            <Label className="text-xs text-gray-400 uppercase block mb-4">Client Signature (Party B)</Label>
-            <div className="grid grid-cols-2 gap-6">
+            <Label className="text-[10px] md:text-xs text-gray-400 uppercase block mb-4">Client Signature (Party B)</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div 
-                className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+                className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors min-h-[100px]"
                 onClick={() => document.getElementById('client-signature-upload')?.click()}
               >
                 <AssetSelector
@@ -285,7 +285,7 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
               </div>
               {formData.clientSignature && (
                 <div className="space-y-2">
-                  <Label className="text-[10px] text-gray-400">Position Offset</Label>
+                  <Label className="text-[10px] text-gray-400 uppercase">Position Offset</Label>
                   <div className="flex gap-4">
                     <div className="flex-1">
                       <span className="text-[10px] text-gray-400">X: {formData.clientSignatureOffset?.x || 0}</span>
@@ -313,19 +313,19 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
 
       {/* 4. Line Items */}
       {!isContractType && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white rounded-xl md:rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase">Items</h3>
-            <span className="text-xs text-gray-400">
-               Total: <span className="text-blue-600 font-bold text-base ml-1">
+            <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase">Items</h3>
+            <span className="text-[10px] md:text-xs text-gray-400">
+               Total: <span className="text-blue-600 font-bold text-sm md:text-base ml-1">
                  HKD {formData.items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0).toFixed(2)}
                </span>
             </span>
           </div>
 
-          <div className="space-y-2">
-            {/* Table Header */}
-            <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-400 uppercase px-2 mb-2">
+          <div className="space-y-3">
+            {/* Table Header (Hidden on small mobile) */}
+            <div className="hidden sm:grid grid-cols-12 gap-2 text-[10px] font-medium text-gray-400 uppercase px-2 mb-2">
               <div className="col-span-1">No.</div>
               <div className="col-span-6">Description</div>
               <div className="col-span-2 text-right">Price</div>
@@ -334,40 +334,48 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
             </div>
 
             {formData.items.map((item, index) => (
-              <div key={index} className="group relative bg-gray-50/30 rounded-lg p-3 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-200 transition-all space-y-3">
-                <div className="grid grid-cols-12 gap-2 items-center">
-                  <div className="col-span-1 text-gray-400 text-sm font-bold pl-1">{index + 1}</div>
-                  <div className="col-span-6">
+              <div key={index} className="group relative bg-gray-50/30 rounded-xl p-3 md:p-4 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-200 transition-all space-y-3">
+                <div className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-2 items-start sm:items-center">
+                  <div className="hidden sm:block col-span-1 text-gray-400 text-sm font-bold pl-1">{index + 1}</div>
+                  
+                  {/* Item Name (Full width on mobile) */}
+                  <div className="w-full sm:col-span-6">
+                    <Label className="sm:hidden text-[10px] text-gray-400 uppercase mb-1 block">Item Name</Label>
                     <Input
                       value={item.description}
                       onChange={(e) => handleItemChange(index, "description", e.target.value)}
                       placeholder="Item name"
-                      className="h-9 border-gray-200 bg-white focus:bg-white px-3 shadow-sm font-medium"
+                      className="h-10 border-gray-200 bg-white focus:bg-white px-3 shadow-sm font-medium w-full"
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Input
-                      type="number"
-                      value={item.unitPrice}
-                      onChange={(e) => handleItemChange(index, "unitPrice", parseFloat(e.target.value) || 0)}
-                      className="h-9 text-right border-gray-200 bg-white px-3 shadow-sm"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                     <Input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => handleItemChange(index, "quantity", parseInt(e.target.value) || 1)}
-                      className="h-9 text-center border-gray-200 bg-white px-1 shadow-sm"
-                    />
-                  </div>
-                  <div className="col-span-2 text-right text-sm font-bold text-blue-600 pr-2">
-                    ${(item.quantity * item.unitPrice).toFixed(0)}
+
+                  <div className="flex w-full sm:col-span-5 gap-3">
+                    <div className="flex-1">
+                      <Label className="sm:hidden text-[10px] text-gray-400 uppercase mb-1 block text-right">Price</Label>
+                      <Input
+                        type="number"
+                        value={item.unitPrice}
+                        onChange={(e) => handleItemChange(index, "unitPrice", parseFloat(e.target.value) || 0)}
+                        className="h-10 text-right border-gray-200 bg-white px-3 shadow-sm w-full"
+                      />
+                    </div>
+                    <div className="w-20">
+                      <Label className="sm:hidden text-[10px] text-gray-400 uppercase mb-1 block text-center">Qty</Label>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(index, "quantity", parseInt(e.target.value) || 1)}
+                        className="h-10 text-center border-gray-200 bg-white px-1 shadow-sm w-full"
+                      />
+                    </div>
+                    <div className="hidden sm:block col-span-2 text-right text-sm font-bold text-blue-600 pr-2 min-w-[60px]">
+                      ${(item.quantity * item.unitPrice).toFixed(0)}
+                    </div>
                   </div>
                 </div>
 
                 {/* Sub-items list */}
-                <div className="pl-9 space-y-2">
+                <div className="pl-0 sm:pl-9 space-y-2">
                   {item.subItems?.map((sub, sIdx) => (
                     <div key={sIdx} className="flex items-center gap-2 group/sub">
                       <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
@@ -379,7 +387,7 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
                           handleItemChange(index, "subItems", newSubItems)
                         }}
                         placeholder="Sub-item detail..."
-                        className="h-7 text-xs border-transparent bg-transparent hover:border-gray-200 hover:bg-white focus:bg-white py-0 shadow-none"
+                        className="h-8 text-xs border-transparent bg-transparent hover:border-gray-200 hover:bg-white focus:bg-white py-0 shadow-none w-full"
                       />
                       <button 
                         onClick={() => {
@@ -403,10 +411,16 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
                   </button>
                 </div>
 
+                {/* Mobile Total Row */}
+                <div className="sm:hidden flex justify-between items-center pt-2 border-t border-gray-100">
+                   <span className="text-[10px] text-gray-400 uppercase">Item Total</span>
+                   <span className="text-sm font-bold text-blue-600">${(item.quantity * item.unitPrice).toFixed(0)}</span>
+                </div>
+
                 {/* Delete Button (absolute) */}
                 <button 
                   onClick={() => removeItem(index)}
-                  className="absolute -right-3 -top-3 bg-white rounded-full p-1.5 shadow-lg border border-gray-100 text-gray-300 opacity-0 group-hover:opacity-100 transition-all hover:text-red-500 hover:scale-110 z-10"
+                  className="absolute -right-2 -top-2 md:-right-3 md:-top-3 bg-white rounded-full p-1.5 shadow-lg border border-gray-100 text-gray-300 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all hover:text-red-500 hover:scale-110 z-10"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -417,7 +431,7 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
           <Button 
             variant="ghost" 
             onClick={addItem}
-            className="w-full mt-4 text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-10 border-dashed border border-blue-200"
+            className="w-full mt-4 text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-11 md:h-10 border-dashed border border-blue-200 rounded-xl"
           >
             <Plus className="w-4 h-4 mr-2" /> Add Item
           </Button>
@@ -425,16 +439,12 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
       )}
 
       {/* 5. Terms */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Terms</h3>
+      <div className="bg-white rounded-xl md:rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
+        <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase mb-4">Terms</h3>
         <div className="space-y-4">
-           <Input
-            placeholder="Enter available terms..."
-            className="bg-gray-50 border-none pl-4"
-           />
-           <div className="flex gap-2 flex-wrap">
+           <div className="flex gap-2 flex-wrap mb-2">
              {["Payment due on receipt", "Net 30", "50% Deposit"].map(term => (
-               <div key={term} className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full cursor-pointer hover:bg-gray-200"
+               <div key={term} className="text-[10px] md:text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full cursor-pointer hover:bg-gray-200"
                     onClick={() => handleFieldChange("paymentTerms", term)}>
                  {term}
                </div>
@@ -450,13 +460,13 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
       </div>
 
       {/* 6. Document Language Settings */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Document Language</h3>
+      <div className="bg-white rounded-xl md:rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
+        <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase mb-4">Document Language</h3>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label className="text-sm font-medium">Bilingual Mode</Label>
-              <p className="text-xs text-gray-500">Show content in two languages side-by-side</p>
+              <p className="text-[10px] md:text-xs text-gray-500">Show content in two languages side-by-side</p>
             </div>
             <Switch 
               checked={formData.languageMode === "bilingual"}
@@ -464,13 +474,13 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs text-gray-400 uppercase">Primary Language</Label>
+              <Label className="text-[10px] md:text-xs text-gray-400 uppercase">Primary Language</Label>
               <select 
                 value={formData.primaryLanguage || 'en'}
                 onChange={(e) => handleFieldChange("primaryLanguage", e.target.value)}
-                className="w-full h-10 px-3 bg-gray-50 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full h-11 md:h-10 px-3 bg-gray-50 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 {(Object.keys(languageNames) as Language[]).map(lang => (
                   <option key={lang} value={lang}>{languageNames[lang]}</option>
@@ -480,11 +490,11 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
 
             {formData.languageMode === "bilingual" && (
               <div className="space-y-2">
-                <Label className="text-xs text-gray-400 uppercase">Secondary Language</Label>
+                <Label className="text-[10px] md:text-xs text-gray-400 uppercase">Secondary Language</Label>
                 <select 
                   value={formData.secondaryLanguage || 'zh-TW'}
                   onChange={(e) => handleFieldChange("secondaryLanguage", e.target.value)}
-                  className="w-full h-10 px-3 bg-gray-50 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full h-11 md:h-10 px-3 bg-gray-50 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                 >
                   {(Object.keys(languageNames) as Language[]).map(lang => (
                     <option key={lang} value={lang}>{languageNames[lang]}</option>
@@ -497,7 +507,7 @@ export function EditorForm({ documentType, formData, onChange, onFocusField }: E
       </div>
 
       {/* 7. Action Buttons (Bottom Fixed or relative) */}
-      <div className="flex gap-4 pt-4">
+      <div className="flex gap-4 pt-4 pb-10 sm:pb-0">
         <Button variant="outline" className="flex-1 h-12 rounded-xl text-gray-500 border-gray-200 hover:bg-gray-50">
           Cancel
         </Button>

@@ -26,6 +26,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [agentOpen, setAgentOpen] = useState(false)
   const [agentExpanded, setAgentExpanded] = useState(false)
+  const [mobileView, setMobileView] = useState<'form' | 'preview'>('form')
   const searchParams = useSearchParams()
   const router = useRouter()
   const docId = searchParams.get("id")
@@ -314,17 +315,33 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
       </div>
 
       <main className="flex-1 flex overflow-hidden relative">
-        {/* Main Content Area - Slides left when agent opens */}
+        {/* Main Content Area - Slides left when agent opens (Desktop only) */}
         <div 
           className={`flex-1 overflow-hidden transition-all duration-500 ease-in-out ${
             agentOpen 
-              ? agentExpanded ? 'mr-[500px]' : 'mr-[400px]' 
+              ? agentExpanded ? 'lg:mr-[500px]' : 'lg:mr-[400px]' 
               : 'mr-0'
           }`}
         >
+          {/* Mobile View Toggle */}
+          <div className="lg:hidden flex border-b border-gray-100 bg-white sticky top-0 z-10">
+            <button 
+              onClick={() => setMobileView('form')}
+              className={`flex-1 py-3 text-sm font-bold transition-colors ${mobileView === 'form' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
+            >
+              Editor
+            </button>
+            <button 
+              onClick={() => setMobileView('preview')}
+              className={`flex-1 py-3 text-sm font-bold transition-colors ${mobileView === 'preview' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
+            >
+              Preview
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
             {/* Left: Form */}
-            <div className="overflow-y-auto bg-white border-r border-gray-100 p-6 lg:p-10 scrollbar-hide">
+            <div className={`overflow-y-auto bg-white border-r border-gray-100 p-6 lg:p-10 scrollbar-hide ${mobileView === 'preview' ? 'hidden lg:block' : 'block'}`}>
               <div className="max-w-2xl mx-auto space-y-6">
                  {(activeTab === "invoice" || activeTab === "receipt") && (
                   <PaymentStatusUI
@@ -339,8 +356,8 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             </div>
 
             {/* Right: Preview - A4 Format */}
-            <div className="overflow-y-auto bg-gray-50/50 p-8 flex justify-center relative" id="document-preview-container">
-               <div className="absolute top-4 right-4 z-10">
+            <div className={`overflow-y-auto bg-gray-50/50 p-4 lg:p-8 flex justify-center relative ${mobileView === 'form' ? 'hidden lg:flex' : 'flex'}`} id="document-preview-container">
+               <div className="absolute top-4 right-4 z-10 hidden lg:block">
                   <div className="bg-white/80 backdrop-blur px-3 py-1.5 rounded-full text-xs font-medium text-gray-500 shadow-sm border border-gray-100">
                     Live Preview
                   </div>
@@ -352,7 +369,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           </div>
         </div>
 
-        {/* AI Agent Sidebar - Slides in from right */}
+        {/* AI Agent Sidebar - Slides in from right (Desktop: push, Mobile: overlay) */}
         <AIAgentSidebar 
           currentDocType={activeTab} 
           onDocumentGenerated={handleDocumentGenerated}
