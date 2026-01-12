@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import type { PaymentStatus } from "@/lib/payment-utils"
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { Building2, User, Pen, Trash2, Plus } from 'lucide-react'
+import { Building2, User, Pen, Trash2, Plus, Upload } from 'lucide-react'
 import type { Language } from '@/lib/language-context'
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
@@ -58,6 +58,8 @@ interface DocumentPreviewProps {
 export function DocumentPreview({ documentType, formData, onFieldChange, onFieldClick }: DocumentPreviewProps) {
   const { user } = useAuth()
   const [companySettings, setCompanySettings] = useState<any>(null)
+  const [draggingAsset, setDraggingAsset] = useState<'signature' | 'stamp' | 'clientSignature' | null>(null)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   
   // Helper for inline editing
   const EditableText = ({ 
@@ -209,13 +211,43 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
 
   const Header = () => {
     const Logo = () => (
-      <div className={`flex ${logoPosition === "center" ? "justify-center" : logoPosition === "right" ? "justify-end" : "justify-start"} cursor-pointer hover:ring-2 hover:ring-[#6366f1] rounded p-1 transition-all group relative min-h-[60px] min-w-[120px]`} onClick={() => document.getElementById('logo-upload')?.click()}>
+      <div 
+        className={`flex ${logoPosition === "center" ? "justify-center" : logoPosition === "right" ? "justify-end" : "justify-start"} cursor-pointer hover:ring-2 hover:ring-[#6366f1] rounded p-1 transition-all group relative min-h-[60px] min-w-[120px]`} 
+        onClick={(e) => {
+          e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.onchange = async (event) => {
+            const file = (event.target as HTMLInputElement).files?.[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                onFieldChange?.('logo', reader.result as string);
+              };
+              reader.readAsDataURL(file);
+            }
+          };
+          input.click();
+        }}
+      >
         {formData.logo ? (
-          <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" crossOrigin="anonymous" />
+          <>
+            <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" crossOrigin="anonymous" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded">
+              <span className="bg-white px-3 py-1 rounded-full text-xs font-bold text-blue-600 shadow-sm">Click to Change</span>
+            </div>
+          </>
         ) : (companySettings?.logo_url && !companySettings.logo_url.includes('kino')) ? (
-          <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" crossOrigin="anonymous" />
+          <>
+            <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" crossOrigin="anonymous" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded">
+              <span className="bg-white px-3 py-1 rounded-full text-xs font-bold text-blue-600 shadow-sm">Click to Change</span>
+            </div>
+          </>
         ) : (
-          <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'} border-2 border-dashed border-gray-200 p-4 rounded bg-gray-50/50 w-full`}>
+          <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'} border-2 border-dashed border-gray-300 hover:border-blue-400 p-4 rounded bg-gray-50/50 hover:bg-blue-50/30 w-full transition-all`}>
+            <Upload className="w-6 h-6 text-gray-300 mb-1" />
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t({ en: "UPLOAD LOGO", 'zh-TW': "點擊上傳標誌" })}</div>
           </div>
         )}
@@ -419,6 +451,84 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
     const clientSigX = formData.clientSignatureOffset?.x || 0
     const clientSigY = formData.clientSignatureOffset?.y || 0
 
+    const handleAssetClick = (assetType: 'signature' | 'stamp' | 'clientSignature', currentValue: string | null | undefined) => {
+      if (currentValue) {
+        const action = confirm(t({ en: "Remove this asset or upload a new one?\n\nOK = Remove\nCancel = Upload new", 'zh-TW': "移除此資產還是上傳新的？\n\n確定 = 移除\n取消 = 上傳新的" }));
+        if (action) {
+          onFieldChange?.(assetType, null);
+        } else {
+          triggerAssetUpload(assetType);
+        }
+      } else {
+        triggerAssetUpload(assetType);
+      }
+    };
+
+    const triggerAssetUpload = (assetType: 'signature' | 'stamp' | 'clientSignature') => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (file) {
+          // Auto background removal for stamps/signatures
+          try {
+            const { removeImageBackground, dataURLtoFile } = await import('@/lib/image-utils');
+            const transparentDataUrl = await removeImageBackground(file);
+            onFieldChange?.(assetType, transparentDataUrl);
+          } catch (error) {
+            console.error('Background removal failed:', error);
+            // Fallback: upload without bg removal
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              onFieldChange?.(assetType, reader.result as string);
+            };
+            reader.readAsDataURL(file);
+          }
+        }
+      };
+      input.click();
+    };
+
+    const handleMouseDown = (e: React.MouseEvent, assetType: 'signature' | 'stamp' | 'clientSignature') => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDraggingAsset(assetType);
+      const rect = (e.target as HTMLElement).getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    };
+
+    useEffect(() => {
+      if (!draggingAsset) return;
+
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!draggingAsset) return;
+        const container = document.getElementById('document-preview-card');
+        if (!container) return;
+        const containerRect = container.getBoundingClientRect();
+        const newX = e.clientX - containerRect.left - dragOffset.x;
+        const newY = e.clientY - containerRect.top - dragOffset.y;
+        
+        const offsetField = `${draggingAsset}Offset` as 'signatureOffset' | 'stampOffset' | 'clientSignatureOffset';
+        onFieldChange?.(offsetField, { x: Math.round(newX), y: Math.round(newY) });
+      };
+
+      const handleMouseUp = () => {
+        setDraggingAsset(null);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }, [draggingAsset, dragOffset, onFieldChange]);
+
     // Quotation usually has no signature
     if (documentType === "quotation") {
       return (
@@ -461,14 +571,59 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
             {/* Issuer Signature & Stamp */}
             <div className="relative flex flex-col items-center min-w-[200px]">
               <div className="h-28 flex items-center justify-center relative w-full mb-2">
-                {(formData.stamp || companySettings?.stamp_url) && (
-                  <div className="absolute right-0 top-0 opacity-80" style={{ transform: `translate(${stampX}px, ${stampY}px)` }}>
+                {(formData.stamp || companySettings?.stamp_url) ? (
+                  <div 
+                    className="absolute right-0 top-0 opacity-80 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 transition-all group"
+                    style={{ transform: `translate(${stampX}px, ${stampY}px)` }}
+                    onMouseDown={(e) => handleMouseDown(e, 'stamp')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAssetClick('stamp', formData.stamp || companySettings?.stamp_url);
+                    }}
+                  >
                     <img src={formData.stamp || companySettings?.stamp_url} alt="Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />
+                    <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
+                      <Trash2 className="w-3 h-3 text-red-400" />
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => handleAssetClick('stamp', null)}
+                    className="absolute right-0 top-0 border-2 border-dashed border-gray-200 hover:border-blue-300 rounded-lg p-2 cursor-pointer bg-gray-50/50 hover:bg-blue-50/30 transition-all flex items-center justify-center"
+                    style={{ width: '96px', height: '96px' }}
+                  >
+                    <div className="text-center">
+                      <Upload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                      <span className="text-[8px] text-gray-400">STAMP</span>
+                    </div>
                   </div>
                 )}
-                {(formData.signature || companySettings?.signature_url) && (
-                  <div className="z-10" style={{ transform: `translate(${sigX}px, ${sigY}px)` }}>
+                
+                {(formData.signature || companySettings?.signature_url) ? (
+                  <div 
+                    className="z-10 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 transition-all group"
+                    style={{ transform: `translate(${sigX}px, ${sigY}px)` }}
+                    onMouseDown={(e) => handleMouseDown(e, 'signature')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAssetClick('signature', formData.signature || companySettings?.signature_url);
+                    }}
+                  >
                     <img src={formData.signature || companySettings?.signature_url} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
+                    <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
+                      <Trash2 className="w-3 h-3 text-red-400" />
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => handleAssetClick('signature', null)}
+                    className="border-2 border-dashed border-gray-200 hover:border-blue-300 rounded-lg p-4 cursor-pointer bg-gray-50/50 hover:bg-blue-50/30 transition-all flex items-center justify-center"
+                    style={{ width: '192px', height: '80px' }}
+                  >
+                    <div className="text-center">
+                      <Upload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                      <span className="text-[8px] text-gray-400">SIGNATURE</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -483,9 +638,31 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
             {documentType === "contract" && (
               <div className="relative flex flex-col items-center min-w-[200px]">
                 <div className="h-28 flex items-center justify-center relative w-full mb-2">
-                  {formData.clientSignature && (
-                    <div style={{ transform: `translate(${clientSigX}px, ${clientSigY}px)` }}>
+                  {formData.clientSignature ? (
+                    <div 
+                      className="cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 transition-all group"
+                      style={{ transform: `translate(${clientSigX}px, ${clientSigY}px)` }}
+                      onMouseDown={(e) => handleMouseDown(e, 'clientSignature')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAssetClick('clientSignature', formData.clientSignature);
+                      }}
+                    >
                       <img src={formData.clientSignature} alt="Client Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
+                      <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
+                        <Trash2 className="w-3 h-3 text-red-400" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => handleAssetClick('clientSignature', null)}
+                      className="border-2 border-dashed border-gray-200 hover:border-blue-300 rounded-lg p-4 cursor-pointer bg-gray-50/50 hover:bg-blue-50/30 transition-all flex items-center justify-center"
+                      style={{ width: '192px', height: '80px' }}
+                    >
+                      <div className="text-center">
+                        <Upload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                        <span className="text-[8px] text-gray-400">CLIENT SIGNATURE</span>
+                      </div>
                     </div>
                   )}
                 </div>
