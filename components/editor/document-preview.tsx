@@ -556,17 +556,6 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
     return (
       <div className="pt-8 mt-12 border-t-2 border-gray-800">
         <div className="flex justify-between items-end">
-          <div className="w-64 space-y-1">
-            <div className="flex justify-between py-1 text-xs">
-              <span className="font-bold text-gray-900">{t({ en: "SUBTOTAL", 'zh-TW': "小計" })}:</span>
-              <span className="text-gray-900">${totalAmount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between py-2 font-bold text-gray-900 border-t-2 border-gray-800 mt-2">
-              <span className="text-sm">{t({ en: "TOTAL", 'zh-TW': "總計" })}:</span>
-              <span className="text-sm">${totalAmount.toFixed(2)}</span>
-            </div>
-          </div>
-          
           <div className="flex gap-12">
             {/* Issuer Signature & Stamp */}
             <div className="relative flex flex-col items-center min-w-[200px]">
@@ -673,6 +662,17 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="w-64 space-y-1">
+            <div className="flex justify-between py-1 text-xs">
+              <span className="font-bold text-gray-900">{t({ en: "SUBTOTAL", 'zh-TW': "小計" })}:</span>
+              <span className="text-gray-900">${totalAmount.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between py-2 font-bold text-gray-900 border-t-2 border-gray-800 mt-2">
+              <span className="text-sm">{t({ en: "TOTAL", 'zh-TW': "總計" })}:</span>
+              <span className="text-sm">${totalAmount.toFixed(2)}</span>
+            </div>
           </div>
         </div>
         <div className="mt-12 text-center border-t border-gray-100 pt-4">
