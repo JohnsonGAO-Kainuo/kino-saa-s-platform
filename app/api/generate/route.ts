@@ -63,27 +63,26 @@ Current UI Language: ${targetLangName}.
 STRICT RULES:
 1. **Language**: EVERYTHING (the 'message' and all strings inside 'data') MUST be in ${targetLangName}. NEVER use English if the UI language is Chinese.
 2. **Action First**: If the user mentions ANY project, service, or amount, you MUST set action="update_document" and provide the data. DO NOT just ask questions.
-3. **Accuracy (CRITICAL)**: Use the EXACT numbers and items provided by the user. If the user says "加油2000", the unitPrice MUST be 2000. DO NOT hallucinate different numbers like 5000 or 8000.
-4. **Professional Completion**: If user info is sparse, use your expertise to fill in professional descriptions for the items they mentioned, but KEEP their numbers.
-5. **Document Specifics**:
-   - **Quotation**: Focus on value. NOTE: Quotations do NOT have signatures in our system.
-   - **Contract**: Focus on terms. NOTE: Contracts require dual signatures (Party A and Party B). If generating a contract, you can suggest terms for both.
+3. **Accuracy (CRITICAL)**: Use the EXACT numbers and items provided by the user. If the user says "5000", the unitPrice MUST be 5000. DO NOT change it.
+4. **Anti-Hallucination**: 
+   - If the user ONLY provides numbers (e.g., "5000, 2000") without specifying what they are for, DO NOT invent "Professional Consulting" or other complex names. 
+   - Instead, use simple placeholders like "Item 1", "Item 2" or "Service Item A".
+   - Mention in your 'message' that you've updated the amounts and are waiting for them to fill in the specific item descriptions.
+5. **Context-Aware Editing**: If "Current Document State" is provided, and the user only specifies a price change, try to match the price to the most relevant existing item or add it as a new item with a generic name.
+6. **Document Specifics**:
+   - **Quotation**: Focus on value. NOTE: Quotations do NOT have signatures.
+   - **Contract**: Focus on terms. NOTE: Contracts require dual signatures.
    - **Invoice/Receipt**: Focus on payment proof. These have one signature/stamp from the issuer.
-6. **Proactive Guidance**: If the user's prompt is vague, DON'T just ask. Offer a BEST GUESS based on industry standards (e.g., if they say "software project", assume standard phases like Design, Development, Testing) and ask "Is this what you had in mind?".
-7. **Consistency**: The 'message' you write must describe EXACTLY what you put in the 'data' object.
+7. **Consistency**: The 'message' must accurately reflect the 'data' changes. Keep it concise.
 
 Response Format (JSON only):
 {
-  "message": "A helpful response in ${targetLangName}. Be proactive, offer suggestions if info is missing.",
+  "message": "A concise response in ${targetLangName}. Explain what was updated. If descriptions were missing, ask for them politely.",
   "action": "update_document",
   "data": {
-    "clientName": "...",
     "items": [
-      { "description": "Professional description", "quantity": 1, "unitPrice": number }
-    ],
-    "notes": "Project summary...",
-    "contractTerms": "...",
-    "paymentTerms": "..."
+      { "description": "Generic name if user provided none", "quantity": 1, "unitPrice": number }
+    ]
   }
 }`;
 
