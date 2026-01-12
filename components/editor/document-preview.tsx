@@ -133,9 +133,12 @@ const EditableText = ({
 export function DocumentPreview({ documentType, formData, onFieldChange, onFieldClick }: DocumentPreviewProps) {
   const { user } = useAuth()
   const [companySettings, setCompanySettings] = useState<any>(null)
+  
+  // Local state for smooth dragging
   const [draggingAsset, setDraggingAsset] = useState<'signature' | 'stamp' | 'clientSignature' | null>(null)
-  const [dragStartPos, setDragStartStartPos] = useState({ x: 0, y: 0 })
-  const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 })
+  const [dragPos, setDragPos] = useState({ x: 0, y: 0 })
+  const [dragStartMouse, setDragStartMouse] = useState({ x: 0, y: 0 })
+  const [dragStartOffset, setDragStartOffset] = useState({ x: 0, y: 0 })
   
   const totalAmount = formData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
   const paymentStatus = formData.paymentStatus
@@ -515,17 +518,13 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
     const handleMouseDown = (e: React.MouseEvent, assetType: 'signature' | 'stamp' | 'clientSignature') => {
       e.preventDefault();
       e.stopPropagation();
-      setDraggingAsset(assetType);
       
-      // Store initial mouse position
-      setDragStartStartPos({
-        x: e.clientX,
-        y: e.clientY
-      });
-
-      // Store initial offset from formData
       const currentOffset = formData[`${assetType}Offset` as keyof FormDataType] as { x: number, y: number } || { x: 0, y: 0 };
-      setInitialOffset(currentOffset);
+      
+      setDraggingAsset(assetType);
+      setDragStartMouse({ x: e.clientX, y: e.clientY });
+      setDragStartOffset(currentOffset);
+      setDragPos(currentOffset);
     };
 
     useEffect(() => {
@@ -534,18 +533,34 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
       const handleMouseMove = (e: MouseEvent) => {
         if (!draggingAsset) return;
         
-        // Calculate delta from start position
-        const deltaX = e.clientX - dragStartPos.x;
-        const deltaY = e.clientY - dragStartPos.y;
+        // Find scale factor of the container
+        const container = document.querySelector('.a4-paper-container');
+        let scale = 1;
+        if (container) {
+          const style = window.getComputedStyle(container);
+          const matrix = new WebKitCSSMatrix(style.transform);
+          scale = matrix.a || 1; // Current scale factor
+        }
+
+        const deltaX = (e.clientX - dragStartMouse.x) / scale;
+        const deltaY = (e.clientY - dragStartMouse.y) / scale;
         
-        const offsetField = `${draggingAsset}Offset` as 'signatureOffset' | 'stampOffset' | 'clientSignatureOffset';
-        onFieldChange?.(offsetField, { 
-          x: initialOffset.x + deltaX, 
-          y: initialOffset.y + deltaY 
-        });
+        const newPos = { 
+          x: dragStartOffset.x + deltaX, 
+          y: dragStartOffset.y + deltaY 
+        };
+        
+        setDragPos(newPos);
       };
 
       const handleMouseUp = () => {
+        if (draggingAsset) {
+          const offsetField = `${draggingAsset}Offset` as 'signatureOffset' | 'stampOffset' | 'clientSignatureOffset';
+          onFieldChange?.(offsetField, { 
+            x: Math.round(dragPos.x), 
+            y: Math.round(dragPos.y) 
+          });
+        }
         setDraggingAsset(null);
       };
 
@@ -556,7 +571,7 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
       };
-    }, [draggingAsset, dragStartPos, initialOffset, onFieldChange]);
+    }, [draggingAsset, dragStartMouse, dragStartOffset, dragPos, onFieldChange]);
 
     // Quotation usually has no signature, but show confirmation names for consistency
     if (documentType === "quotation") {
@@ -605,13 +620,10 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
       <div className="pt-8 mt-12 border-t-2 border-gray-800">
         <div className="flex justify-between items-end">
           <div className="flex gap-12">
-            {/* Issuer Signature & Stamp */}
-            <div className="relative flex flex-col items-center min-w-[200px]">
-              <div className="h-28 flex items-center justify-center relative w-full mb-2">
                 {(formData.stamp || companySettings?.stamp_url) ? (
                   <div 
-                    className="absolute right-0 top-0 opacity-80 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 transition-all group"
-                    style={{ transform: `translate(${stampX}px, ${stampY}px)` }}
+                    className={`absolute right-0 top-0 opacity-80 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 group ${draggingAsset === 'stamp' ? '' : 'transition-all'}`}
+                    style={{ transform: `translate(${draggingAsset === 'stamp' ? dragPos.x : stampX}px, ${draggingAsset === 'stamp' ? dragPos.y : stampY}px)` }}
                     onMouseDown={(e) => handleMouseDown(e, 'stamp')}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -638,8 +650,8 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
                 
                 {(formData.signature || companySettings?.signature_url) ? (
                   <div 
-                    className="z-10 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 transition-all group"
-                    style={{ transform: `translate(${sigX}px, ${sigY}px)` }}
+                    className={`z-10 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 group ${draggingAsset === 'signature' ? '' : 'transition-all'}`}
+                    style={{ transform: `translate(${draggingAsset === 'signature' ? dragPos.x : sigX}px, ${draggingAsset === 'signature' ? dragPos.y : sigY}px)` }}
                     onMouseDown={(e) => handleMouseDown(e, 'signature')}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -680,8 +692,8 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
                 <div className="h-28 flex items-center justify-center relative w-full mb-2">
                   {formData.clientSignature ? (
                     <div 
-                      className="cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 transition-all group"
-                      style={{ transform: `translate(${clientSigX}px, ${clientSigY}px)` }}
+                      className={`cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 group ${draggingAsset === 'clientSignature' ? '' : 'transition-all'}`}
+                      style={{ transform: `translate(${draggingAsset === 'clientSignature' ? dragPos.x : clientSigX}px, ${draggingAsset === 'clientSignature' ? dragPos.y : clientSigY}px)` }}
                       onMouseDown={(e) => handleMouseDown(e, 'clientSignature')}
                       onClick={(e) => {
                         e.stopPropagation();
