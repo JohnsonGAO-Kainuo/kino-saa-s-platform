@@ -752,7 +752,6 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
         </div>
       </div>
     )
-    )
   }
 
   return (
