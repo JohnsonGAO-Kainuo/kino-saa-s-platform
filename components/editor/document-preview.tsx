@@ -617,117 +617,123 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
     return (
       <div className="pt-8 mt-12 border-t-2 border-gray-800">
         <div className="flex justify-between items-end">
-          <div className="flex gap-12">
-                {(formData.stamp || companySettings?.stamp_url) ? (
-                  <div 
-                    className={`absolute right-0 top-0 opacity-80 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 group ${draggingAsset === 'stamp' ? '' : 'transition-all'}`}
-                    style={{ transform: `translate(${draggingAsset === 'stamp' ? dragPos.x : stampX}px, ${draggingAsset === 'stamp' ? dragPos.y : stampY}px)` }}
-                    onMouseDown={(e) => handleMouseDown(e, 'stamp')}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAssetClick('stamp', formData.stamp || companySettings?.stamp_url);
-                    }}
-                  >
-                    <img src={formData.stamp || companySettings?.stamp_url} alt="Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />
-                    <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
-                      <Trash2 className="w-3 h-3 text-red-400" />
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    onClick={() => handleAssetClick('stamp', null)}
-                    className="absolute right-0 top-0 border-2 border-dashed border-gray-200 hover:border-blue-300 rounded-lg p-2 cursor-pointer bg-gray-50/50 hover:bg-blue-50/30 transition-all flex items-center justify-center"
-                    style={{ width: '96px', height: '96px' }}
-                  >
-                    <div className="text-center">
-                      <Upload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
-                      <span className="text-[8px] text-gray-400">STAMP</span>
-                    </div>
-                  </div>
-                )}
-                
-                {(formData.signature || companySettings?.signature_url) ? (
-                  <div 
-                    className={`z-10 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 group ${draggingAsset === 'signature' ? '' : 'transition-all'}`}
-                    style={{ transform: `translate(${draggingAsset === 'signature' ? dragPos.x : sigX}px, ${draggingAsset === 'signature' ? dragPos.y : sigY}px)` }}
-                    onMouseDown={(e) => handleMouseDown(e, 'signature')}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAssetClick('signature', formData.signature || companySettings?.signature_url);
-                    }}
-                  >
-                    <img src={formData.signature || companySettings?.signature_url} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
-                    <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
-                      <Trash2 className="w-3 h-3 text-red-400" />
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    onClick={() => handleAssetClick('signature', null)}
-                    className="border-2 border-dashed border-gray-200 hover:border-blue-300 rounded-lg p-4 cursor-pointer bg-gray-50/50 hover:bg-blue-50/30 transition-all flex items-center justify-center"
-                    style={{ width: '192px', height: '80px' }}
-                  >
-                    <div className="text-center">
-                      <Upload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
-                      <span className="text-[8px] text-gray-400">SIGNATURE</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="w-full border-t border-gray-900 pt-2 text-center">
-                <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900 mb-1">
-                  {documentType === "contract" ? t({ en: "PARTY A (ISSUER)", 'zh-TW': "甲方 (發件人)" }) : t({ en: "AUTHORIZED SIGNATURE & CHOP", 'zh-TW': "授權簽名及公司蓋章" })}
-                </p>
-                <p className="text-[11px] font-black text-gray-900 truncate px-2">
-                  {formData.companyName || companySettings?.company_name || ""}
-                </p>
-              </div>
-            </div>
-
-            {/* Client Signature (Contract Only) */}
-            {documentType === "contract" && (
+          {/* Left Side: Signatures & Stamps */}
+          <div className="flex flex-col gap-8">
+            <div className="flex gap-12 items-end">
               <div className="relative flex flex-col items-center min-w-[200px]">
                 <div className="h-28 flex items-center justify-center relative w-full mb-2">
-                  {formData.clientSignature ? (
+                  {(formData.stamp || companySettings?.stamp_url) ? (
                     <div 
-                      className={`cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 group ${draggingAsset === 'clientSignature' ? '' : 'transition-all'}`}
-                      style={{ transform: `translate(${draggingAsset === 'clientSignature' ? dragPos.x : clientSigX}px, ${draggingAsset === 'clientSignature' ? dragPos.y : clientSigY}px)` }}
-                      onMouseDown={(e) => handleMouseDown(e, 'clientSignature')}
+                      className={`absolute right-0 top-0 opacity-80 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 group ${draggingAsset === 'stamp' ? '' : 'transition-all'}`}
+                      style={{ transform: `translate(${draggingAsset === 'stamp' ? dragPos.x : stampX}px, ${draggingAsset === 'stamp' ? dragPos.y : stampY}px)` }}
+                      onMouseDown={(e) => handleMouseDown(e, 'stamp')}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleAssetClick('clientSignature', formData.clientSignature);
+                        handleAssetClick('stamp', formData.stamp || companySettings?.stamp_url);
                       }}
                     >
-                      <img src={formData.clientSignature} alt="Client Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
+                      <img src={formData.stamp || companySettings?.stamp_url} alt="Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />
                       <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
                         <Trash2 className="w-3 h-3 text-red-400" />
                       </div>
                     </div>
                   ) : (
                     <div 
-                      onClick={() => handleAssetClick('clientSignature', null)}
+                      onClick={() => handleAssetClick('stamp', null)}
+                      className="absolute right-0 top-0 border-2 border-dashed border-gray-200 hover:border-blue-300 rounded-lg p-2 cursor-pointer bg-gray-50/50 hover:bg-blue-50/30 transition-all flex items-center justify-center"
+                      style={{ width: '96px', height: '96px' }}
+                    >
+                      <div className="text-center">
+                        <Upload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                        <span className="text-[8px] text-gray-400">STAMP</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {(formData.signature || companySettings?.signature_url) ? (
+                    <div 
+                      className={`z-10 cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 group ${draggingAsset === 'signature' ? '' : 'transition-all'}`}
+                      style={{ transform: `translate(${draggingAsset === 'signature' ? dragPos.x : sigX}px, ${draggingAsset === 'signature' ? dragPos.y : sigY}px)` }}
+                      onMouseDown={(e) => handleMouseDown(e, 'signature')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAssetClick('signature', formData.signature || companySettings?.signature_url);
+                      }}
+                    >
+                      <img src={formData.signature || companySettings?.signature_url} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
+                      <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
+                        <Trash2 className="w-3 h-3 text-red-400" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => handleAssetClick('signature', null)}
                       className="border-2 border-dashed border-gray-200 hover:border-blue-300 rounded-lg p-4 cursor-pointer bg-gray-50/50 hover:bg-blue-50/30 transition-all flex items-center justify-center"
                       style={{ width: '192px', height: '80px' }}
                     >
                       <div className="text-center">
                         <Upload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
-                        <span className="text-[8px] text-gray-400">CLIENT SIGNATURE</span>
+                        <span className="text-[8px] text-gray-400">SIGNATURE</span>
                       </div>
                     </div>
                   )}
                 </div>
                 <div className="w-full border-t border-gray-900 pt-2 text-center">
                   <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900 mb-1">
-                    {t({ en: "PARTY B (CLIENT)", 'zh-TW': "乙方 (客戶)" })}
+                    {documentType === "contract" ? t({ en: "PARTY A (ISSUER)", 'zh-TW': "甲方 (發件人)" }) : t({ en: "AUTHORIZED SIGNATURE & CHOP", 'zh-TW': "授權簽名及公司蓋章" })}
                   </p>
                   <p className="text-[11px] font-black text-gray-900 truncate px-2">
-                    {formData.clientName || ""}
+                    {formData.companyName || companySettings?.company_name || ""}
                   </p>
                 </div>
               </div>
-            )}
+
+              {/* Client Signature (Contract Only) */}
+              {documentType === "contract" && (
+                <div className="relative flex flex-col items-center min-w-[200px]">
+                  <div className="h-28 flex items-center justify-center relative w-full mb-2">
+                    {formData.clientSignature ? (
+                      <div 
+                        className={`cursor-move hover:ring-2 hover:ring-blue-400 rounded p-1 group ${draggingAsset === 'clientSignature' ? '' : 'transition-all'}`}
+                        style={{ transform: `translate(${draggingAsset === 'clientSignature' ? dragPos.x : clientSigX}px, ${draggingAsset === 'clientSignature' ? dragPos.y : clientSigY}px)` }}
+                        onMouseDown={(e) => handleMouseDown(e, 'clientSignature')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAssetClick('clientSignature', formData.clientSignature);
+                        }}
+                      >
+                        <img src={formData.clientSignature} alt="Client Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
+                        <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
+                          <Trash2 className="w-3 h-3 text-red-400" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => handleAssetClick('clientSignature', null)}
+                        className="border-2 border-dashed border-gray-200 hover:border-blue-300 rounded-lg p-4 cursor-pointer bg-gray-50/50 hover:bg-blue-50/30 transition-all flex items-center justify-center"
+                        style={{ width: '192px', height: '80px' }}
+                      >
+                        <div className="text-center">
+                          <Upload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                          <span className="text-[8px] text-gray-400">CLIENT SIGNATURE</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-full border-t border-gray-900 pt-2 text-center">
+                    <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900 mb-1">
+                      {t({ en: "PARTY B (CLIENT)", 'zh-TW': "乙方 (客戶)" })}
+                    </p>
+                    <p className="text-[11px] font-black text-gray-900 truncate px-2">
+                      {formData.clientName || ""}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Right Side: Totals */}
           <div className="w-64 space-y-1">
             <div className="flex justify-between py-1 text-xs">
               <span className="font-bold text-gray-900">{t({ en: "SUBTOTAL", 'zh-TW': "小計" })}:</span>
@@ -739,11 +745,13 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
             </div>
           </div>
         </div>
+
         <div className="mt-12 text-center border-t border-gray-100 pt-4">
           <p className="text-[11px] text-gray-400 italic">{t({ en: "Thank you for your business!", 'zh-TW': "多謝惠顧！" })}</p>
           <p className="text-[10px] text-gray-300 mt-2">{t({ en: "End of Document", 'zh-TW': "文件完" })}</p>
         </div>
       </div>
+    )
     )
   }
 
