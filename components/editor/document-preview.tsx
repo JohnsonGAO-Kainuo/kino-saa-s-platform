@@ -59,7 +59,8 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
   const { user } = useAuth()
   const [companySettings, setCompanySettings] = useState<any>(null)
   const [draggingAsset, setDraggingAsset] = useState<'signature' | 'stamp' | 'clientSignature' | null>(null)
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const [dragStartPos, setDragStartStartPos] = useState({ x: 0, y: 0 })
+  const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 })
   
   // Helper for inline editing
   const EditableText = ({ 
@@ -494,11 +495,16 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
       e.preventDefault();
       e.stopPropagation();
       setDraggingAsset(assetType);
-      const rect = (e.target as HTMLElement).getBoundingClientRect();
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+      
+      // Store initial mouse position
+      setDragStartStartPos({
+        x: e.clientX,
+        y: e.clientY
       });
+
+      // Store initial offset from formData
+      const currentOffset = formData[`${assetType}Offset` as keyof FormDataType] as { x: number, y: number } || { x: 0, y: 0 };
+      setInitialOffset(currentOffset);
     };
 
     useEffect(() => {
@@ -506,14 +512,16 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
 
       const handleMouseMove = (e: MouseEvent) => {
         if (!draggingAsset) return;
-        const container = document.getElementById('document-preview-card');
-        if (!container) return;
-        const containerRect = container.getBoundingClientRect();
-        const newX = e.clientX - containerRect.left - dragOffset.x;
-        const newY = e.clientY - containerRect.top - dragOffset.y;
+        
+        // Calculate delta from start position
+        const deltaX = e.clientX - dragStartPos.x;
+        const deltaY = e.clientY - dragStartPos.y;
         
         const offsetField = `${draggingAsset}Offset` as 'signatureOffset' | 'stampOffset' | 'clientSignatureOffset';
-        onFieldChange?.(offsetField, { x: Math.round(newX), y: Math.round(newY) });
+        onFieldChange?.(offsetField, { 
+          x: initialOffset.x + deltaX, 
+          y: initialOffset.y + deltaY 
+        });
       };
 
       const handleMouseUp = () => {
@@ -527,7 +535,7 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
       };
-    }, [draggingAsset, dragOffset, onFieldChange]);
+    }, [draggingAsset, dragStartPos, initialOffset, onFieldChange]);
 
     // Quotation usually has no signature, but show confirmation names for consistency
     if (documentType === "quotation") {
