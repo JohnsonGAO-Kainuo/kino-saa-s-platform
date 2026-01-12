@@ -62,72 +62,81 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
   const [dragStartPos, setDragStartStartPos] = useState({ x: 0, y: 0 })
   const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 })
   
-  // Helper for inline editing
-  const EditableText = ({ 
-    value, 
-    field, 
-    placeholder, 
-    multiline = false,
-    className = "" 
-  }: { 
-    value: string; 
-    field: string; 
-    placeholder?: string;
-    multiline?: boolean;
-    className?: string;
-  }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [localValue, setLocalValue] = useState(value);
+// Helper for inline editing - Moved OUTSIDE to keep focus stable
+const EditableText = ({ 
+  value, 
+  field, 
+  placeholder, 
+  multiline = false,
+  className = "",
+  onSave
+}: { 
+  value: string; 
+  field: string; 
+  placeholder?: string;
+  multiline?: boolean;
+  className?: string;
+  onSave?: (field: string, value: string) => void;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [localValue, setLocalValue] = useState(value);
 
-    useEffect(() => {
-      setLocalValue(value);
-    }, [value]);
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
 
-    const handleBlur = () => {
-      setIsEditing(false);
-      if (localValue !== value) {
-        onFieldChange?.(field, localValue);
-      }
-    };
+  const handleBlur = () => {
+    setIsEditing(false);
+    if (localValue !== value) {
+      onSave?.(field, localValue);
+    }
+  };
 
-    if (isEditing) {
-      if (multiline) {
-        return (
-          <textarea
-            autoFocus
-            className={`w-full p-1 border-2 border-blue-400 rounded outline-none bg-blue-50/30 text-inherit font-inherit resize-none ${className}`}
-            value={localValue}
-            onChange={(e) => setLocalValue(e.target.value)}
-            onBlur={handleBlur}
-            rows={3}
-          />
-        );
-      }
+  if (isEditing) {
+    if (multiline) {
       return (
-        <input
+        <textarea
           autoFocus
-          className={`w-full p-1 border-2 border-blue-400 rounded outline-none bg-blue-50/30 text-inherit font-inherit ${className}`}
+          className={`w-full p-1 border-2 border-blue-400 rounded outline-none bg-blue-50/30 text-inherit font-inherit resize-none ${className}`}
           value={localValue}
           onChange={(e) => setLocalValue(e.target.value)}
           onBlur={handleBlur}
-          onKeyDown={(e) => e.key === 'Enter' && handleBlur()}
+          rows={3}
         />
       );
     }
-
     return (
-      <div 
-        onClick={() => setIsEditing(true)}
-        className={`cursor-text hover:bg-blue-50/50 hover:ring-1 hover:ring-blue-200 rounded px-1 transition-all min-h-[1.2em] relative group ${className}`}
-      >
-        <span className={!value ? "text-gray-300 italic" : ""}>
-          {value || placeholder}
-        </span>
-        <Pen className="w-3 h-3 absolute -right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-30 text-blue-500" />
-      </div>
+      <input
+        autoFocus
+        className={`w-full p-1 border-2 border-blue-400 rounded outline-none bg-blue-50/30 text-inherit font-inherit ${className}`}
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={(e) => e.key === 'Enter' && handleBlur()}
+      />
     );
-  };
+  }
 
+  return (
+    <div 
+      onClick={() => setIsEditing(true)}
+      className={`cursor-text hover:bg-blue-50/50 hover:ring-1 hover:ring-blue-200 rounded px-1 transition-all min-h-[1.2em] relative group ${className}`}
+    >
+      <span className={!value ? "text-gray-300 italic" : ""}>
+        {value || placeholder}
+      </span>
+      <Pen className="w-3 h-3 absolute -right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-30 text-blue-500" />
+    </div>
+  );
+};
+
+export function DocumentPreview({ documentType, formData, onFieldChange, onFieldClick }: DocumentPreviewProps) {
+  const { user } = useAuth()
+  const [companySettings, setCompanySettings] = useState<any>(null)
+  const [draggingAsset, setDraggingAsset] = useState<'signature' | 'stamp' | 'clientSignature' | null>(null)
+  const [dragStartPos, setDragStartStartPos] = useState({ x: 0, y: 0 })
+  const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 })
+  
   const totalAmount = formData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
   const paymentStatus = formData.paymentStatus
   const languageMode = formData.languageMode || "single"
@@ -203,12 +212,6 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
     }
   }[templateId]
 
-  const DocumentWrapper = ({ children }: { children: React.ReactNode }) => (
-    <Card id="document-preview-card" className={`${styles.card} ${isPaidReceipt || isVoidedReceipt ? "bg-gradient-to-br from-white to-slate-50" : ""}`}>
-      {templateId === 'modern' && <div className="absolute top-0 right-0 w-32 h-32 bg-[#6366f1]/10 rounded-bl-full -mr-16 -mt-16 pointer-events-none" />}
-      <div className="max-w-full text-sm leading-relaxed relative z-10">{children}</div>
-    </Card>
-  )
 
   const Header = () => {
     const Logo = () => (
@@ -309,14 +312,16 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
             value={displayCompanyName} 
             field="companyName" 
             placeholder={t({ en: "[Company Name]", 'zh-TW': "[公司名稱]" })} 
-            className="font-black text-gray-900 uppercase text-sm" 
+            className="font-black text-gray-900 uppercase text-sm"
+            onSave={onFieldChange}
           />
           <EditableText 
             value={displayCompanyAddress} 
             field="companyAddress" 
             multiline
             placeholder={t({ en: "[Address]", 'zh-TW': "[地址]" })} 
-            className="text-gray-600 leading-relaxed" 
+            className="text-gray-600 leading-relaxed"
+            onSave={onFieldChange}
           />
         </div>
         <div className="text-xs space-y-1">
@@ -328,6 +333,7 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
             field="clientName" 
             placeholder={t({ en: "[Client Name]", 'zh-TW': "[客戶名稱]" })} 
             className="font-black text-[14px] text-gray-900 mt-2" 
+            onSave={onFieldChange}
           />
           <EditableText 
             value={formData.clientAddress} 
@@ -335,6 +341,7 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
             multiline
             placeholder={t({ en: "[Client Address]", 'zh-TW': "[客戶地址]" })} 
             className="text-gray-600 leading-relaxed" 
+            onSave={onFieldChange}
           />
         </div>
       </div>
@@ -362,6 +369,7 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
                     field={`items.${index}.description`} 
                     placeholder="Description"
                     className="font-semibold"
+                    onSave={onFieldChange}
                   />
                   <button 
                     onClick={() => {
@@ -378,11 +386,17 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
                   <input 
                     type="number"
                     className="w-12 bg-transparent text-right outline-none hover:bg-blue-50 focus:bg-blue-50 rounded px-1 transition-all"
-                    value={item.quantity}
-                    onChange={(e) => {
-                      const newItems = [...formData.items];
-                      newItems[index].quantity = parseInt(e.target.value) || 0;
-                      onFieldChange?.('items', newItems);
+                    defaultValue={item.quantity}
+                    onBlur={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      if (val !== item.quantity) {
+                        const newItems = [...formData.items];
+                        newItems[index].quantity = val;
+                        onFieldChange?.('items', newItems);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                     }}
                   />
                 </td>
@@ -392,11 +406,17 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
                     <input 
                       type="number"
                       className="w-20 bg-transparent text-right outline-none hover:bg-blue-50 focus:bg-blue-50 rounded px-1 transition-all"
-                      value={item.unitPrice}
-                      onChange={(e) => {
-                        const newItems = [...formData.items];
-                        newItems[index].unitPrice = parseFloat(e.target.value) || 0;
-                        onFieldChange?.('items', newItems);
+                      defaultValue={item.unitPrice}
+                      onBlur={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        if (val !== item.unitPrice) {
+                          const newItems = [...formData.items];
+                          newItems[index].unitPrice = val;
+                          onFieldChange?.('items', newItems);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                       }}
                     />
                   </div>
@@ -413,6 +433,7 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
                         field={`items.${index}.subItems.${sIndex}`} 
                         placeholder="Detail..."
                         className="text-[11px] flex-1"
+                        onSave={onFieldChange}
                       />
                       <button 
                         onClick={() => {
@@ -717,23 +738,27 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
   }
 
   return (
-    <DocumentWrapper>
-      <Header />
-      <PartiesInfo />
-      <ItemsTable />
-      {formData.notes && (
-        <div className="mb-6 pt-4 border-t border-gray-300">
-          <p className={styles.sectionHeader}>{t({ en: "Notes", 'zh-TW': "備註" })}:</p>
-          <EditableText 
-            value={formData.notes} 
-            field="notes" 
-            multiline
-            placeholder={t({ en: "Additional notes...", 'zh-TW': "額外備註..." })} 
-            className="text-xs text-gray-700 whitespace-pre-wrap" 
-          />
-        </div>
-      )}
-      <Footer />
-    </DocumentWrapper>
+    <Card id="document-preview-card" className={`${styles.card} ${isPaidReceipt || isVoidedReceipt ? "bg-gradient-to-br from-white to-slate-50" : ""}`}>
+      {templateId === 'modern' && <div className="absolute top-0 right-0 w-32 h-32 bg-[#6366f1]/10 rounded-bl-full -mr-16 -mt-16 pointer-events-none" />}
+      <div className="max-w-full text-sm leading-relaxed relative z-10">
+        {Header()}
+        {PartiesInfo()}
+        {ItemsTable()}
+        {formData.notes && (
+          <div className="mb-6 pt-4 border-t border-gray-300">
+            <p className={styles.sectionHeader}>{t({ en: "Notes", 'zh-TW': "備註" })}:</p>
+            <EditableText 
+              value={formData.notes} 
+              field="notes" 
+              multiline
+              placeholder={t({ en: "Additional notes...", 'zh-TW': "額外備註..." })} 
+              className="text-xs text-gray-700 whitespace-pre-wrap"
+              onSave={onFieldChange}
+            />
+          </div>
+        )}
+        {Footer()}
+      </div>
+    </Card>
   )
 }
