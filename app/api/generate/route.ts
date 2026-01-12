@@ -28,7 +28,7 @@ const responseSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const { prompt, documentType, currentContext, uiLanguage } = await req.json();
+    const { prompt, documentType, currentContext, uiLanguage, focusedField } = await req.json();
     const apiKey = process.env.DEEPSEEK_API_KEY;
     
     if (!apiKey) {
@@ -74,6 +74,7 @@ STRICT RULES:
    - **Contract**: Focus on terms. NOTE: Contracts require dual signatures.
    - **Invoice/Receipt**: Focus on payment proof. These have one signature/stamp from the issuer.
 7. **Consistency**: The 'message' must accurately reflect the 'data' changes. Keep it concise.
+8. **Context Focus**: If \`focusedField\` is provided (e.g., "notes", "items-section"), prioritize your suggestions and updates for that specific part of the document.
 
 Response Format (JSON only):
 {

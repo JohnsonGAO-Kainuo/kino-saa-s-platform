@@ -27,6 +27,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const [agentOpen, setAgentOpen] = useState(false)
   const [agentExpanded, setAgentExpanded] = useState(false)
   const [mobileView, setMobileView] = useState<'form' | 'preview'>('form')
+  const [focusedField, setFocusedField] = useState<{ id: string; name: string } | null>(null)
   const searchParams = useSearchParams()
   const router = useRouter()
   const docId = searchParams.get("id")
@@ -279,6 +280,19 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const totalAmount = formData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
 
   const handleFocusField = (fieldId: string) => {
+    // Map field IDs to readable names for AI
+    const fieldNames: Record<string, string> = {
+      companyName: t("Company Name", "公司名稱"),
+      companyAddress: t("Company Address", "公司地址"),
+      clientName: t("Client Name", "客戶名稱"),
+      clientAddress: t("Client Address", "客戶地址"),
+      notes: t("Notes", "備註"),
+      'items-section': t("Items List", "項目清單")
+    }
+    
+    setFocusedField({ id: fieldId, name: fieldNames[fieldId] || fieldId })
+    setAgentOpen(true) // Open sidebar when a field is focused for help
+
     const element = document.getElementById(fieldId)
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -373,6 +387,8 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           onToggle={(val) => setAgentOpen(val)}
           onExpandChange={setAgentExpanded}
           initialContext={formData}
+          focusedField={focusedField}
+          onClearFocus={() => setFocusedField(null)}
           docId={docId}
         />
       </main>

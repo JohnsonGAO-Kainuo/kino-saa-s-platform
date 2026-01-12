@@ -28,9 +28,21 @@ interface AIAgentSidebarProps {
   onToggle: (open: boolean) => void
   onExpandChange?: (expanded: boolean) => void
   docId?: string | null
+  focusedField?: { id: string; name: string } | null
+  onClearFocus?: () => void
 }
 
-export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, onToggle, onExpandChange, initialContext, docId }: AIAgentSidebarProps & { initialContext?: any }) {
+export function AIAgentSidebar({ 
+  currentDocType, 
+  onDocumentGenerated, 
+  isOpen, 
+  onToggle, 
+  onExpandChange, 
+  initialContext, 
+  docId,
+  focusedField,
+  onClearFocus
+}: AIAgentSidebarProps & { initialContext?: any }) {
   const { language, t } = useLanguage()
   const [isExpanded, setIsExpanded] = useState(false)
   const [input, setInput] = useState("")
@@ -182,10 +194,13 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: userMessage,
+          prompt: focusedField 
+            ? `[Focusing on ${focusedField.name}] ${userMessage}` 
+            : userMessage,
           documentType: currentDocType,
           currentContext: initialContext || null,
-          uiLanguage: language
+          uiLanguage: language,
+          focusedField: focusedField?.id
         })
       });
 
@@ -348,6 +363,22 @@ export function AIAgentSidebar({ currentDocType, onDocumentGenerated, isOpen, on
 
       {view === 'chat' && (
         <div className="p-4 bg-white border-t border-[#f7f9fc]">
+          {focusedField && (
+            <div className="mb-2 flex items-center justify-between bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                <span className="text-[11px] font-bold text-blue-600">
+                  {t("Focusing on")}: {focusedField.name}
+                </span>
+              </div>
+              <button 
+                onClick={onClearFocus}
+                className="text-blue-400 hover:text-blue-600 transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
           <div className="relative">
             <textarea
               value={input}
