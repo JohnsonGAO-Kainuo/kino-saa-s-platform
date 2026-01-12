@@ -55,13 +55,6 @@ interface DocumentPreviewProps {
   onFieldClick?: (fieldId: string) => void
 }
 
-export function DocumentPreview({ documentType, formData, onFieldChange, onFieldClick }: DocumentPreviewProps) {
-  const { user } = useAuth()
-  const [companySettings, setCompanySettings] = useState<any>(null)
-  const [draggingAsset, setDraggingAsset] = useState<'signature' | 'stamp' | 'clientSignature' | null>(null)
-  const [dragStartPos, setDragStartStartPos] = useState({ x: 0, y: 0 })
-  const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 })
-  
 // Helper for inline editing - Moved OUTSIDE to keep focus stable
 const EditableText = ({ 
   value, 
@@ -69,7 +62,8 @@ const EditableText = ({
   placeholder, 
   multiline = false,
   className = "",
-  onSave
+  onSave,
+  onFocus
 }: { 
   value: string; 
   field: string; 
@@ -77,6 +71,7 @@ const EditableText = ({
   multiline?: boolean;
   className?: string;
   onSave?: (field: string, value: string) => void;
+  onFocus?: () => void;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState(value);
@@ -119,7 +114,10 @@ const EditableText = ({
 
   return (
     <div 
-      onClick={() => setIsEditing(true)}
+      onClick={() => {
+        setIsEditing(true);
+        onFocus?.();
+      }}
       className={`cursor-text hover:bg-blue-50/50 hover:ring-1 hover:ring-blue-200 rounded px-1 transition-all min-h-[1.2em] relative group ${className}`}
     >
       <span className={!value ? "text-gray-300 italic" : ""}>
