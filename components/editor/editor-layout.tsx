@@ -299,6 +299,29 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     )
   }
 
+  const handleFieldChange = (field: string, value: any) => {
+    setFormData((prev) => {
+      const newData = { ...prev }
+      if (field.includes('.')) {
+        const parts = field.split('.')
+        let current: any = newData
+        for (let i = 0; i < parts.length - 1; i++) {
+          const part = parts[i]
+          if (Array.isArray(current) && !isNaN(parseInt(part))) {
+            current = current[parseInt(part)]
+          } else {
+            current = current[part]
+          }
+        }
+        const lastPart = parts[parts.length - 1]
+        current[lastPart] = value
+      } else {
+        ;(newData as any)[field] = value
+      }
+      return newData
+    })
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <EditorHeader 
@@ -315,7 +338,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
       </div>
 
       <main className="flex-1 flex overflow-hidden relative">
-        {/* Main Content Area - Slides left when agent opens (Desktop only) */}
+        {/* Main Content Area - Full width with Interactive Preview */}
         <div 
           className={`flex-1 overflow-hidden transition-all duration-500 ease-in-out ${
             agentOpen 
@@ -323,53 +346,26 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
               : 'mr-0'
           }`}
         >
-          {/* Mobile View Toggle */}
-          <div className="lg:hidden flex border-b border-gray-100 bg-white sticky top-0 z-10">
-            <button 
-              onClick={() => setMobileView('form')}
-              className={`flex-1 py-3 text-sm font-bold transition-colors ${mobileView === 'form' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
-            >
-              Editor
-            </button>
-            <button 
-              onClick={() => setMobileView('preview')}
-              className={`flex-1 py-3 text-sm font-bold transition-colors ${mobileView === 'preview' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
-            >
-              Preview
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
-            {/* Left: Form */}
-            <div className={`overflow-y-auto bg-white border-r border-gray-100 p-6 lg:p-10 scrollbar-hide ${mobileView === 'preview' ? 'hidden lg:block' : 'block'}`}>
-              <div className="max-w-2xl mx-auto space-y-6">
-                 {(activeTab === "invoice" || activeTab === "receipt") && (
-                  <PaymentStatusUI
-                    documentType={activeTab}
-                    currentStatus={formData.paymentStatus}
-                    onStatusChange={handlePaymentStatusChange}
-                    totalAmount={totalAmount}
-                  />
-                )}
-                <EditorForm documentType={activeTab} formData={formData} onChange={setFormData} onFocusField={handleFocusField} />
+          <div className="h-full overflow-y-auto bg-gray-50/50 p-4 lg:p-12 flex justify-center relative scrollbar-hide">
+            <div className="absolute top-4 right-4 z-10 hidden lg:block">
+              <div className="bg-white/80 backdrop-blur px-3 py-1.5 rounded-full text-[10px] font-bold text-blue-500 shadow-sm border border-blue-100 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                INTERACTIVE EDITING MODE
               </div>
             </div>
-
-            {/* Right: Preview - A4 Format */}
-            <div className={`overflow-y-auto bg-gray-50/50 p-4 lg:p-8 flex justify-center relative ${mobileView === 'form' ? 'hidden lg:flex' : 'flex'}`} id="document-preview-container">
-               <div className="absolute top-4 right-4 z-10 hidden lg:block">
-                  <div className="bg-white/80 backdrop-blur px-3 py-1.5 rounded-full text-xs font-medium text-gray-500 shadow-sm border border-gray-100">
-                    Live Preview
-                  </div>
-               </div>
-              <div className="a4-paper-container shadow-2xl">
-                <DocumentPreview documentType={activeTab} formData={formData} onFieldClick={handleFocusField} />
-              </div>
+            
+            <div className="a4-paper-container shadow-2xl transition-transform duration-300">
+              <DocumentPreview 
+                documentType={activeTab} 
+                formData={formData} 
+                onFieldChange={handleFieldChange}
+                onFieldClick={handleFocusField} 
+              />
             </div>
           </div>
         </div>
 
-        {/* AI Agent Sidebar - Slides in from right (Desktop: push, Mobile: overlay) */}
+        {/* AI Agent Sidebar - Primary Editor Control */}
         <AIAgentSidebar 
           currentDocType={activeTab} 
           onDocumentGenerated={handleDocumentGenerated}

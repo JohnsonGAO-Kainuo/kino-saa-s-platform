@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import type { PaymentStatus } from "@/lib/payment-utils"
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { Building2, User, Pen } from 'lucide-react'
+import { Building2, User, Pen, Trash2, Plus } from 'lucide-react'
 import type { Language } from '@/lib/language-context'
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
@@ -51,12 +51,80 @@ interface FormDataType {
 interface DocumentPreviewProps {
   documentType: DocumentType
   formData: FormDataType
+  onFieldChange?: (field: string, value: any) => void
   onFieldClick?: (fieldId: string) => void
 }
 
-export function DocumentPreview({ documentType, formData, onFieldClick }: DocumentPreviewProps) {
+export function DocumentPreview({ documentType, formData, onFieldChange, onFieldClick }: DocumentPreviewProps) {
   const { user } = useAuth()
   const [companySettings, setCompanySettings] = useState<any>(null)
+  
+  // Helper for inline editing
+  const EditableText = ({ 
+    value, 
+    field, 
+    placeholder, 
+    multiline = false,
+    className = "" 
+  }: { 
+    value: string; 
+    field: string; 
+    placeholder?: string;
+    multiline?: boolean;
+    className?: string;
+  }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [localValue, setLocalValue] = useState(value);
+
+    useEffect(() => {
+      setLocalValue(value);
+    }, [value]);
+
+    const handleBlur = () => {
+      setIsEditing(false);
+      if (localValue !== value) {
+        onFieldChange?.(field, localValue);
+      }
+    };
+
+    if (isEditing) {
+      if (multiline) {
+        return (
+          <textarea
+            autoFocus
+            className={`w-full p-1 border-2 border-blue-400 rounded outline-none bg-blue-50/30 text-inherit font-inherit resize-none ${className}`}
+            value={localValue}
+            onChange={(e) => setLocalValue(e.target.value)}
+            onBlur={handleBlur}
+            rows={3}
+          />
+        );
+      }
+      return (
+        <input
+          autoFocus
+          className={`w-full p-1 border-2 border-blue-400 rounded outline-none bg-blue-50/30 text-inherit font-inherit ${className}`}
+          value={localValue}
+          onChange={(e) => setLocalValue(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={(e) => e.key === 'Enter' && handleBlur()}
+        />
+      );
+    }
+
+    return (
+      <div 
+        onClick={() => setIsEditing(true)}
+        className={`cursor-text hover:bg-blue-50/50 hover:ring-1 hover:ring-blue-200 rounded px-1 transition-all min-h-[1.2em] relative group ${className}`}
+      >
+        <span className={!value ? "text-gray-300 italic" : ""}>
+          {value || placeholder}
+        </span>
+        <Pen className="w-3 h-3 absolute -right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-30 text-blue-500" />
+      </div>
+    );
+  };
+
   const totalAmount = formData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
   const paymentStatus = formData.paymentStatus
   const languageMode = formData.languageMode || "single"
@@ -195,59 +263,152 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
   }
 
   const PartiesInfo = () => {
-    const displayCompanyName = formData.companyName || companySettings?.company_name || t({ en: "[Company Name]", 'zh-TW': "[公司名稱]" })
-    const displayCompanyAddress = formData.companyAddress || companySettings?.company_address || t({ en: "[Address]", 'zh-TW': "[地址]" })
+    const displayCompanyName = formData.companyName || companySettings?.company_name || ""
+    const displayCompanyAddress = formData.companyAddress || companySettings?.company_address || ""
 
     return (
       <div className={`grid grid-cols-2 gap-12 mb-10 ${templateId === 'modern' ? 'bg-slate-50/50 p-6 rounded-2xl border border-slate-100' : ''}`}>
-        <div className="text-xs space-y-1 cursor-pointer hover:bg-yellow-50 rounded p-2 transition-all" onClick={() => onFieldClick?.('companyAddress')}>
+        <div className="text-xs space-y-1">
           <p className="text-yellow-600 font-bold mb-1 uppercase tracking-widest text-[10px] border-b border-yellow-100 pb-1 flex items-center gap-1">
             <Building2 className="w-3.5 h-3.5" /> {t({ en: "FROM", 'zh-TW': "發件人" })}
           </p>
-          <p className="font-black text-gray-900 uppercase text-sm">{displayCompanyName}</p>
-          <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">{displayCompanyAddress}</p>
+          <EditableText 
+            value={displayCompanyName} 
+            field="companyName" 
+            placeholder={t({ en: "[Company Name]", 'zh-TW': "[公司名稱]" })} 
+            className="font-black text-gray-900 uppercase text-sm" 
+          />
+          <EditableText 
+            value={displayCompanyAddress} 
+            field="companyAddress" 
+            multiline
+            placeholder={t({ en: "[Address]", 'zh-TW': "[地址]" })} 
+            className="text-gray-600 leading-relaxed" 
+          />
         </div>
-        <div className="text-xs space-y-1 cursor-pointer hover:bg-yellow-50 rounded p-2 transition-all" onClick={() => onFieldClick?.('clientAddress')}>
+        <div className="text-xs space-y-1">
           <p className="text-yellow-600 font-bold mb-1 uppercase tracking-widest text-[10px] border-b border-yellow-100 pb-1 flex items-center gap-1">
             <User className="w-3.5 h-3.5" /> {t({ en: "BILL TO", 'zh-TW': "致" })}
           </p>
-          <p className="font-black text-[14px] text-gray-900 mt-2">{formData.clientName || t({ en: "[Client Name]", 'zh-TW': "[客戶名稱]" })}</p>
-          <p className="text-gray-600 break-words leading-relaxed">{formData.clientAddress || t({ en: "[Client Address]", 'zh-TW': "[客戶地址]" })}</p>
+          <EditableText 
+            value={formData.clientName} 
+            field="clientName" 
+            placeholder={t({ en: "[Client Name]", 'zh-TW': "[客戶名稱]" })} 
+            className="font-black text-[14px] text-gray-900 mt-2" 
+          />
+          <EditableText 
+            value={formData.clientAddress} 
+            field="clientAddress" 
+            multiline
+            placeholder={t({ en: "[Client Address]", 'zh-TW': "[客戶地址]" })} 
+            className="text-gray-600 leading-relaxed" 
+          />
         </div>
       </div>
     )
   }
 
   const ItemsTable = () => (
-    <table className="w-full mb-6 cursor-pointer hover:bg-slate-50 transition-all rounded" onClick={() => onFieldClick?.('items-section')}>
-      <thead>
-        <tr className={styles.accentLine}>
-          <th className="text-left py-2 font-bold text-xs text-gray-900">{t({ en: "Description", 'zh-TW': "描述" })}</th>
-          <th className="text-right py-2 font-bold text-xs w-16 text-gray-900">{t({ en: "Qty", 'zh-TW': "數量" })}</th>
-          <th className="text-right py-2 font-bold text-xs w-20 text-gray-900">{t({ en: "Unit Price", 'zh-TW': "單價" })}</th>
-          <th className="text-right py-2 font-bold text-xs w-20 text-gray-900">{t({ en: "Amount", 'zh-TW': "金額" })}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {formData.items.map((item, index) => (
-          <React.Fragment key={index}>
-            <tr className={styles.itemRow}>
-              <td className="py-3 text-xs text-gray-900 font-semibold">{item.description || "—"}</td>
-              <td className="text-right py-3 text-xs text-gray-800">{item.quantity}</td>
-              <td className="text-right py-3 text-xs text-gray-800">${item.unitPrice.toFixed(2)}</td>
-              <td className="text-right py-3 font-semibold text-xs text-gray-900">${(item.quantity * item.unitPrice).toFixed(2)}</td>
-            </tr>
-            {item.subItems && item.subItems.length > 0 && item.subItems.map((subItem, sIndex) => (
-              <tr key={`${index}-${sIndex}`} className="border-b border-gray-100 bg-gray-50/20">
-                <td colSpan={4} className="py-1 pl-6 text-[11px] text-gray-500">
-                  • {subItem}
+    <div className="mb-6">
+      <table className="w-full">
+        <thead>
+          <tr className={styles.accentLine}>
+            <th className="text-left py-2 font-bold text-xs text-gray-900">{t({ en: "Description", 'zh-TW': "描述" })}</th>
+            <th className="text-right py-2 font-bold text-xs w-16 text-gray-900">{t({ en: "Qty", 'zh-TW': "數量" })}</th>
+            <th className="text-right py-2 font-bold text-xs w-20 text-gray-900">{t({ en: "Unit Price", 'zh-TW': "單價" })}</th>
+            <th className="text-right py-2 font-bold text-xs w-20 text-gray-900">{t({ en: "Amount", 'zh-TW': "金額" })}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {formData.items.map((item, index) => (
+            <React.Fragment key={index}>
+              <tr className={styles.itemRow}>
+                <td className="py-3 text-xs text-gray-900 font-semibold group relative">
+                  <EditableText 
+                    value={item.description} 
+                    field={`items.${index}.description`} 
+                    placeholder="Description"
+                    className="font-semibold"
+                  />
+                  <button 
+                    onClick={() => {
+                      const newItems = [...formData.items];
+                      newItems.splice(index, 1);
+                      onFieldChange?.('items', newItems);
+                    }}
+                    className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </td>
+                <td className="text-right py-3 text-xs text-gray-800">
+                  <input 
+                    type="number"
+                    className="w-12 bg-transparent text-right outline-none hover:bg-blue-50 focus:bg-blue-50 rounded px-1 transition-all"
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const newItems = [...formData.items];
+                      newItems[index].quantity = parseInt(e.target.value) || 0;
+                      onFieldChange?.('items', newItems);
+                    }}
+                  />
+                </td>
+                <td className="text-right py-3 text-xs text-gray-800">
+                  <div className="flex items-center justify-end">
+                    <span>$</span>
+                    <input 
+                      type="number"
+                      className="w-20 bg-transparent text-right outline-none hover:bg-blue-50 focus:bg-blue-50 rounded px-1 transition-all"
+                      value={item.unitPrice}
+                      onChange={(e) => {
+                        const newItems = [...formData.items];
+                        newItems[index].unitPrice = parseFloat(e.target.value) || 0;
+                        onFieldChange?.('items', newItems);
+                      }}
+                    />
+                  </div>
+                </td>
+                <td className="text-right py-3 font-semibold text-xs text-gray-900">${(item.quantity * item.unitPrice).toFixed(2)}</td>
               </tr>
-            ))}
-          </React.Fragment>
-        ))}
-      </tbody>
-    </table>
+              {item.subItems && item.subItems.length > 0 && item.subItems.map((subItem, sIndex) => (
+                <tr key={`${index}-${sIndex}`} className="border-b border-gray-100 bg-gray-50/20">
+                  <td colSpan={4} className="py-1 pl-6 text-[11px] text-gray-500 group relative">
+                    <div className="flex items-center gap-1">
+                      <span>•</span>
+                      <EditableText 
+                        value={subItem} 
+                        field={`items.${index}.subItems.${sIndex}`} 
+                        placeholder="Detail..."
+                        className="text-[11px] flex-1"
+                      />
+                      <button 
+                        onClick={() => {
+                          const newItems = [...formData.items];
+                          newItems[index].subItems = newItems[index].subItems?.filter((_, i) => i !== sIndex);
+                          onFieldChange?.('items', newItems);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+      <button 
+        onClick={() => {
+          const newItems = [...formData.items, { description: "", quantity: 1, unitPrice: 0, subItems: [] }];
+          onFieldChange?.('items', newItems);
+        }}
+        className="w-full py-2 border-2 border-dashed border-gray-100 text-gray-300 hover:border-blue-200 hover:text-blue-400 rounded-lg transition-all flex items-center justify-center gap-1 mt-2 text-xs font-bold"
+      >
+        <Plus className="w-3.5 h-3.5" /> {t({ en: "ADD ITEM", 'zh-TW': "增加項目" })}
+      </button>
+    </div>
   )
 
   const Footer = () => {
@@ -353,7 +514,13 @@ export function DocumentPreview({ documentType, formData, onFieldClick }: Docume
       {formData.notes && (
         <div className="mb-6 pt-4 border-t border-gray-300">
           <p className={styles.sectionHeader}>{t({ en: "Notes", 'zh-TW': "備註" })}:</p>
-          <p className="text-xs text-gray-700 whitespace-pre-wrap">{formData.notes}</p>
+          <EditableText 
+            value={formData.notes} 
+            field="notes" 
+            multiline
+            placeholder={t({ en: "Additional notes...", 'zh-TW': "額外備註..." })} 
+            className="text-xs text-gray-700 whitespace-pre-wrap" 
+          />
         </div>
       )}
       <Footer />

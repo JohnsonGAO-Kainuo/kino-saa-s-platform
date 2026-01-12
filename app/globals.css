@@ -129,14 +129,14 @@
 /* Scale down for smaller screens */
 @media (max-width: 1400px) {
   .a4-paper-container {
-    transform: scale(0.85);
+    transform: scale(0.95);
     transform-origin: top center;
   }
 }
 
 @media (max-width: 1200px) {
   .a4-paper-container {
-    transform: scale(0.7);
+    transform: scale(0.85);
     transform-origin: top center;
   }
 }
@@ -155,6 +155,23 @@
     overflow-x: hidden;
     height: 500px; /* Limit height on mobile */
   }
+}
+
+/* Scrollbar Hide Utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @media (max-width: 480px) {
