@@ -529,11 +529,30 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
       };
     }, [draggingAsset, dragOffset, onFieldChange]);
 
-    // Quotation usually has no signature
+    // Quotation usually has no signature, but show confirmation names for consistency
     if (documentType === "quotation") {
       return (
         <div className="pt-8 mt-12 border-t-2 border-gray-800">
-          <div className="flex justify-end">
+          <div className="flex justify-between items-start">
+            <div className="flex gap-12">
+              <div className="w-48">
+                <div className="border-t border-gray-400 pt-2">
+                  <p className="text-[9px] uppercase text-gray-500 font-bold mb-1">{t({ en: "ISSUED BY", 'zh-TW': "發件人" })}</p>
+                  <p className="text-[11px] font-black text-gray-900 truncate">
+                    {formData.companyName || companySettings?.company_name || ""}
+                  </p>
+                </div>
+              </div>
+              <div className="w-48">
+                <div className="border-t border-gray-400 pt-2">
+                  <p className="text-[9px] uppercase text-gray-500 font-bold mb-1">{t({ en: "PREPARED FOR", 'zh-TW': "致" })}</p>
+                  <p className="text-[11px] font-black text-gray-900 truncate">
+                    {formData.clientName || ""}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="w-64 space-y-1">
               <div className="flex justify-between py-1 text-xs">
                 <span className="font-bold text-gray-900">{t({ en: "SUBTOTAL", 'zh-TW': "小計" })}:</span>
@@ -617,8 +636,11 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
                 )}
               </div>
               <div className="w-full border-t border-gray-900 pt-2 text-center">
-                <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900">
+                <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900 mb-1">
                   {documentType === "contract" ? t({ en: "PARTY A (ISSUER)", 'zh-TW': "甲方 (發件人)" }) : t({ en: "AUTHORIZED SIGNATURE & CHOP", 'zh-TW': "授權簽名及公司蓋章" })}
+                </p>
+                <p className="text-[11px] font-black text-gray-900 truncate px-2">
+                  {formData.companyName || companySettings?.company_name || ""}
                 </p>
               </div>
             </div>
@@ -656,8 +678,11 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
                   )}
                 </div>
                 <div className="w-full border-t border-gray-900 pt-2 text-center">
-                  <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900">
+                  <p className="font-bold text-[10px] uppercase tracking-tight text-gray-900 mb-1">
                     {t({ en: "PARTY B (CLIENT)", 'zh-TW': "乙方 (客戶)" })}
+                  </p>
+                  <p className="text-[11px] font-black text-gray-900 truncate px-2">
+                    {formData.clientName || ""}
                   </p>
                 </div>
               </div>
