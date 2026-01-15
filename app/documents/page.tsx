@@ -10,7 +10,6 @@ import {
   Receipt, 
   Files, 
   Search, 
-  Filter, 
   MoreVertical, 
   Eye, 
   Edit, 
@@ -33,6 +32,7 @@ import Link from "next/link"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { Suspense } from "react"
+import { cn } from "@/lib/utils"
 
 function DocumentsContent() {
   const searchParams = useSearchParams()
@@ -73,120 +73,136 @@ function DocumentsContent() {
 
   const getDocIcon = (type: string) => {
     switch (type) {
-      case "quotation": return <FileText className="w-5 h-5 text-orange-500" />
-      case "contract": return <FileSignature className="w-5 h-5 text-emerald-500" />
-      case "invoice": return <Receipt className="w-5 h-5 text-purple-500" />
-      default: return <Files className="w-5 h-5 text-blue-500" />
+      case "quotation": return <FileText className="w-5 h-5 text-orange-600" />
+      case "contract": return <FileSignature className="w-5 h-5 text-emerald-600" />
+      case "invoice": return <Receipt className="w-5 h-5 text-rose-600" />
+      default: return <Files className="w-5 h-5 text-blue-600" />
+    }
+  }
+
+  const getDocColor = (type: string) => {
+     switch (type) {
+      case "quotation": return "bg-orange-50 border-orange-100/50"
+      case "contract": return "bg-emerald-50 border-emerald-100/50"
+      case "invoice": return "bg-rose-50 border-rose-100/50"
+      default: return "bg-blue-50 border-blue-100/50"
     }
   }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "paid": return <Badge className="bg-green-100 text-green-700 border-none">Paid</Badge>
-      case "sent": return <Badge className="bg-blue-100 text-blue-700 border-none">Sent</Badge>
-      default: return <Badge className="bg-gray-100 text-gray-700 border-none">Draft</Badge>
+      case "paid": return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200/50 hover:bg-emerald-200">Paid</Badge>
+      case "sent": return <Badge className="bg-blue-100 text-blue-700 border-blue-200/50 hover:bg-blue-200">Sent</Badge>
+      default: return <Badge className="bg-secondary text-muted-foreground border-border hover:bg-secondary/80">Draft</Badge>
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] p-4 md:p-8 text-slate-900">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div className="min-h-screen bg-background p-6 md:p-10 text-foreground">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">My Documents</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage and track all your generated documents</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">Documents</h1>
+          <p className="text-muted-foreground text-lg mt-2">Manage and track your paperwork</p>
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <Link href="/editor?type=quotation" className="w-full sm:w-auto">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 h-11 md:h-10">
-              <Plus className="w-4 h-4" /> Create New
+            <Button className="w-full h-12 rounded-[16px] text-base gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
+              <Plus className="w-5 h-5" /> Create New
             </Button>
           </Link>
         </div>
       </header>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
-        <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-100 overflow-x-auto no-scrollbar">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+        <div className="flex bg-card p-1.5 rounded-[18px] shadow-sm border border-border overflow-x-auto no-scrollbar w-full lg:w-auto">
           {["all", "quotation", "contract", "invoice"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
+              className={cn(
+                "px-6 py-2.5 rounded-[14px] text-sm font-semibold transition-all whitespace-nowrap",
                 activeTab === tab 
-                  ? "bg-blue-50 text-blue-600 shadow-sm" 
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
+                  ? "bg-primary/10 text-primary shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              )}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}s
             </button>
           ))}
         </div>
 
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <div className="relative w-full lg:w-[400px]">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input 
-            placeholder="Search documents or clients..." 
+            placeholder="Search documents..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white border-none shadow-sm h-11 md:h-10 focus-visible:ring-blue-500" 
+            className="pl-12 h-12 bg-card border-border shadow-sm text-base focus-visible:ring-primary/20 rounded-[16px]" 
           />
         </div>
       </div>
 
       {/* Document List */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
-          <p className="text-slate-500">Loading your documents...</p>
+        <div className="flex flex-col items-center justify-center py-32">
+          <Loader2 className="w-12 h-12 animate-spin text-primary/50 mb-4" />
+          <p className="text-muted-foreground font-medium">Loading your documents...</p>
         </div>
       ) : filteredDocs.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
           {filteredDocs.map((doc) => (
-            <Card key={doc.id} className="border-none shadow-sm hover:shadow-md transition-all group bg-white overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+            <Card key={doc.id} className="group border border-border bg-card hover:border-primary/30 transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-0.5 overflow-visible">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-5">
+                  {/* Icon Container */}
+                  <div className={cn("w-14 h-14 rounded-[18px] flex items-center justify-center shrink-0 border shadow-sm transition-transform duration-300 group-hover:scale-105", getDocColor(doc.doc_type))}>
                     {getDocIcon(doc.doc_type)}
                   </div>
                   
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-0.5">
-                      <h3 className="font-bold text-slate-900 truncate text-sm md:text-base">{doc.title || "Untitled Document"}</h3>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(doc.status || "draft")}
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 py-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                      <h3 className="font-bold text-foreground truncate text-lg tracking-tight group-hover:text-primary transition-colors">
+                        {doc.title || "Untitled Document"}
+                      </h3>
+                      <div className="scale-90 origin-left">
+                         {getStatusBadge(doc.status || "draft")}
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] md:text-xs text-slate-500">
-                      <span className="flex items-center gap-1 font-medium text-slate-700">
+                    
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5 font-medium text-foreground/80">
                         {doc.client_name || "No Client"}
                       </span>
-                      <span className="hidden sm:inline-block">•</span>
+                      <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-border"></span>
                       <span>Updated {format(new Date(doc.updated_at), "MMM d, yyyy")}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <Link href={`/editor?type=${doc.doc_type}&id=${doc.id}`}>
-                      <Button variant="ghost" size="icon" className="text-slate-400 hover:text-blue-600 hover:bg-blue-50">
-                        <Edit className="w-4 h-4" />
+                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10">
+                        <Edit className="w-5 h-5" />
                       </Button>
                     </Link>
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600">
-                          <MoreVertical className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary">
+                          <MoreVertical className="w-5 h-5" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem className="gap-2">
-                          <Eye className="w-4 h-4" /> View
+                      <DropdownMenuContent align="end" className="w-48 rounded-[16px] border-border p-2">
+                        <DropdownMenuItem className="gap-2 rounded-[10px] cursor-pointer py-2.5">
+                          <Eye className="w-4 h-4" /> View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2">
+                        <DropdownMenuItem className="gap-2 rounded-[10px] cursor-pointer py-2.5">
                           <Download className="w-4 h-4" /> Download PDF
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          className="gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+                          className="gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 rounded-[10px] cursor-pointer py-2.5"
                           onClick={() => handleDelete(doc.id)}
                         >
                           <Trash2 className="w-4 h-4" /> Delete
@@ -200,19 +216,19 @@ function DocumentsContent() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-100">
-          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-            <Files className="w-8 h-8 text-slate-300" />
+        <div className="flex flex-col items-center justify-center py-32 bg-card rounded-[32px] border-2 border-dashed border-border/60">
+          <div className="w-20 h-20 bg-secondary/50 rounded-[24px] flex items-center justify-center mb-6">
+            <Files className="w-10 h-10 text-muted-foreground/40" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900 mb-1">No documents found</h3>
-          <p className="text-slate-500 mb-6 text-center max-w-xs">
+          <h3 className="text-xl font-bold text-foreground mb-2">No documents found</h3>
+          <p className="text-muted-foreground mb-8 text-center max-w-sm text-base leading-relaxed">
             {activeTab === "all" 
               ? "You haven't created any documents yet. Start by creating a quotation or invoice."
               : `You don't have any ${activeTab}s yet.`}
           </p>
           <Link href="/editor?type=quotation">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-              <Plus className="w-4 h-4" /> Create Your First Document
+            <Button size="lg" className="h-12 px-8 rounded-[16px] text-base gap-2 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
+              <Plus className="w-5 h-5" /> Create First Document
             </Button>
           </Link>
         </div>
@@ -224,12 +240,11 @@ function DocumentsContent() {
 export default function DocumentsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#f7f9fc] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     }>
       <DocumentsContent />
     </Suspense>
   )
 }
-
