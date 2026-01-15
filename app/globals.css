@@ -4,58 +4,63 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Sleek Design Theme - Figma Inspired */
-  /* Background: Cream White */
-  --background: #FEFEFA; 
-  /* Foreground: Dark Brown/Grey */
-  --foreground: #403A38; 
-
-  /* Cards: Off-white/Very light beige */
-  --card: #FEFDF9; 
-  --card-foreground: #403A38;
-
-  --popover: #FEFDF9;
-  --popover-foreground: #403A38;
+  /* Sleek Design System - Exact Figma Colors */
   
-  /* Primary Brand Color - Orange */
+  /* Main Background - Warm Beige/Grey from Figma background */
+  --background: #F2F0E9; 
+  
+  /* Text Colors */
+  --foreground: #403A38; /* Dark warm grey, not black */
+  --foreground-muted: #988F8B; /* Secondary text */
+  --foreground-accent: #F55503; /* The signature orange */
+
+  /* Card Colors */
+  --card: #FEFEFA; /* Cream white */
+  --card-hover: #FFFFFF;
+  --card-foreground: #403A38;
+  
+  /* Borders - Distinctive Beige Border */
+  --border: #DDD9D2; 
+  --border-hover: #CQC7BE;
+  --input: #EBE7E0;
+  
+  /* Brand Colors */
   --primary: #F55503; 
   --primary-foreground: #FFFFFF;
+  --primary-light: #FFF0E6; /* Light orange background */
   
-  /* Secondary - Light Beige */
-  --secondary: #F6F3EE; 
+  --secondary: #EBE7E0; /* Darker beige for secondary elements */
   --secondary-foreground: #5B5655; 
   
-  /* Muted - Subdued text/backgrounds */
   --muted: #F6F3EE;
-  --muted-foreground: #988F8B; 
+  --muted-foreground: #9CA3AF;
   
-  /* Accent - Light Orange/Peach for hover/active states */
-  --accent: #FDF1E8; 
+  --accent: #FFF0E6; 
   --accent-foreground: #F55503; 
   
-  --destructive: #df1b41;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   
-  /* Borders: Light Grey/Beige */
-  --border: #DBD7CF; 
-  --input: #DBD7CF;
   --ring: #F55503;
   
-  --radius: 1rem; /* 16px base radius */
+  /* Radius - Matching Figma's 22px-26px style */
+  --radius: 1.375rem; /* ~22px */
 }
 
 .dark {
-  /* Dark Mode - Adapted to match Warm/Sleek vibe but dark */
-  --background: #1C1917; /* Warm Dark Grey */
+  /* Dark Mode Adaptation */
+  --background: #1C1917; 
   --foreground: #FAFAF9;
+  --foreground-muted: #A8A29E;
   
   --card: #292524;
+  --card-hover: #353130;
   --card-foreground: #FAFAF9;
   
-  --popover: #292524;
-  --popover-foreground: #FAFAF9;
+  --border: #44403C;
+  --input: #44403C;
   
-  --primary: #F55503; /* Keep Orange */
+  --primary: #F55503; 
   --primary-foreground: #FFFFFF;
   
   --secondary: #44403C;
@@ -67,23 +72,17 @@
   --accent: #44403C;
   --accent-foreground: #FAFAF9;
   
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  
-  --border: #57534E;
-  --input: #57534E;
   --ring: #F55503;
 }
 
 @theme inline {
   --font-sans: "Inter", "Geist", "Geist Fallback", sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -94,15 +93,12 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
   --color-ring: var(--ring);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
 }
 
 @layer base {
@@ -114,13 +110,24 @@
   }
 }
 
-/* ===== A4 Paper Format Styles ===== */
+/* Custom Utilities for Sleek Design */
+@layer components {
+  .sleek-card {
+    @apply bg-card border border-border rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_8px_16px_rgba(0,0,0,0.04)] hover:-translate-y-0.5;
+  }
+  
+  .sleek-card-hover {
+    @apply hover:border-primary/30;
+  }
+}
+
+/* A4 Paper Styles - Keeping existing functionality */
 .a4-paper-container {
   width: 210mm;
   min-height: 297mm;
   background: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 
-              0 0 0 1px rgba(0, 0, 0, 0.03); /* Softer shadow */
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 
+              0 0 0 1px rgba(0, 0, 0, 0.02);
   margin: 0 auto;
   padding: 20mm 15mm;
   position: relative;
@@ -136,13 +143,8 @@
     padding: 0;
     page-break-after: always;
   }
-  
-  #document-preview-container {
-    background: white !important;
-  }
 }
 
-/* Scale down for smaller screens */
 @media (max-width: 1400px) {
   .a4-paper-container {
     transform: scale(0.95);
@@ -159,40 +161,24 @@
 
 @media (max-width: 768px) {
   .a4-paper-container {
-    width: 210mm; /* Keep fixed width */
+    width: 210mm;
     min-height: 297mm;
-    transform: scale(0.42); /* Scale down significantly for mobile */
+    transform: scale(0.42);
     transform-origin: top center;
-    margin-bottom: -150mm; /* Negative margin to compensate for scale overflow */
+    margin-bottom: -150mm;
   }
   
   #document-preview-container {
     padding: 1rem 0;
     overflow-x: hidden;
-    height: 500px; /* Limit height on mobile */
+    height: 500px;
   }
 }
 
-/* Scrollbar Hide Utility */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-@media (max-width: 480px) {
-  .a4-paper-container {
-    transform: scale(0.35);
-    margin-bottom: -180mm;
-  }
 }
