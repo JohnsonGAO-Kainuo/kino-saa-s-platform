@@ -102,15 +102,6 @@ export default function DashboardPage() {
           <RecentActivity documents={documents} />
         </section>
       )}
-
-      {/* Global Integrated AI Sidebar */}
-      <AIAgentSidebar 
-        currentDocType="document" 
-        onDocumentGenerated={handleDocumentGenerated} 
-        isOpen={agentOpen}
-        onToggle={setAgentOpen}
-        docId="dashboard"
-      />
     </div>
   )
 }

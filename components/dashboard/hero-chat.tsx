@@ -93,6 +93,19 @@ export default function DashboardHero() {
             Generate <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
+        
+        {/* Suggested Prompts - Hints */}
+        <div className="absolute -bottom-10 left-0 w-full flex justify-center gap-3">
+          <button onClick={() => setPrompt("Quote for Website Redesign")} className="text-xs bg-white/50 hover:bg-white border border-border/50 rounded-full px-3 py-1.5 text-muted-foreground transition-all">
+            "Quote for Website Redesign"
+          </button>
+          <button onClick={() => setPrompt("Invoice to Acme for $500")} className="text-xs bg-white/50 hover:bg-white border border-border/50 rounded-full px-3 py-1.5 text-muted-foreground transition-all">
+            "Invoice to Acme for $500"
+          </button>
+          <button onClick={() => setPrompt("Contract for Marketing Services")} className="text-xs bg-white/50 hover:bg-white border border-border/50 rounded-full px-3 py-1.5 text-muted-foreground transition-all">
+            "Contract for Marketing Services"
+          </button>
+        </div>
       </div>
 
       {/* Templates / Quick Starts */}
