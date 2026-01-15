@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { Building2, User, Pen, Trash2, Plus, Upload } from 'lucide-react'
 import type { Language } from '@/lib/language-context'
+import { cn } from "@/lib/utils"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 

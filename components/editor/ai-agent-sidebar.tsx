@@ -374,6 +374,28 @@ export function AIAgentSidebar({
             </div>
           )}
           <div className="relative">
+            {/* Quick Tips Tooltip/Hint */}
+            <div className="absolute -top-8 left-0 flex gap-2 overflow-x-auto no-scrollbar max-w-full pb-1">
+              <button 
+                onClick={() => setInput(t("Update client info", "更新客戶信息"))}
+                className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 whitespace-nowrap hover:bg-primary/20 transition-colors"
+              >
+                💡 {t("Update client", "更新客戶")}
+              </button>
+              <button 
+                onClick={() => setInput(t("Change item prices", "修改項目價格"))}
+                className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 whitespace-nowrap hover:bg-primary/20 transition-colors"
+              >
+                💰 {t("Change price", "改價")}
+              </button>
+              <button 
+                onClick={() => setInput(t("Add a new service item", "添加新服務"))}
+                className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 whitespace-nowrap hover:bg-primary/20 transition-colors"
+              >
+                ➕ {t("Add item", "加項")}
+              </button>
+            </div>
+            
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
