@@ -38,8 +38,8 @@ export function EditorHeader({ documentType, onSave, isSaving, lastSaved }: Edit
           </Link>
           
           {lastSaved && (
-            <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
-              <Check className="w-3 h-3 text-green-500" />
+            <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground bg-secondary/50 px-2 py-1 rounded-full border border-border">
+              <Check className="w-3 h-3 text-emerald-500" />
               <span>Auto-saved at {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
             </div>
           )}

@@ -23,17 +23,10 @@ export function StatsCards({ stats }: { stats: { total: number, quotations: numb
   ]
 
   const colorStyles = {
-    blue: "bg-blue-500 hover:bg-blue-600",
-    orange: "bg-orange-500 hover:bg-orange-600",
-    green: "bg-emerald-500 hover:bg-emerald-600",
-    purple: "bg-purple-500 hover:bg-purple-600",
-  }
-
-  const iconStyles = {
-    blue: "bg-white/20 text-white",
-    orange: "bg-white/20 text-white",
-    green: "bg-white/20 text-white",
-    purple: "bg-white/20 text-white",
+    blue: "text-blue-600 bg-blue-50",
+    orange: "text-orange-600 bg-orange-50",
+    green: "text-emerald-600 bg-emerald-50",
+    purple: "text-purple-600 bg-purple-50",
   }
 
   return (
@@ -42,26 +35,25 @@ export function StatsCards({ stats }: { stats: { total: number, quotations: numb
         <Link 
           key={index} 
           href={card.href}
-          className={`${colorStyles[card.color]} rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg transition-all hover:-translate-y-1 block text-white`}
+          className="bg-card border border-border rounded-[22px] p-5 md:p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 block group"
         >
           <div className="flex justify-between items-start">
             <div className="min-w-0">
-              <p className="text-white/80 text-[10px] md:text-sm font-medium mb-1 truncate">{t(card.labelKey)}</p>
-              <h3 className="text-xl md:text-3xl font-bold">{card.value}</h3>
+              <p className="text-muted-foreground text-[10px] md:text-sm font-medium mb-1 truncate group-hover:text-primary transition-colors">{t(card.labelKey)}</p>
+              <h3 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{card.value}</h3>
             </div>
-            <div className={`p-1.5 md:p-2 rounded-lg md:rounded-xl ${iconStyles[card.color]} backdrop-blur-sm shrink-0`}>
-              <card.icon className="w-4 h-4 md:w-6 md:h-6" />
+            <div className={`p-2 md:p-3 rounded-xl ${colorStyles[card.color]} shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+              <card.icon className="w-5 h-5 md:w-6 md:h-6" />
             </div>
           </div>
-          <div className="mt-2 md:mt-4 flex items-center text-white/70 text-[10px] md:text-xs">
-            <span className="bg-white/20 px-1.5 py-0.5 rounded text-white mr-2 hidden sm:inline-block">
+          <div className="mt-4 flex items-center text-muted-foreground text-[10px] md:text-xs">
+            <span className="bg-secondary px-2 py-1 rounded-full text-foreground mr-2 hidden sm:inline-block font-medium group-hover:bg-primary/10 group-hover:text-primary transition-colors">
               {t('View All')}
             </span>
-            <span className="truncate">{t('click to manage')}</span>
+            <span className="truncate opacity-70">{t('click to manage')}</span>
           </div>
         </Link>
       ))}
     </div>
   )
 }
-

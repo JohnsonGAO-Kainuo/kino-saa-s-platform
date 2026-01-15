@@ -4,66 +4,80 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Kino Enterprise Light Theme (Stripe-inspired) - Converted from oklch to Hex for compatibility */
-  --background: #f7f9fc; 
-  --foreground: #1a1f36; 
-  --card: #ffffff; 
-  --card-foreground: #1a1f36;
-  --popover: #ffffff;
-  --popover-foreground: #1a1f36;
+  /* Sleek Design Theme - Figma Inspired */
+  /* Background: Cream White */
+  --background: #FEFEFA; 
+  /* Foreground: Dark Brown/Grey */
+  --foreground: #403A38; 
+
+  /* Cards: Off-white/Very light beige */
+  --card: #FEFDF9; 
+  --card-foreground: #403A38;
+
+  --popover: #FEFDF9;
+  --popover-foreground: #403A38;
   
-  /* Primary Brand Color - Professional Blurple */
-  --primary: #635bff; 
-  --primary-foreground: #ffffff;
+  /* Primary Brand Color - Orange */
+  --primary: #F55503; 
+  --primary-foreground: #FFFFFF;
   
-  /* Secondary - Slate/Grayish */
-  --secondary: #f0f2f7; 
-  --secondary-foreground: #1a1f36; 
+  /* Secondary - Light Beige */
+  --secondary: #F6F3EE; 
+  --secondary-foreground: #5B5655; 
   
   /* Muted - Subdued text/backgrounds */
-  --muted: #f7f9fc;
-  --muted-foreground: #4f566b; 
+  --muted: #F6F3EE;
+  --muted-foreground: #988F8B; 
   
-  /* Accent - For hover states or highlights */
-  --accent: #f6f9fc; 
-  --accent-foreground: #1a1f36; 
+  /* Accent - Light Orange/Peach for hover/active states */
+  --accent: #FDF1E8; 
+  --accent-foreground: #F55503; 
   
   --destructive: #df1b41;
   --destructive-foreground: #ffffff;
   
-  --border: #e6e9ef; 
-  --input: #e6e9ef;
-  --ring: #635bff;
+  /* Borders: Light Grey/Beige */
+  --border: #DBD7CF; 
+  --input: #DBD7CF;
+  --ring: #F55503;
   
-  --radius: 0.5rem; /* 8px */
+  --radius: 1rem; /* 16px base radius */
 }
 
 .dark {
-  /* Dark Mode - Professional Slate - Converted to Hex */
-  --background: #0a0c10;
-  --foreground: #f8f9fa;
-  --card: #161920;
-  --card-foreground: #f8f9fa;
-  --popover: #161920;
-  --popover-foreground: #f8f9fa;
-  --primary: #7a73ff;
-  --primary-foreground: #ffffff;
-  --secondary: #2d333d;
-  --secondary-foreground: #f8f9fa;
-  --muted: #2d333d;
-  --muted-foreground: #a0aec0;
-  --accent: #2d333d;
-  --accent-foreground: #f8f9fa;
-  --destructive: #ff4d4d;
-  --destructive-foreground: #f8f9fa;
-  --border: #3d4451;
-  --input: #3d4451;
-  --ring: #7a73ff;
+  /* Dark Mode - Adapted to match Warm/Sleek vibe but dark */
+  --background: #1C1917; /* Warm Dark Grey */
+  --foreground: #FAFAF9;
+  
+  --card: #292524;
+  --card-foreground: #FAFAF9;
+  
+  --popover: #292524;
+  --popover-foreground: #FAFAF9;
+  
+  --primary: #F55503; /* Keep Orange */
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: #44403C;
+  --secondary-foreground: #FAFAF9;
+  
+  --muted: #44403C;
+  --muted-foreground: #A8A29E;
+  
+  --accent: #44403C;
+  --accent-foreground: #FAFAF9;
+  
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  
+  --border: #57534E;
+  --input: #57534E;
+  --ring: #F55503;
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: "Inter", "Geist", "Geist Fallback", sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -87,6 +101,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
 }
 
 @layer base {
@@ -94,7 +110,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
@@ -103,12 +119,12 @@
   width: 210mm;
   min-height: 297mm;
   background: white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 
-              0 0 0 1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 
+              0 0 0 1px rgba(0, 0, 0, 0.03); /* Softer shadow */
   margin: 0 auto;
   padding: 20mm 15mm;
   position: relative;
-  border-radius: 2px;
+  border-radius: 4px;
 }
 
 @media print {

@@ -76,24 +76,24 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] p-8 text-slate-900">
+    <div className="min-h-screen bg-background p-8 text-foreground">
       {/* Top Header */}
       <header className="flex justify-between items-center mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-500 mt-1">Overview of your business documents</p>
+          <h1 className="text-4xl font-bold text-foreground tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-2 text-lg">Overview of your business documents</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
               placeholder="Search..." 
-              className="pl-10 bg-white border-none shadow-sm w-64 focus-visible:ring-blue-500" 
+              className="pl-10 bg-card border-border shadow-sm w-64 focus-visible:ring-primary rounded-xl" 
             />
           </div>
-          <Button variant="ghost" size="icon" className="relative text-slate-500 hover:text-blue-600">
+          <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary hover:bg-secondary rounded-xl">
             <Bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#f7f9fc]"></span>
+            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background"></span>
           </Button>
         </div>
       </header>

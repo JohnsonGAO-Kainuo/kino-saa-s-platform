@@ -360,10 +360,10 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
               : 'mr-0'
           }`}
         >
-          <div className="h-full overflow-y-auto bg-gray-50/50 p-4 lg:p-12 flex justify-center relative scrollbar-hide">
+          <div className="h-full overflow-y-auto bg-muted/30 p-4 lg:p-12 flex justify-center relative scrollbar-hide">
             <div className="absolute top-4 right-4 z-10 hidden lg:block">
-              <div className="bg-white/80 backdrop-blur px-3 py-1.5 rounded-full text-[10px] font-bold text-blue-500 shadow-sm border border-blue-100 flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+              <div className="bg-card/80 backdrop-blur px-3 py-1.5 rounded-full text-[10px] font-bold text-primary shadow-sm border border-primary/20 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
                 INTERACTIVE EDITING MODE
               </div>
             </div>

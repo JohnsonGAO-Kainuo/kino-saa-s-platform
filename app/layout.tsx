@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased bg-[#f7f9fc] text-foreground`}>
+      <body className={`font-sans antialiased bg-background text-foreground`}>
         <AuthProvider>
           <LanguageProvider>
             <div className="flex flex-col md:flex-row min-h-screen">

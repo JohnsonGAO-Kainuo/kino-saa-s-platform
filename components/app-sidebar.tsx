@@ -42,14 +42,14 @@ export function AppSidebar() {
   const { state } = useSidebar()
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-slate-200 bg-white">
-      <SidebarHeader className="h-16 flex items-center justify-center border-b border-slate-100">
+    <Sidebar collapsible="icon" className="border-r border-border bg-background/50 backdrop-blur-sm">
+      <SidebarHeader className="h-16 flex items-center justify-center border-b border-border/50">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#6366f1] rounded-lg flex items-center justify-center shadow-sm">
-            <span className="text-lg font-bold text-white leading-none">K</span>
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+            <span className="text-lg font-bold text-primary-foreground leading-none">K</span>
           </div>
           {state !== "collapsed" && (
-            <span className="text-xl font-bold tracking-tight text-[#1a1f36]">Kino</span>
+            <span className="text-xl font-bold tracking-tight text-foreground">Kino</span>
           )}
         </Link>
       </SidebarHeader>
@@ -63,14 +63,14 @@ export function AppSidebar() {
                 isActive={pathname === item.href}
                 tooltip={item.label}
                 className={cn(
-                  "h-10 px-3 transition-all duration-200",
+                  "h-10 px-3 transition-all duration-200 rounded-xl",
                   pathname === item.href 
-                    ? "bg-slate-100 text-[#6366f1] font-semibold" 
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-primary/10 text-primary font-semibold shadow-sm" 
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 )}
               >
                 <Link href={item.href}>
-                  <item.icon className={cn("w-5 h-5", pathname === item.href ? "text-[#6366f1]" : "text-slate-400")} />
+                  <item.icon className={cn("w-5 h-5", pathname === item.href ? "text-primary" : "text-muted-foreground/70")} />
                   <span>{item.label}</span>
                 </Link>
               </SidebarMenuButton>
@@ -79,7 +79,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="px-3 py-4 border-t border-slate-100">
+      <SidebarFooter className="px-3 py-4 border-t border-border/50">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -87,14 +87,14 @@ export function AppSidebar() {
               isActive={pathname === "/settings"}
               tooltip="Settings"
               className={cn(
-                "h-10 px-3 transition-all duration-200",
+                "h-10 px-3 transition-all duration-200 rounded-xl",
                 pathname === "/settings" 
-                  ? "bg-slate-100 text-[#6366f1] font-semibold" 
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-primary/10 text-primary font-semibold shadow-sm" 
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               )}
             >
               <Link href="/settings">
-                <Settings className={cn("w-5 h-5", pathname === "/settings" ? "text-[#6366f1]" : "text-slate-400")} />
+                <Settings className={cn("w-5 h-5", pathname === "/settings" ? "text-primary" : "text-muted-foreground/70")} />
                 <span>Settings</span>
               </Link>
             </SidebarMenuButton>
