@@ -67,6 +67,28 @@ export function AIAgentSidebar({
     }
   }, [])
 
+  // Handle URL Query Params for initial prompt (from Dashboard Hero)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const initialPrompt = searchParams.get('prompt');
+      
+      if (initialPrompt && !messages.some(m => m.role === 'user' && m.content === initialPrompt)) {
+        // Clear param to prevent re-triggering
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.search.replace(/[\?&]prompt=[^&]+/, '').replace(/^&/, '?');
+        window.history.replaceState({}, '', newUrl);
+        
+        setInput(initialPrompt);
+        // Small delay to ensure state is ready
+        setTimeout(() => {
+          const fakeEvent = { key: "Enter", shiftKey: false, preventDefault: () => {} } as any;
+          setInput(initialPrompt); // set again to be sure
+          handleSend(initialPrompt); 
+        }, 500);
+      }
+    }
+  }, []);
+
   // Initialize/Load current session
   useEffect(() => {
     const savedHistoryStr = localStorage.getItem('ai_chat_sessions')
@@ -182,9 +204,10 @@ export function AIAgentSidebar({
     }
   }
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
-    const userMessage = input.trim()
+  const handleSend = async (overrideInput?: string) => {
+    const textToSend = overrideInput || input;
+    if (!textToSend.trim() || isLoading) return
+    const userMessage = textToSend.trim()
     setMessages(prev => [...prev, { role: "user", content: userMessage }])
     setInput("")
     setIsLoading(true)
@@ -387,7 +410,7 @@ export function AIAgentSidebar({
               placeholder={t("Ask AI to draft or edit...")}
               className="w-full bg-[#f7f9fc] border border-[#e6e9ef] rounded-xl px-4 py-3 pr-12 text-[13px] focus:ring-2 focus:ring-[#6366f1]/20 outline-none h-[100px] resize-none"
             />
-            <button onClick={handleSend} disabled={!input.trim() || isLoading} className="absolute right-3 bottom-3 p-2 bg-[#6366f1] text-white rounded-lg disabled:bg-slate-200 shadow-sm"><Send className="w-4 h-4" /></button>
+            <button onClick={() => handleSend()} disabled={!input.trim() || isLoading} className="absolute right-3 bottom-3 p-2 bg-[#6366f1] text-white rounded-lg disabled:bg-slate-200 shadow-sm"><Send className="w-4 h-4" /></button>
           </div>
           <p className="mt-2 text-[10px] text-center text-[#a3acb9]">{t("Press Enter to send. Use Shift+Enter for new line.")}</p>
         </div>
