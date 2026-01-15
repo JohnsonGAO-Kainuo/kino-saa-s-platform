@@ -354,11 +354,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
       <main className="flex-1 flex overflow-hidden relative">
         {/* Main Content Area - Full width with Interactive Preview */}
         <div 
-          className={`flex-1 overflow-hidden transition-all duration-500 ease-in-out ${
-            agentOpen 
-              ? agentExpanded ? 'lg:mr-[500px]' : 'lg:mr-[400px]' 
-              : 'mr-0'
-          }`}
+          className="flex-1 overflow-hidden transition-all duration-500 ease-in-out"
         >
           <div className="h-full overflow-y-auto bg-muted/30 p-4 lg:p-12 flex justify-center relative scrollbar-hide">
             <div className="absolute top-4 right-4 z-10 hidden lg:block">
@@ -379,7 +375,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           </div>
         </div>
 
-        {/* AI Agent Sidebar - Primary Editor Control */}
+        {/* AI Agent Sidebar - Floating Widget */}
         <AIAgentSidebar 
           currentDocType={activeTab} 
           onDocumentGenerated={handleDocumentGenerated}

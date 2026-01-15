@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, FileText, Settings, Briefcase, ChevronRight } from "lucide-react"
+import { Home, FileText, Settings, Briefcase, ChevronRight, Users, Package } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils"
 const sidebarItems = [
   { icon: Home, label: "Dashboard", href: "/" },
   { icon: FileText, label: "Documents", href: "/documents" },
+  { icon: Users, label: "Clients", href: "/clients" },
+  { icon: Package, label: "Items", href: "/items" },
   { icon: Briefcase, label: "Business Profile", href: "/profile" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]

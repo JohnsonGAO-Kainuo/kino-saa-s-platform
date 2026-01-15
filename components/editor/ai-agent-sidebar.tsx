@@ -21,6 +21,8 @@ interface ChatSession {
   docId?: string | null
 }
 
+import { cn } from "@/lib/utils"
+
 interface AIAgentSidebarProps {
   currentDocType: string
   onDocumentGenerated: (content: any) => void
@@ -30,6 +32,7 @@ interface AIAgentSidebarProps {
   docId?: string | null
   focusedField?: { id: string; name: string } | null
   onClearFocus?: () => void
+  initialContext?: any // Added to fix type error
 }
 
 export function AIAgentSidebar({ 
@@ -262,26 +265,32 @@ export function AIAgentSidebar({
 
   return (
     <>
-      {/* Floating Toggle Button (Visible when closed) */}
+      {/* Floating Toggle Button (Always visible when closed, acts as the main entry point) */}
       {!isOpen && (
         <Button
           onClick={() => onToggle(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-[#6366f1] text-white shadow-2xl hover:bg-[#5658d2] z-50 group transition-all hover:scale-110 active:scale-95"
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl hover:bg-primary/90 z-50 group transition-all hover:scale-110 active:scale-95"
           size="icon"
         >
           <div className="relative">
             <Bot className="w-7 h-7" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#6366f1] animate-pulse" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-primary animate-pulse" />
           </div>
-          <span className="absolute right-16 bg-white text-[#1a1f36] px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl border border-[#e6e9ef] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+          <span className="absolute right-16 bg-popover text-popover-foreground px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl border border-border opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
             {t("Need help? Ask AI", "需要幫助？問問 AI")}
           </span>
         </Button>
       )}
 
-      {/* Sidebar Container */}
-      <div className={`fixed right-0 top-[64px] h-[calc(100vh-64px)] bg-white border-l border-[#e6e9ef] shadow-xl transition-all duration-500 ease-in-out z-40 flex flex-col ${isExpanded ? "w-full md:w-[500px]" : "w-full md:w-[400px]"} ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
-        <div className="p-4 border-b border-[#f7f9fc] flex items-center justify-between bg-white">
+      {/* Floating Chat Window (Replaces Sidebar) */}
+      <div 
+        className={cn(
+          "fixed bottom-24 right-6 w-[400px] max-w-[calc(100vw-48px)] bg-card border border-border shadow-2xl rounded-2xl overflow-hidden transition-all duration-300 ease-in-out z-50 flex flex-col max-h-[700px] h-[600px]",
+          isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-10 scale-95 pointer-events-none"
+        )}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           {view === 'history' ? (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setView('chat')}>
