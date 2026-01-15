@@ -204,6 +204,15 @@ export function AIAgentSidebar({
     setIsLoading(true)
 
     try {
+      // Gather external context from LocalStorage
+      const savedClients = typeof window !== 'undefined' ? localStorage.getItem('kino_clients') : null;
+      const savedItems = typeof window !== 'undefined' ? localStorage.getItem('kino_items') : null;
+      
+      const externalContext = {
+        clients: savedClients ? JSON.parse(savedClients) : [],
+        items: savedItems ? JSON.parse(savedItems) : []
+      };
+
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -213,6 +222,7 @@ export function AIAgentSidebar({
             : userMessage,
           documentType: currentDocType,
           currentContext: initialContext || null,
+          externalContext, // Pass this to the API
           uiLanguage: language,
           focusedField: focusedField?.id
         })

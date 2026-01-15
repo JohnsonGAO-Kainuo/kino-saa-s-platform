@@ -28,7 +28,7 @@ const responseSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const { prompt, documentType, currentContext, uiLanguage, focusedField } = await req.json();
+    const { prompt, documentType, currentContext, externalContext, uiLanguage, focusedField } = await req.json();
     const apiKey = process.env.DEEPSEEK_API_KEY;
     
     if (!apiKey) {
@@ -69,12 +69,16 @@ STRICT RULES:
    - Instead, use simple placeholders like "Item 1", "Item 2" or "Service Item A".
    - Mention in your 'message' that you've updated the amounts and are waiting for them to fill in the specific item descriptions.
 5. **Context-Aware Editing**: If "Current Document State" is provided, and the user only specifies a price change, try to match the price to the most relevant existing item or add it as a new item with a generic name.
-6. **Document Specifics**:
+6. **External Database (Lazy Mode)**:
+   - You have access to the user's Client Database and Item Database (see Context below).
+   - **Clients**: If the user mentions a client name (e.g., "Acme") that vaguely matches an entry in 'Client Database', you MUST auto-fill 'clientName', 'clientEmail', and 'clientAddress' from that entry.
+   - **Items**: If the user mentions an item (e.g., "Web Dev") that matches an entry in 'Item Database', you MUST auto-fill its 'description', 'unitPrice' (price), and 'unit'.
+7. **Document Specifics**:
    - **Quotation**: Focus on value. NOTE: Quotations do NOT have signatures.
    - **Contract**: Focus on terms. NOTE: Contracts require dual signatures.
    - **Invoice/Receipt**: Focus on payment proof. These have one signature/stamp from the issuer.
-7. **Consistency**: The 'message' must accurately reflect the 'data' changes. Keep it concise.
-8. **Context Focus**: If \`focusedField\` is provided (e.g., "notes", "items-section"), prioritize your suggestions and updates for that specific part of the document.
+8. **Consistency**: The 'message' must accurately reflect the 'data' changes. Keep it concise.
+9. **Context Focus**: If \`focusedField\` is provided (e.g., "notes", "items-section"), prioritize your suggestions and updates for that specific part of the document.
 
 Response Format (JSON only):
 {
@@ -88,7 +92,9 @@ Response Format (JSON only):
 }`;
 
     const userPrompt = `User Prompt: "${prompt}"
-${currentContext ? `Current Document State: ${JSON.stringify(currentContext)}` : 'No context.'}`;
+${currentContext ? `Current Document State: ${JSON.stringify(currentContext)}` : 'No context.'}
+${externalContext ? `Client Database: ${JSON.stringify(externalContext.clients)}
+Item Database: ${JSON.stringify(externalContext.items)}` : 'No external database access.'}`;
 
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',

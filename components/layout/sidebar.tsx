@@ -25,8 +25,8 @@ export function Sidebar() {
         {/* Logo Section */}
         <div className="p-6 pb-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-[14px] flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
-              <span className="font-bold text-xl leading-none pt-1">K</span>
+            <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-lg shadow-orange-500/20 overflow-hidden bg-[#F55503]">
+              <img src="/kino-logo.svg" alt="Kino Logo" className="w-full h-full object-cover p-1.5" />
             </div>
             <div>
               <span className="text-lg font-bold text-foreground tracking-tight block leading-none">Kino</span>
