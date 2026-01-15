@@ -1,12 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sparkles, Send, X, Maximize2, Minimize2, Loader2, Bot, User, MessageSquare, Languages, History, ChevronLeft } from "lucide-react"
+import { Sparkles, Send, X, Loader2, Bot, User, Languages, History, ChevronLeft } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { toast } from "sonner"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { cn } from "@/lib/utils"
 
 interface Message {
   role: "user" | "assistant"
@@ -21,33 +20,24 @@ interface ChatSession {
   docId?: string | null
 }
 
-import { cn } from "@/lib/utils"
-
 interface AIAgentSidebarProps {
   currentDocType: string
   onDocumentGenerated: (content: any) => void
-  isOpen: boolean
-  onToggle: (open: boolean) => void
-  onExpandChange?: (expanded: boolean) => void
   docId?: string | null
   focusedField?: { id: string; name: string } | null
   onClearFocus?: () => void
-  initialContext?: any // Added to fix type error
+  initialContext?: any
 }
 
 export function AIAgentSidebar({ 
   currentDocType, 
   onDocumentGenerated, 
-  isOpen, 
-  onToggle, 
-  onExpandChange, 
   initialContext, 
   docId,
   focusedField,
   onClearFocus
-}: AIAgentSidebarProps & { initialContext?: any }) {
+}: AIAgentSidebarProps) {
   const { language, t } = useLanguage()
-  const [isExpanded, setIsExpanded] = useState(false)
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [view, setView] = useState<'chat' | 'history'>('chat')
@@ -84,8 +74,6 @@ export function AIAgentSidebar({
         setInput(initialPrompt);
         // Small delay to ensure state is ready
         setTimeout(() => {
-          const fakeEvent = { key: "Enter", shiftKey: false, preventDefault: () => {} } as any;
-          setInput(initialPrompt); // set again to be sure
           handleSend(initialPrompt); 
         }, 500);
       }
@@ -257,56 +245,26 @@ export function AIAgentSidebar({
     }
   }
 
-  const handleExpandToggle = () => {
-    const nextState = !isExpanded
-    setIsExpanded(nextState)
-    onExpandChange?.(nextState)
-  }
-
   return (
-    <>
-      {/* Floating Toggle Button (Always visible when closed, acts as the main entry point) */}
-      {!isOpen && (
-        <Button
-          onClick={() => onToggle(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl hover:bg-primary/90 z-50 group transition-all hover:scale-110 active:scale-95"
-          size="icon"
-        >
-          <div className="relative">
-            <Bot className="w-7 h-7" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-primary animate-pulse" />
-          </div>
-          <span className="absolute right-16 bg-popover text-popover-foreground px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl border border-border opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-            {t("Need help? Ask AI", "需要幫助？問問 AI")}
-          </span>
-        </Button>
-      )}
-
-      {/* Floating Chat Window (Replaces Sidebar) */}
-      <div 
-        className={cn(
-          "fixed bottom-24 right-6 w-[400px] max-w-[calc(100vw-48px)] bg-card border border-border shadow-2xl rounded-2xl overflow-hidden transition-all duration-300 ease-in-out z-50 flex flex-col max-h-[700px] h-[600px]",
-          isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-10 scale-95 pointer-events-none"
-        )}
-      >
-        {/* Header */}
-        <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30 backdrop-blur-sm">
+    <div className="flex flex-col h-full bg-card/50 backdrop-blur-sm border-r border-border">
+      {/* Header */}
+      <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           {view === 'history' ? (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setView('chat')}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-[#6366f1]/10 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-[#6366f1]" />
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-primary" />
             </div>
           )}
           <div>
-            <h3 className="text-sm font-bold text-[#1a1f36]">
+            <h3 className="text-sm font-bold text-foreground">
               {view === 'history' ? t("Chat History") : t("AI Intelligence")}
             </h3>
             {view === 'chat' && (
-              <p className="text-[11px] text-[#4f566b] flex items-center gap-1">
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                 {t("Smart Agent Active")}
               </p>
@@ -317,53 +275,47 @@ export function AIAgentSidebar({
           {view === 'chat' && (
             <>
               {initialContext && (
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-[#6366f1]" onClick={handleTranslateContent}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={handleTranslateContent}>
                   <Languages className="w-4 h-4" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-[#4f566b]" onClick={() => setView('history')}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setView('history')}>
                 <History className="w-4 h-4" />
               </Button>
             </>
           )}
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-[#4f566b]" onClick={handleExpandToggle}>
-            {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-[#4f566b]" onClick={() => onToggle(false)}>
-            <X className="w-4 h-4" />
-          </Button>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[#fcfdfe]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-muted/10 p-4">
         {view === 'history' ? (
-          <div className="p-4 space-y-3">
+          <div className="space-y-3">
             {history.length > 0 ? history.map(session => (
-              <button key={session.id} onClick={() => loadSession(session)} className={`w-full text-left p-4 rounded-xl border transition-all ${currentSessionId === session.id ? "bg-[#6366f1]/5 border-[#6366f1]" : "bg-white border-[#e6e9ef] hover:border-[#6366f1]"}`}>
+              <button key={session.id} onClick={() => loadSession(session)} className={cn("w-full text-left p-4 rounded-xl border transition-all", currentSessionId === session.id ? "bg-primary/5 border-primary" : "bg-card border-border hover:border-primary/50")}>
                 <div className="flex justify-between items-start mb-1">
-                  <span className="text-[14px] font-bold text-[#1a1f36] truncate pr-4">{session.title}</span>
-                  <span className="text-[10px] text-[#a3acb9]">{new Date(session.timestamp).toLocaleDateString()}</span>
+                  <span className="text-sm font-bold text-foreground truncate pr-4">{session.title}</span>
+                  <span className="text-[10px] text-muted-foreground">{new Date(session.timestamp).toLocaleDateString()}</span>
                 </div>
-                <p className="text-[12px] text-[#4f566b] line-clamp-2 italic">
+                <p className="text-xs text-muted-foreground line-clamp-2 italic">
                   {session.messages[session.messages.length - 1]?.content.replace(/\*\*|\*|_|#|`/g, '')}
                 </p>
               </button>
             )) : (
-              <div className="flex flex-col items-center justify-center py-20 text-[#a3acb9]">
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <History className="w-12 h-12 mb-4 opacity-20" />
                 <p className="text-sm">{t("No history yet")}</p>
               </div>
             )}
           </div>
         ) : (
-          <div className="p-4 space-y-6">
+          <div className="space-y-6">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`flex gap-3 max-w-[85%] ${m.role === "user" ? "flex-row-reverse" : ""}`}>
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${m.role === "user" ? "bg-white border-[#e6e9ef]" : "bg-[#6366f1] border-[#6366f1]"}`}>
-                    {m.role === "user" ? <User className="w-4 h-4 text-[#4f566b]" /> : <Bot className="w-4 h-4 text-white" />}
+                <div className={`flex gap-3 max-w-[90%] ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${m.role === "user" ? "bg-card border-border" : "bg-primary border-primary"}`}>
+                    {m.role === "user" ? <User className="w-4 h-4 text-muted-foreground" /> : <Bot className="w-4 h-4 text-primary-foreground" />}
                   </div>
-                  <div className={`p-3 rounded-2xl text-[13px] leading-relaxed shadow-sm ${m.role === "user" ? "bg-white border-[#e6e9ef] text-[#1a1f36] rounded-tr-none" : "bg-[#6366f1] text-white rounded-tl-none"}`}>
+                  <div className={cn("p-3 rounded-2xl text-[13px] leading-relaxed shadow-sm", m.role === "user" ? "bg-card border border-border text-foreground rounded-tr-none" : "bg-primary text-primary-foreground rounded-tl-none")}>
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm]}
                       components={{
@@ -371,7 +323,7 @@ export function AIAgentSidebar({
                         ul: ({children}) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
                         ol: ({children}) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
                         li: ({children}) => <li className="marker:text-inherit">{children}</li>,
-                        strong: ({children}) => <strong className={`font-bold ${m.role === 'assistant' ? 'text-white border-b border-white/20' : 'text-[#1a1f36]'}`}>{children}</strong>,
+                        strong: ({children}) => <strong className={cn("font-bold", m.role === 'assistant' ? 'text-primary-foreground/90 border-b border-primary-foreground/20' : 'text-foreground')}>{children}</strong>,
                         code: ({children}) => <code className="bg-black/10 px-1 rounded font-mono text-[11px]">{children}</code>
                       }}
                     >
@@ -383,7 +335,7 @@ export function AIAgentSidebar({
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="flex gap-3 items-center text-[#4f566b] text-[12px] bg-slate-100/50 px-3 py-1.5 rounded-full border border-slate-100">
+                <div className="flex gap-3 items-center text-muted-foreground text-xs bg-muted/50 px-3 py-1.5 rounded-full border border-border">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   {t("Thinking...")}
                 </div>
@@ -394,18 +346,18 @@ export function AIAgentSidebar({
       </div>
 
       {view === 'chat' && (
-        <div className="p-4 bg-white border-t border-[#f7f9fc]">
+        <div className="p-4 bg-card border-t border-border">
           {focusedField && (
-            <div className="mb-2 flex items-center justify-between bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+            <div className="mb-2 flex items-center justify-between bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/20">
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                <span className="text-[11px] font-bold text-blue-600">
+                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                <span className="text-[11px] font-bold text-primary">
                   {t("Focusing on")}: {focusedField.name}
                 </span>
               </div>
               <button 
                 onClick={onClearFocus}
-                className="text-blue-400 hover:text-blue-600 transition-colors"
+                className="text-primary/60 hover:text-primary transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -417,14 +369,13 @@ export function AIAgentSidebar({
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
               placeholder={t("Ask AI to draft or edit...")}
-              className="w-full bg-[#f7f9fc] border border-[#e6e9ef] rounded-xl px-4 py-3 pr-12 text-[13px] focus:ring-2 focus:ring-[#6366f1]/20 outline-none h-[100px] resize-none"
+              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 pr-12 text-[13px] focus:ring-2 focus:ring-primary/20 outline-none h-[100px] resize-none placeholder:text-muted-foreground/50"
             />
-            <button onClick={() => handleSend()} disabled={!input.trim() || isLoading} className="absolute right-3 bottom-3 p-2 bg-[#6366f1] text-white rounded-lg disabled:bg-slate-200 shadow-sm"><Send className="w-4 h-4" /></button>
+            <button onClick={() => handleSend()} disabled={!input.trim() || isLoading} className="absolute right-3 bottom-3 p-2 bg-primary text-primary-foreground rounded-lg disabled:opacity-50 shadow-sm hover:bg-primary/90 transition-colors"><Send className="w-4 h-4" /></button>
           </div>
-          <p className="mt-2 text-[10px] text-center text-[#a3acb9]">{t("Press Enter to send. Use Shift+Enter for new line.")}</p>
+          <p className="mt-2 text-[10px] text-center text-muted-foreground/60">{t("Press Enter to send. Use Shift+Enter for new line.")}</p>
         </div>
       )}
     </div>
-    </>
   )
 }

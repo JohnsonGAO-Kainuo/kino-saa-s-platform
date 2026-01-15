@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { EditorTabs } from "./editor-tabs"
-import { EditorForm } from "./editor-form"
 import { DocumentPreview } from "./document-preview"
 import { EditorHeader } from "./editor-header"
 import { AIAgentSidebar } from "./ai-agent-sidebar"
-import { PaymentStatusUI } from "./payment-status-ui"
 import type { PaymentStatus } from "@/lib/payment-utils"
 import { createPaymentStatus } from "@/lib/payment-utils"
 import { useSearchParams, useRouter } from "next/navigation"
@@ -16,6 +14,7 @@ import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
 import { Loader2 } from "lucide-react"
 import { useLanguage, type Language } from "@/lib/language-context"
+import { cn } from "@/lib/utils"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
@@ -24,8 +23,6 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const [isSaving, setIsSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const [agentOpen, setAgentOpen] = useState(false)
-  const [agentExpanded, setAgentExpanded] = useState(false)
   const [mobileView, setMobileView] = useState<'form' | 'preview'>('form')
   const [focusedField, setFocusedField] = useState<{ id: string; name: string } | null>(null)
   const searchParams = useSearchParams()
@@ -201,6 +198,8 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
           stampOffset: formData.stampOffset,
           logo: formData.logo,
           stamp: formData.stamp,
+          clientSignature: formData.clientSignature,
+          clientSignatureOffset: formData.clientSignatureOffset,
         },
         signature_url: formData.signature || undefined,
       }
@@ -270,15 +269,6 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     toast.success(t("Document updated by AI!", "文件已由 AI 更新！"));
   }
 
-  const handlePaymentStatusChange = (newStatus: PaymentStatus) => {
-    setFormData((prev) => ({
-      ...prev,
-      paymentStatus: newStatus,
-    }))
-  }
-
-  const totalAmount = formData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
-
   const handleFocusField = (fieldId: string) => {
     // Map field IDs to readable names for AI
     const fieldNames: Record<string, string> = {
@@ -291,7 +281,6 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     }
     
     setFocusedField({ id: fieldId, name: fieldNames[fieldId] || fieldId })
-    setAgentOpen(true) // Open sidebar when a field is focused for help
 
     const element = document.getElementById(fieldId)
     if (element) {
@@ -337,7 +326,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
       <EditorHeader 
         documentType={activeTab} 
         onSave={() => handleSave(false)} 
@@ -345,25 +334,28 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
         lastSaved={lastSaved}
       />
 
-      <div className="border-b border-border bg-card sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <EditorTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Side: Persistent Chat Panel (Split View) */}
+        <div className="w-[400px] border-r border-border bg-muted/10 hidden md:flex flex-col h-full z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+          <AIAgentSidebar 
+            currentDocType={activeTab} 
+            onDocumentGenerated={handleDocumentGenerated}
+            initialContext={formData}
+            focusedField={focusedField}
+            onClearFocus={() => setFocusedField(null)}
+            docId={docId}
+          />
         </div>
-      </div>
 
-      <main className="flex-1 flex overflow-hidden relative">
-        {/* Main Content Area - Full width with Interactive Preview */}
-        <div 
-          className="flex-1 overflow-hidden transition-all duration-500 ease-in-out"
-        >
-          <div className="h-full overflow-y-auto bg-muted/30 p-4 lg:p-12 flex justify-center relative scrollbar-hide">
-            <div className="absolute top-4 right-4 z-10 hidden lg:block">
-              <div className="bg-card/80 backdrop-blur px-3 py-1.5 rounded-full text-[10px] font-bold text-primary shadow-sm border border-primary/20 flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-                INTERACTIVE EDITING MODE
-              </div>
+        {/* Right Side: Document Preview */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-muted/30 relative">
+          <div className="border-b border-border bg-card/80 backdrop-blur z-10">
+            <div className="max-w-4xl mx-auto px-6">
+              <EditorTabs activeTab={activeTab} onTabChange={setActiveTab} />
             </div>
-            
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 lg:p-12 flex justify-center scrollbar-hide">
             <div className="a4-paper-container shadow-2xl transition-transform duration-300">
               <DocumentPreview 
                 documentType={activeTab} 
@@ -374,20 +366,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             </div>
           </div>
         </div>
-
-        {/* AI Agent Sidebar - Floating Widget */}
-        <AIAgentSidebar 
-          currentDocType={activeTab} 
-          onDocumentGenerated={handleDocumentGenerated}
-          isOpen={agentOpen}
-          onToggle={(val) => setAgentOpen(val)}
-          onExpandChange={setAgentExpanded}
-          initialContext={formData}
-          focusedField={focusedField}
-          onClearFocus={() => setFocusedField(null)}
-          docId={docId}
-        />
-      </main>
+      </div>
     </div>
   )
 }
