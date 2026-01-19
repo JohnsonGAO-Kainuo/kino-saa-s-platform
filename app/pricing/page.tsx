@@ -8,30 +8,11 @@ import { cn } from "@/lib/utils"
 
 const plans = [
   {
-    name: "Free",
-    description: "Perfect for getting started",
-    price: "$0",
-    period: "forever",
-    features: [
-      "2 documents per month",
-      "Basic AI assistance",
-      "PDF export",
-      "Email support",
-    ],
-    limitations: [
-      "No custom branding",
-      "Limited templates",
-    ],
-    cta: "Get Started",
-    ctaVariant: "outline" as const,
-    popular: false,
-    icon: Sparkles,
-  },
-  {
     name: "Pro",
     description: "Best for freelancers & small teams",
-    price: "$5",
+    price: "$7.80",
     period: "per month",
+    trial: "7-day free trial",
     features: [
       "Unlimited documents",
       "Advanced AI assistance",
@@ -43,31 +24,10 @@ const plans = [
       "Document history & drafts",
     ],
     limitations: [],
-    cta: "Upgrade to Pro",
+    cta: "Start 7-day Free Trial",
     ctaVariant: "default" as const,
     popular: true,
     icon: Zap,
-  },
-  {
-    name: "Enterprise",
-    description: "For larger organizations",
-    price: "$25",
-    period: "per month",
-    features: [
-      "Everything in Pro",
-      "Team collaboration (up to 10 users)",
-      "Admin dashboard",
-      "API access",
-      "Custom integrations",
-      "Dedicated account manager",
-      "SLA guarantee",
-      "Custom contract terms",
-    ],
-    limitations: [],
-    cta: "Contact Sales",
-    ctaVariant: "outline" as const,
-    popular: false,
-    icon: Building2,
   },
 ]
 
@@ -78,7 +38,7 @@ export default function PricingPage() {
         <Link href="/">
           <Button variant="ghost" className="mb-8">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            Back
           </Button>
         </Link>
         
@@ -134,6 +94,9 @@ export default function PricingPage() {
                 <div className="text-center mb-8">
                   <span className="text-5xl font-bold">{plan.price}</span>
                   <span className="text-muted-foreground ml-2">/{plan.period}</span>
+                  {plan.trial && (
+                    <div className="text-sm text-muted-foreground mt-2">{plan.trial}</div>
+                  )}
                 </div>
                 
                 <div className="space-y-4 flex-1">
@@ -161,9 +124,7 @@ export default function PricingPage() {
                   )}
                   asChild
                 >
-                  <Link href={plan.name === "Enterprise" ? "mailto:sales@kino.app" : "/login"}>
-                    {plan.cta}
-                  </Link>
+                  <Link href="/login">{plan.cta}</Link>
                 </Button>
               </CardContent>
             </Card>
