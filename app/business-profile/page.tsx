@@ -53,8 +53,7 @@ export default function BusinessProfilePage() {
     if (!user) return
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from("business_profiles")
+      const { data, error } = await supabase      .schema('kino')        .from("business_profiles")
         .select("*")
         .eq("user_id", user.id)
         .order("is_default", { ascending: false })

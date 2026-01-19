@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       // Ensure user has kino membership
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        await supabase.from('app_memberships').upsert({
+        await supabase.schema('kino').from('app_memberships').upsert({
           user_id: user.id,
           app_slug: 'kino',
           role: 'member'

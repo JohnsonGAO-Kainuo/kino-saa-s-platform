@@ -151,7 +151,7 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
     async function fetchSettings() {
       if (user) {
         try {
-          const { data, error } = await supabase.from('company_settings').select('*').eq('user_id', user.id).single()
+          const { data, error } = await supabase.schema('kino').from('company_settings').select('*').eq('user_id', user.id).single()
           // Handle case where no settings exist yet (PGRST116 = no rows returned)
           if (error && error.code !== 'PGRST116') {
             console.error('Failed to load company settings:', error)

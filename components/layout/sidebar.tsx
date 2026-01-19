@@ -36,6 +36,7 @@ export const Sidebar = memo(function Sidebar() {
       try {
         // Get user's company name from company_settings
         const { data: companyData } = await supabase
+          .schema('kino')
           .from('company_settings')
           .select('company_name')
           .eq('user_id', user.id)
@@ -43,6 +44,7 @@ export const Sidebar = memo(function Sidebar() {
 
         // Get subscription info
         const { data: subData } = await supabase
+          .schema('kino')
           .from('subscriptions')
           .select('plan_type')
           .eq('user_id', user.id)

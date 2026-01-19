@@ -48,7 +48,7 @@ export default function LoginPage() {
         
         // Create membership for new user
         if (data.user) {
-          await supabase.from('app_memberships').upsert({
+          await supabase.schema('kino').from('app_memberships').upsert({
             user_id: data.user.id,
             app_slug: 'kino',
             role: 'member'
@@ -69,7 +69,7 @@ export default function LoginPage() {
         
         // Ensure membership exists for returning user
         if (data.user) {
-          await supabase.from('app_memberships').upsert({
+          await supabase.schema('kino').from('app_memberships').upsert({
             user_id: data.user.id,
             app_slug: 'kino',
             role: 'member'

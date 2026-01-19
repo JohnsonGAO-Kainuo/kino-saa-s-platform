@@ -4,6 +4,7 @@ import { Document, DocumentType, DocumentStatus, RelationshipType } from './type
 export class DocumentStorage {
   async saveDocument(doc: Partial<Document>): Promise<Document | null> {
     const { data, error } = await supabase
+      .schema('kino')
       .from('documents')
       .upsert({
         ...doc,
@@ -22,6 +23,7 @@ export class DocumentStorage {
 
   async getDocument(id: string): Promise<Document | null> {
     const { data, error } = await supabase
+      .schema('kino')
       .from('documents')
       .select('*')
       .eq('id', id)
@@ -38,7 +40,7 @@ export class DocumentStorage {
   async getAllDocuments(filters?: { type?: DocumentType; status?: DocumentStatus; limit?: number }): Promise<Document[]> {
     try {
       // Default limit to prevent loading too many documents at once
-      const limit = filters?.limit || 100
+      const limit = filtersschema('kino').?.limit || 100
       let query = supabase.from('documents').select('*', { count: 'exact' })
 
       if (filters?.type) query = query.eq('doc_type', filters.type)
@@ -68,7 +70,7 @@ export class DocumentStorage {
 
   async getDocumentStats(): Promise<{ total: number; quotations: number; contracts: number; invoices: number }> {
     try {
-      const { data, error } = await supabase.from('documents').select('doc_type')
+      const { data, error } = await supabase.schema('kino').from('documents').select('doc_type')
 
       if (error) {
         // Handle case where table doesn't exist
@@ -96,6 +98,7 @@ export class DocumentStorage {
 
   async deleteDocument(id: string): Promise<boolean> {
     const { error } = await supabase
+      .schema('kino')
       .from('documents')
       .delete()
       .eq('id', id)
@@ -109,7 +112,8 @@ export class DocumentStorage {
   }
 
   async createRelationship(sourceId: string, targetId: string, type: RelationshipType): Promise<boolean> {
-    const { error } = await supabase
+    conschema('kino')
+      .st { error } = await supabase
       .from('document_relationships')
       .insert({
         source_doc_id: sourceId,
@@ -125,7 +129,8 @@ export class DocumentStorage {
     return true
   }
 
-  async getRelationships(docId: string): Promise<any[]> {
+  asyncschema('kino')
+      . getRelationships(docId: string): Promise<any[]> {
     const { data, error } = await supabase
       .from('document_relationships')
       .select('*')

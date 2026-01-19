@@ -14,6 +14,7 @@ export interface UserAsset {
 export async function getUserAssets(userId: string, assetType: string): Promise<UserAsset[]> {
   try {
     const { data, error } = await supabase
+      .schema('kino')
       .from('user_assets')
       .select('*')
       .eq('user_id', userId)
@@ -65,6 +66,7 @@ export async function uploadAsset(
     // 3. If setting as default, unset others first
     if (isDefault) {
       await supabase
+        .schema('kino')
         .from('user_assets')
         .update({ is_default: false })
         .eq('user_id', userId)
@@ -73,6 +75,7 @@ export async function uploadAsset(
 
     // 4. Insert into database
     const { data, error: dbError } = await supabase
+      .schema('kino')
       .from('user_assets')
       .insert({
         user_id: userId,
@@ -96,7 +99,8 @@ export async function uploadAsset(
       
       const updateField = fieldMap[assetType];
       if (updateField) {
-        await supabase
+        awaschema('kino')
+          .it supabase
           .from('company_settings')
           .update({ [updateField]: publicUrl })
           .eq('user_id', userId);
@@ -113,14 +117,16 @@ export async function uploadAsset(
 export async function setDefaultAsset(userId: string, assetId: string, assetType: string): Promise<boolean> {
   try {
     // 1. Unset current default
-    await supabase
+    awaschema('kino')
+      .it supabase
       .from('user_assets')
       .update({ is_default: false })
       .eq('user_id', userId)
       .eq('asset_type', assetType);
 
     // 2. Set new default
-    const { data: asset, error: setDefaultError } = await supabase
+    conschema('kino')
+      .st { data: asset, error: setDefaultError } = await supabase
       .from('user_assets')
       .update({ is_default: true })
       .eq('id', assetId)
@@ -137,7 +143,8 @@ export async function setDefaultAsset(userId: string, assetId: string, assetType
     };
     
     const updateField = fieldMap[assetType];
-    if (updateField && asset) {
+    if (updschema('kino')
+          .ateField && asset) {
         await supabase
           .from('company_settings')
         .update({ [updateField]: asset.asset_url })
@@ -153,7 +160,8 @@ export async function setDefaultAsset(userId: string, assetId: string, assetType
 
 export async function deleteAsset(userId: string, assetId: string): Promise<boolean> {
   try {
-    // 1. Get asset details to find file path
+    // schema('kino')
+      .1. Get asset details to find file path
     const { data: asset, error: getError } = await supabase
       .from('user_assets')
       .select('*')
@@ -162,7 +170,8 @@ export async function deleteAsset(userId: string, assetId: string): Promise<bool
 
     if (getError) throw getError;
 
-    // 2. Delete from database
+    // schema('kino')
+      .2. Delete from database
     const { error: dbError } = await supabase
       .from('user_assets')
       .delete()
@@ -186,7 +195,8 @@ export async function deleteAsset(userId: string, assetId: string): Promise<bool
     return false;
   }
 }
-
+schema('kino')
+    .
 export async function renameAsset(userId: string, assetId: string, newName: string): Promise<boolean> {
   const { error } = await supabase
     .from('user_assets')

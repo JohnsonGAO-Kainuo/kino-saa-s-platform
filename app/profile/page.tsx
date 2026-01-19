@@ -64,6 +64,7 @@ export default function ProfilePage() {
   async function fetchSettings() {
     try {
       const { data, error } = await supabase
+        .schema('kino')
         .from('company_settings')
         .select('*')
         .eq('user_id', user?.id)
