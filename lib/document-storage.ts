@@ -39,20 +39,17 @@ export class DocumentStorage {
 
   async getAllDocuments(filters?: { type?: DocumentType; status?: DocumentStatus; limit?: number }): Promise<Document[]> {
     try {
-      // Default limit to prevent loading too many documents at once
-      const limit = filtersschema('kino').?.limit || 100
-      let query = supabase.from('documents').select('*', { count: 'exact' })
+      const limit = filters?.limit ?? 100
+      let query: any = supabase.schema('kino').from('documents').select('*', { count: 'exact' })
 
       if (filters?.type) query = query.eq('doc_type', filters.type)
       if (filters?.status) query = query.eq('status', filters.status)
-      
-      // Always apply limit for performance
+
       query = query.limit(limit)
 
       const { data, error } = await query.order('updated_at', { ascending: false })
 
       if (error) {
-        // Handle case where table doesn't exist or RLS blocks access
         if (error.code === '42P01' || error.code === 'PGRST301') {
           console.warn('Documents table may not exist yet. Please run the database migration scripts.')
         } else {
@@ -62,8 +59,8 @@ export class DocumentStorage {
       }
 
       return data || []
-    } catch (error) {
-      console.error('Unexpected error getting documents:', error)
+    } catch (err) {
+      console.error('Unexpected error getting documents:', err)
       return []
     }
   }
@@ -73,7 +70,6 @@ export class DocumentStorage {
       const { data, error } = await supabase.schema('kino').from('documents').select('doc_type')
 
       if (error) {
-        // Handle case where table doesn't exist
         if (error.code === '42P01' || error.code === 'PGRST301') {
           console.warn('Documents table may not exist yet.')
         } else {
@@ -84,14 +80,14 @@ export class DocumentStorage {
 
       const stats = {
         total: data?.length || 0,
-        quotations: data?.filter(d => d.doc_type === 'quotation').length || 0,
-        contracts: data?.filter(d => d.doc_type === 'contract').length || 0,
-        invoices: data?.filter(d => d.doc_type === 'invoice').length || 0,
+        quotations: data?.filter((d: any) => d.doc_type === 'quotation').length || 0,
+        contracts: data?.filter((d: any) => d.doc_type === 'contract').length || 0,
+        invoices: data?.filter((d: any) => d.doc_type === 'invoice').length || 0,
       }
 
       return stats
-    } catch (error) {
-      console.error('Unexpected error getting document stats:', error)
+    } catch (err) {
+      console.error('Unexpected error getting document stats:', err)
       return { total: 0, quotations: 0, contracts: 0, invoices: 0 }
     }
   }
@@ -112,8 +108,8 @@ export class DocumentStorage {
   }
 
   async createRelationship(sourceId: string, targetId: string, type: RelationshipType): Promise<boolean> {
-    conschema('kino')
-      .st { error } = await supabase
+    const { error } = await supabase
+      .schema('kino')
       .from('document_relationships')
       .insert({
         source_doc_id: sourceId,
@@ -129,9 +125,9 @@ export class DocumentStorage {
     return true
   }
 
-  asyncschema('kino')
-      . getRelationships(docId: string): Promise<any[]> {
+  async getRelationships(docId: string): Promise<any[]> {
     const { data, error } = await supabase
+      .schema('kino')
       .from('document_relationships')
       .select('*')
       .or(`source_doc_id.eq.${docId},target_doc_id.eq.${docId}`)
