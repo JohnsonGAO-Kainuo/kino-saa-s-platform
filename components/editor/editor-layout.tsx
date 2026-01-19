@@ -121,7 +121,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
       } else if (user) {
         try {
           const { data: settings } = await supabase
-            .from('kino.company_settings')
+            .from('company_settings')
             .select('*')
             .eq('user_id', user.id)
             .single()

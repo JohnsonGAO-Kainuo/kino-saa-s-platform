@@ -7,7 +7,18 @@
 		"github": {
 			"type": "http",
 			"url": "https://api.githubcopilot.com/mcp/"
+		},
+		"stripe": {
+			"type": "http",
+			"url": "https://mcp.stripe.com"
 		}
 	},
-	"inputs": []
+	"inputs": [
+		{
+			"type": "promptString",
+			"id": "stripe_secret_key",
+			"description": "Stripe secret API key",
+			"password": true
+		}
+	]
 }

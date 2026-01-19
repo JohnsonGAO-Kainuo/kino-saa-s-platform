@@ -64,7 +64,7 @@ export default function ProfilePage() {
   async function fetchSettings() {
     try {
       const { data, error } = await supabase
-        .from('kino.company_settings')
+        .from('company_settings')
         .select('*')
         .eq('user_id', user?.id)
         .single()
@@ -95,7 +95,7 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       const { error } = await supabase
-          .from('kino.company_settings')
+          .from('company_settings')
         .upsert({
           user_id: user?.id,
           ...settings,

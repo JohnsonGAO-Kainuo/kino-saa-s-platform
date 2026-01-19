@@ -54,7 +54,7 @@ export default function BusinessProfilePage() {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from("kino.business_profiles")
+        .from("business_profiles")
         .select("*")
         .eq("user_id", user.id)
         .order("is_default", { ascending: false })
@@ -104,7 +104,7 @@ export default function BusinessProfilePage() {
   async function ensureSingleDefault(wantDefault: boolean) {
     if (!user || !wantDefault) return
     const { error } = await supabase
-      .from("kino.business_profiles")
+      .from("business_profiles")
       .update({ is_default: false })
       .eq("user_id", user.id)
     if (error) throw error
@@ -115,14 +115,14 @@ export default function BusinessProfilePage() {
     if (!form.name.trim()) return toast.error("Name is required")
 
     const otherDefaultExists = profiles.some(p => p.is_default && p.id !== editingProfile?.id)
-    const shouldBeDefault = form.is_default || !profiles.length || (!otherDefaultExists && editingProfile?.is_default)
+    const shouldBeDefault = form.is_default || !profiles.length || (!otherDefaultExists && !!editingProfile?.is_default)
 
     setSaving(true)
     try {
       await ensureSingleDefault(shouldBeDefault)
 
       const { data, error } = await supabase
-        .from("kino.business_profiles")
+        .from("business_profiles")
         .upsert({
           id: editingProfile?.id,
           user_id: user.id,
@@ -154,7 +154,7 @@ export default function BusinessProfilePage() {
 
     try {
       const { error } = await supabase
-        .from("kino.business_profiles")
+        .from("business_profiles")
         .delete()
         .eq("id", profile.id)
         .eq("user_id", user.id)
@@ -180,7 +180,7 @@ export default function BusinessProfilePage() {
     try {
       await ensureSingleDefault(true)
       const { error } = await supabase
-        .from("kino.business_profiles")
+        .from("business_profiles")
         .update({ is_default: true, updated_at: new Date().toISOString() })
         .eq("id", profileId)
         .eq("user_id", user.id)

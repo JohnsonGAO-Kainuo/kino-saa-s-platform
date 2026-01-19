@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import type { PaymentStatus } from "@/lib/payment-utils"
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
@@ -150,7 +151,7 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
     async function fetchSettings() {
       if (user) {
         try {
-          const { data, error } = await supabase.from('kino.company_settings').select('*').eq('user_id', user.id).single()
+          const { data, error } = await supabase.from('company_settings').select('*').eq('user_id', user.id).single()
           // Handle case where no settings exist yet (PGRST116 = no rows returned)
           if (error && error.code !== 'PGRST116') {
             console.error('Failed to load company settings:', error)
@@ -185,7 +186,7 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
   const titleLabels = getDocumentTitle()
   const isPaidReceipt = documentType === "receipt" && formData.paymentStatus?.status === "paid"
 
-  const styles = {
+  const allStyles = {
     standard: {
       card: "bg-white text-foreground p-12 min-h-[800px] shadow-sm relative",
       header: "border-b border-border pb-8 mb-10",
@@ -196,7 +197,8 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
     // Simplified for now, using standard logic mostly
     corporate: { card: "bg-white p-12", header: "mb-10", accentLine: "border-t", itemRow: "border-b", sectionHeader: "font-bold" },
     modern: { card: "bg-white p-12", header: "mb-10", accentLine: "border-t", itemRow: "border-b", sectionHeader: "font-bold" }
-  }[templateId] || styles.standard
+  }
+  const styles = allStyles[templateId] || allStyles.standard
 
   const Header = () => (
     <div className={styles.header}>

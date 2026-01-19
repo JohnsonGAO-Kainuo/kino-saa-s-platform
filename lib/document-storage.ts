@@ -4,7 +4,7 @@ import { Document, DocumentType, DocumentStatus, RelationshipType } from './type
 export class DocumentStorage {
   async saveDocument(doc: Partial<Document>): Promise<Document | null> {
     const { data, error } = await supabase
-      .from('kino.documents')
+      .from('documents')
       .upsert({
         ...doc,
         updated_at: new Date().toISOString(),
@@ -22,7 +22,7 @@ export class DocumentStorage {
 
   async getDocument(id: string): Promise<Document | null> {
     const { data, error } = await supabase
-      .from('kino.documents')
+      .from('documents')
       .select('*')
       .eq('id', id)
       .single()
@@ -39,7 +39,7 @@ export class DocumentStorage {
     try {
       // Default limit to prevent loading too many documents at once
       const limit = filters?.limit || 100
-      let query = supabase.from('kino.documents').select('*', { count: 'exact' })
+      let query = supabase.from('documents').select('*', { count: 'exact' })
 
       if (filters?.type) query = query.eq('doc_type', filters.type)
       if (filters?.status) query = query.eq('status', filters.status)
@@ -68,7 +68,7 @@ export class DocumentStorage {
 
   async getDocumentStats(): Promise<{ total: number; quotations: number; contracts: number; invoices: number }> {
     try {
-      const { data, error } = await supabase.from('kino.documents').select('doc_type')
+      const { data, error } = await supabase.from('documents').select('doc_type')
 
       if (error) {
         // Handle case where table doesn't exist
@@ -96,7 +96,7 @@ export class DocumentStorage {
 
   async deleteDocument(id: string): Promise<boolean> {
     const { error } = await supabase
-      .from('kino.documents')
+      .from('documents')
       .delete()
       .eq('id', id)
 
@@ -110,7 +110,7 @@ export class DocumentStorage {
 
   async createRelationship(sourceId: string, targetId: string, type: RelationshipType): Promise<boolean> {
     const { error } = await supabase
-      .from('kino.document_relationships')
+      .from('document_relationships')
       .insert({
         source_doc_id: sourceId,
         target_doc_id: targetId,
@@ -127,7 +127,7 @@ export class DocumentStorage {
 
   async getRelationships(docId: string): Promise<any[]> {
     const { data, error } = await supabase
-      .from('kino.document_relationships')
+      .from('document_relationships')
       .select('*')
       .or(`source_doc_id.eq.${docId},target_doc_id.eq.${docId}`)
 
