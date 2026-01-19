@@ -12,20 +12,30 @@ export interface UserAsset {
 }
 
 export async function getUserAssets(userId: string, assetType: string): Promise<UserAsset[]> {
-  const { data, error } = await supabase
-    .from('user_assets')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('asset_type', assetType)
-    .order('is_default', { ascending: false })
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('user_assets')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('asset_type', assetType)
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching user assets:', error);
+    if (error) {
+      // Handle case where table doesn't exist
+      if (error.code === '42P01' || error.code === 'PGRST301') {
+        console.warn('User assets table may not exist yet. Please run the database migration scripts.');
+      } else {
+        console.error('Error fetching user assets:', error);
+      }
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Unexpected error fetching user assets:', error);
     return [];
   }
-
-  return data || [];
 }
 
 export async function uploadAsset(

@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Download, Save, Share2, Loader2, Check } from "lucide-react"
+import { Download, Share2, Loader2, Check, ZoomIn, ZoomOut, Maximize } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import { generatePDF } from "@/lib/pdf-export"
@@ -30,44 +30,63 @@ export function EditorHeader({ documentType, onSave, isSaving, lastSaved }: Edit
   }
 
   return (
-    <header className="border-b border-border bg-card sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="border-b border-border bg-card/80 backdrop-blur sticky top-0 z-50">
+      <div className="max-w-full mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            <span className="text-lg">←</span> Dashboard
+          <Link href="/" className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors group">
+            <span className="text-xl transition-transform group-hover:-translate-x-1">←</span> Dashboard
           </Link>
           
-          {lastSaved && (
-            <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground bg-secondary/50 px-2 py-1 rounded-full border border-border">
-              <Check className="w-3 h-3 text-emerald-500" />
-              <span>Auto-saved at {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-            </div>
-          )}
+          <div className="h-4 w-[1px] bg-border hidden md:block" />
+
+          {/* Improved Save Status Indicator */}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/30 rounded-full border border-border/50">
+            {isSaving ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Syncing...</span>
+              </div>
+            ) : lastSaved ? (
+              <div className="flex items-center gap-2">
+                <Check className="w-3 h-3 text-emerald-500" />
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Auto-saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Unsaved</span>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Action Controls */}
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-2"
-            onClick={onSave}
-            disabled={isSaving}
-          >
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span className="hidden sm:inline">{isSaving ? "Saving..." : "Save"}</span>
-          </Button>
-          <Button variant="outline" size="sm" className="gap-2">
+          <div className="hidden lg:flex items-center gap-1 mr-4 bg-muted/20 p-1 rounded-lg">
+            <Button variant="ghost" size="icon-sm" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+            <span className="text-[10px] font-black w-8 text-center text-muted-foreground">100%</span>
+            <Button variant="ghost" size="icon-sm" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl border-border hover:bg-secondary gap-2 hidden sm:flex">
             <Share2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Share</span>
+            <span className="font-bold text-xs uppercase tracking-wider">Share</span>
           </Button>
+          
           <Button
             size="sm"
-            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+            className="h-10 px-6 rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all gap-2"
             onClick={handleExport}
             disabled={isExporting}
           >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{isExporting ? "Exporting..." : "Export PDF"}</span>
+            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            <span>Export PDF</span>
           </Button>
         </div>
       </div>

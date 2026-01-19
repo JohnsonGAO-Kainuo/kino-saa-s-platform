@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { useLanguage } from '@/lib/language-context'
 import { toast } from 'sonner'
-import { Loader2, Building2, CreditCard, Paintbrush, Save, Upload, Star, Trash2, CheckCircle2 } from 'lucide-react'
+import { Loader2, Building2, CreditCard, Paintbrush, Save, Upload, Star, Trash2, CheckCircle2, Plus } from 'lucide-react'
 import { removeImageBackground, dataURLtoFile } from '@/lib/image-utils'
 import { getUserAssets, uploadAsset, setDefaultAsset, deleteAsset, type UserAsset } from '@/lib/asset-management'
 import {

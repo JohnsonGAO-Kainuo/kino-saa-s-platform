@@ -1,5 +1,6 @@
 "use client"
 
+import React, { memo } from "react"
 import { Home, FileText, Settings, Briefcase, ChevronRight, Users, Package } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -14,7 +15,8 @@ const sidebarItems = [
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
-export function Sidebar() {
+// Memoized Sidebar to prevent unnecessary re-renders
+export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname()
 
   return (
@@ -41,7 +43,7 @@ export function Sidebar() {
             Main Menu
           </div>
           {sidebarItems.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
             return (
               <Link
                 key={item.href}
@@ -90,4 +92,4 @@ export function Sidebar() {
       </div>
     </div>
   )
-}
+})

@@ -3,105 +3,149 @@
 import { useEffect, useState } from "react"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import DashboardHero from "@/components/dashboard/hero-chat"
+import { StatsCards } from "@/components/dashboard/stats-cards"
 import { documentStorage } from "@/lib/document-storage"
 import { Document } from "@/lib/types"
-import { Loader2, Bell, Search } from "lucide-react"
-import { AIAgentSidebar } from "@/components/editor/ai-agent-sidebar"
+import { Bell, Search, Loader2, Plus, Sparkles } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "sonner"
+import Link from "next/link"
 
 export default function DashboardPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [documents, setDocuments] = useState<Document[]>([])
-  const [loading, setLoading] = useState(true)
-  const [agentOpen, setAgentOpen] = useState(false)
+  const [loadingDocs, setLoadingDocs] = useState(true)
+  const [stats, setStats] = useState({
+    total: 0,
+    quotations: 0,
+    contracts: 0,
+    invoices: 0
+  })
 
   useEffect(() => {
     async function loadDashboardData() {
-      setLoading(true)
-      const [recentDocs] = await Promise.all([
-        documentStorage.getAllDocuments({ limit: 5 }),
-      ])
-      setDocuments(recentDocs)
-      setLoading(false)
-    }
-    loadDashboardData()
-  }, [])
-
-  const handleDocumentGenerated = async (content: any) => {
-    if (!user) {
-      toast.error("Please login to create documents")
-      return
-    }
-
-    try {
-      const docType = "quotation" // Default
-      const docData = {
-        user_id: user.id,
-        doc_type: docType,
-        status: "draft",
-        title: content.clientName ? `${docType.toUpperCase()} - ${content.clientName}` : `AI Generated ${docType}`,
-        client_name: content.clientName || "",
-        client_email: content.clientEmail || "",
-        client_address: content.clientAddress || "",
-        content: content,
+      try {
+        setLoadingDocs(true)
+        // Only load recent 5 documents instead of all
+        const recentDocs = await documentStorage.getAllDocuments({ limit: 5 })
+        setDocuments(recentDocs)
+        
+        // Calculate stats in parallel - use a separate lightweight query
+        // For better performance, we can calculate stats from the limited set
+        // or make a separate optimized query
+        const newStats = {
+          total: recentDocs.length, // This is approximate, but faster
+          quotations: recentDocs.filter(d => d.doc_type === 'quotation').length,
+          contracts: recentDocs.filter(d => d.doc_type === 'contract').length,
+          invoices: recentDocs.filter(d => d.doc_type === 'invoice').length
+        }
+        setStats(newStats)
+        
+        // Load full stats in background (non-blocking)
+        setTimeout(async () => {
+          try {
+            const allDocs = await documentStorage.getAllDocuments()
+            const fullStats = {
+              total: allDocs.length,
+              quotations: allDocs.filter(d => d.doc_type === 'quotation').length,
+              contracts: allDocs.filter(d => d.doc_type === 'contract').length,
+              invoices: allDocs.filter(d => d.doc_type === 'invoice').length
+            }
+            setStats(fullStats)
+          } catch (error) {
+            console.error("Failed to load full stats:", error)
+          }
+        }, 100) // Load after initial render
+      } catch (error) {
+        console.error("Failed to load documents:", error)
+      } finally {
+        setLoadingDocs(false)
       }
-
-      const savedDoc = await documentStorage.saveDocument(docData)
-      if (savedDoc) {
-        toast.success("AI draft created! Opening editor...")
-        router.push(`/editor?type=${docType}&id=${savedDoc.id}`)
-      }
-    } catch (error) {
-      console.error("Error creating AI draft:", error)
-      toast.error("Failed to create AI draft")
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      </div>
-    )
-  }
+    
+    // Only load if user is available
+    if (user) {
+      loadDashboardData()
+    } else {
+      setLoadingDocs(false)
+    }
+  }, [user])
 
   return (
-    <div className="min-h-screen bg-background p-6 md:p-10 text-foreground flex flex-col gap-16 relative">
+    <div className="min-h-screen bg-background p-6 md:p-10 flex flex-col gap-12 relative overflow-x-hidden">
       
-      {/* Top Navigation (Subtle) */}
-      <header className="flex justify-end items-center gap-4">
-        <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search documents..." 
-            className="pl-10 bg-card border-border shadow-sm w-64 focus-visible:ring-primary/20 rounded-[14px] h-10" 
-          />
+      {/* Top Navigation */}
+      <header className="flex justify-between items-center gap-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-primary" />
+          </div>
+          <span className="font-bold text-sm tracking-tight text-foreground/80">AI Workspace Active</span>
         </div>
-        <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary hover:bg-secondary rounded-xl">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background"></span>
-        </Button>
+        
+        <div className="flex items-center gap-3">
+          <div className="relative hidden md:block">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search or ask AI..." 
+              className="pl-10 bg-card border-border shadow-none w-64 focus-visible:ring-primary/20 rounded-xl h-10" 
+            />
+          </div>
+          <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary hover:bg-secondary rounded-xl">
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background"></span>
+          </Button>
+        </div>
       </header>
 
-      {/* Hero Section - The Main Focus */}
-      <section className="flex-1 flex flex-col justify-center -mt-10">
+      {/* Hero Section */}
+      <section className="flex flex-col justify-center py-10">
         <DashboardHero />
       </section>
 
-      {/* Recent Activity (Secondary) */}
-      {documents.length > 0 && (
-        <section className="max-w-5xl mx-auto w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-          <div className="mb-4 flex items-center justify-between px-2">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Continue Working</h3>
+      {/* Stats Section */}
+      <section className="max-w-5xl mx-auto w-full">
+        <div className="mb-6 flex items-center justify-between px-2">
+          <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Overview</h3>
+        </div>
+        <StatsCards stats={stats} />
+      </section>
+
+      {/* Recent Activity */}
+      <section className="max-w-5xl mx-auto w-full pb-20">
+        <div className="mb-6 flex items-center justify-between px-2">
+          <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Recent Activity</h3>
+          <Link href="/documents">
+            <Button variant="link" className="text-primary text-xs font-bold uppercase tracking-widest p-0 h-auto">View All Docs</Button>
+          </Link>
+        </div>
+        
+        {loadingDocs ? (
+          <div className="grid grid-cols-1 gap-4">
+            {[1, 2].map(i => (
+              <div key={i} className="h-20 bg-card/30 border border-border rounded-[22px] animate-pulse" />
+            ))}
           </div>
+        ) : documents.length > 0 ? (
           <RecentActivity documents={documents} />
-        </section>
-      )}
+        ) : (
+          <div className="bg-card/30 rounded-[32px] border-2 border-dashed border-border p-16 text-center">
+            <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-light text-muted-foreground/40">
+              +
+            </div>
+            <p className="text-muted-foreground font-medium mb-6">No recent documents found.</p>
+            <Link href="/editor?type=quotation">
+              <Button variant="outline" className="rounded-xl px-8 border-primary/20 text-primary hover:bg-primary/5">
+                Create First Document
+              </Button>
+            </Link>
+          </div>
+        )}
+      </section>
     </div>
   )
 }

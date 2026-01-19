@@ -5,6 +5,7 @@ import { EditorTabs } from "./editor-tabs"
 import { DocumentPreview } from "./document-preview"
 import { EditorHeader } from "./editor-header"
 import { AIAgentSidebar } from "./ai-agent-sidebar"
+import { EditorForm } from "./editor-form"
 import type { PaymentStatus } from "@/lib/payment-utils"
 import { createPaymentStatus } from "@/lib/payment-utils"
 import { useSearchParams, useRouter } from "next/navigation"
@@ -12,9 +13,10 @@ import { documentStorage } from "@/lib/document-storage"
 import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
-import { Loader2 } from "lucide-react"
+import { Loader2, Sparkles, Layout, FileSearch } from "lucide-react"
 import { useLanguage, type Language } from "@/lib/language-context"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 type DocumentType = "quotation" | "invoice" | "receipt" | "contract"
 
@@ -23,15 +25,15 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   const [isSaving, setIsSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const [mobileView, setMobileView] = useState<'form' | 'preview'>('form')
   const [focusedField, setFocusedField] = useState<{ id: string; name: string } | null>(null)
+  const [sidebarMode, setSidebarMode] = useState<'ai' | 'form'>('ai')
+  
   const searchParams = useSearchParams()
   const router = useRouter()
   const docId = searchParams.get("id")
   const { user } = useAuth()
   const { t } = useLanguage()
   
-  // Use a ref to store the current docId to avoid stale closures in auto-save
   const currentDocId = useRef<string | null>(docId)
 
   const [formData, setFormData] = useState({
@@ -60,6 +62,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     contractTerms: "",
     paymentTerms: "",
     deliveryDate: "",
+    currency: "HKD",
     paymentStatus: createPaymentStatus() as PaymentStatus,
     languageMode: "single" as "single" | "bilingual",
     primaryLanguage: "en" as Language,
@@ -75,6 +78,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
   // Load document or default settings
   useEffect(() => {
     async function initEditor() {
+      setLoading(true)
       if (docId) {
         const doc = await documentStorage.getDocument(docId)
         if (doc) {
@@ -99,6 +103,7 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             contractTerms: doc.content?.contractTerms || "",
             paymentTerms: doc.content?.paymentTerms || "",
             deliveryDate: doc.content?.deliveryDate || "",
+            currency: doc.content?.currency || "HKD",
             paymentStatus: createPaymentStatus(doc.status as any) as PaymentStatus,
             languageMode: doc.content?.languageMode || "single",
             primaryLanguage: doc.content?.primaryLanguage || "en",
@@ -121,7 +126,6 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
             .eq('user_id', user.id)
             .single()
 
-          // Universal industry defaults
           const defaultPaymentTerms = "1. Payment is due within 15 days of issue date.\n2. Please include invoice number in payment description.\n3. Late payments may be subject to a 2% monthly interest fee."
           const defaultContractTerms = "1. Scope of Work: As detailed in the project description above.\n2. Timeline: Project will commence upon receipt of initial deposit.\n3. Confidentiality: Both parties agree to keep all project information confidential.\n4. Termination: Either party may terminate with 30 days written notice."
           const defaultNotes = "Thank you for choosing our services! We look forward to a successful collaboration."
@@ -142,7 +146,6 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
               notes: settings.default_invoice_notes || defaultNotes,
             }))
           } else {
-            // Fallback to universal defaults if no settings found
             setFormData(prev => ({
               ...prev,
               paymentTerms: defaultPaymentTerms,
@@ -175,31 +178,8 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
         client_email: formData.clientEmail,
         client_address: formData.clientAddress,
         content: {
-          companyName: formData.companyName,
-          companyEmail: formData.companyEmail,
-          companyAddress: formData.companyAddress,
-          companyPhone: formData.companyPhone,
-          bankName: formData.bankName,
-          accountNumber: formData.accountNumber,
-          fpsId: formData.fpsId,
-          paypalEmail: formData.paypalEmail,
+          ...formData,
           items: formData.items,
-          notes: formData.notes,
-          contractTerms: formData.contractTerms,
-          paymentTerms: formData.paymentTerms,
-          deliveryDate: formData.deliveryDate,
-          languageMode: formData.languageMode,
-          primaryLanguage: formData.primaryLanguage,
-          secondaryLanguage: formData.secondaryLanguage,
-          logoPosition: formData.logoPosition,
-          logoWidth: formData.logoWidth,
-          templateId: formData.templateId,
-          signatureOffset: formData.signatureOffset,
-          stampOffset: formData.stampOffset,
-          logo: formData.logo,
-          stamp: formData.stamp,
-          clientSignature: formData.clientSignature,
-          clientSignatureOffset: formData.clientSignatureOffset,
         },
         signature_url: formData.signature || undefined,
       }
@@ -227,16 +207,58 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
 
     const timer = setTimeout(() => {
       handleSave(true)
-    }, 5000) // Auto-save every 5 seconds after last change
+    }, 5000)
 
     return () => clearTimeout(timer)
   }, [formData, handleSave, user, loading])
 
+  // Proactive Learning: Save new Clients and Items to LocalStorage
+  const learnFromAI = useCallback((content: any) => {
+    if (typeof window === 'undefined') return;
+
+    if (content.clientName) {
+      const savedClientsStr = localStorage.getItem('kino_clients');
+      const clients = savedClientsStr ? JSON.parse(savedClientsStr) : [];
+      const exists = clients.some((c: any) => c.name.toLowerCase() === content.clientName.toLowerCase());
+      
+      if (!exists) {
+        const newClient = {
+          id: crypto.randomUUID(),
+          name: content.clientName,
+          email: content.clientEmail || "",
+          address: content.clientAddress || "",
+          phone: "",
+          status: "Active"
+        };
+        localStorage.setItem('kino_clients', JSON.stringify([newClient, ...clients]));
+      }
+    }
+
+    if (content.items && Array.isArray(content.items)) {
+      const savedItemsStr = localStorage.getItem('kino_items');
+      const items = savedItemsStr ? JSON.parse(savedItemsStr) : [];
+      
+      content.items.forEach((newItem: any) => {
+        if (newItem.description) {
+          const exists = items.some((i: any) => i.name.toLowerCase() === newItem.description.toLowerCase());
+          if (!exists) {
+            const learnedItem = {
+              id: crypto.randomUUID(),
+              name: newItem.description,
+              description: newItem.description,
+              price: Number(newItem.unitPrice) || 0,
+              unit: "Unit"
+            };
+            items.unshift(learnedItem);
+          }
+        }
+      });
+      localStorage.setItem('kino_items', JSON.stringify(items.slice(0, 100)));
+    }
+  }, []);
+
   const handleDocumentGenerated = (generatedContent: any) => {
-    console.log("AI Generated Content Received:", JSON.stringify(generatedContent, null, 2));
-    
     setFormData((prev) => {
-      // Create a fresh object to ensure state update
       const newData = { ...prev };
 
       if (generatedContent.clientName) newData.clientName = generatedContent.clientName;
@@ -251,11 +273,9 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
       if (generatedContent.stamp) newData.stamp = generatedContent.stamp;
       if (generatedContent.clientSignature) newData.clientSignature = generatedContent.clientSignature;
 
-      // Ensure items are updated correctly
       if (generatedContent.items && Array.isArray(generatedContent.items) && generatedContent.items.length > 0) {
-        console.log("Updating items with:", generatedContent.items);
         newData.items = generatedContent.items.map((item: any) => ({
-          id: crypto.randomUUID(), // Always give new items unique IDs
+          id: crypto.randomUUID(),
           description: item.description || "",
           quantity: Number(item.quantity) || 1,
           unitPrice: Number(item.unitPrice) || 0,
@@ -266,11 +286,11 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
       return newData;
     });
 
+    learnFromAI(generatedContent);
     toast.success(t("Document updated by AI!", "文件已由 AI 更新！"));
   }
 
   const handleFocusField = (fieldId: string) => {
-    // Map field IDs to readable names for AI
     const fieldNames: Record<string, string> = {
       companyName: t("Company Name", "公司名稱"),
       companyAddress: t("Company Address", "公司地址"),
@@ -286,20 +306,11 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
       element.focus()
-      // Add a brief highlight effect
-      element.classList.add('ring-4', 'ring-yellow-400', 'ring-opacity-50')
+      element.classList.add('ring-4', 'ring-primary/30')
       setTimeout(() => {
-        element.classList.remove('ring-4', 'ring-yellow-400', 'ring-opacity-50')
+        element.classList.remove('ring-4', 'ring-primary/30')
       }, 2000)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
   }
 
   const handleFieldChange = (field: string, value: any) => {
@@ -335,19 +346,59 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
       />
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Side: Persistent Chat Panel (Split View) */}
-        <div className="w-[400px] border-r border-border bg-muted/10 hidden md:flex flex-col h-full z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-          <AIAgentSidebar 
-            currentDocType={activeTab} 
-            onDocumentGenerated={handleDocumentGenerated}
-            initialContext={formData}
-            focusedField={focusedField}
-            onClearFocus={() => setFocusedField(null)}
-            docId={docId}
-          />
+        {/* Left Side: Dynamic Workspace Panel */}
+        <div className="w-[420px] border-r border-border bg-card/30 hidden md:flex flex-col h-full z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative">
+          
+          {/* Panel Mode Switcher */}
+          <div className="p-2 border-b border-border bg-muted/20 flex gap-1">
+            <Button 
+              variant={sidebarMode === 'ai' ? 'default' : 'ghost'} 
+              size="sm" 
+              className={cn("flex-1 h-9 rounded-[10px] gap-2 text-xs", sidebarMode === 'ai' ? "shadow-sm" : "text-muted-foreground")}
+              onClick={() => setSidebarMode('ai')}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              AI Assistant
+            </Button>
+            <Button 
+              variant={sidebarMode === 'form' ? 'default' : 'ghost'} 
+              size="sm" 
+              className={cn("flex-1 h-9 rounded-[10px] gap-2 text-xs", sidebarMode === 'form' ? "shadow-sm" : "text-muted-foreground")}
+              onClick={() => setSidebarMode('form')}
+            >
+              <Layout className="w-3.5 h-3.5" />
+              Manual Edit
+            </Button>
+          </div>
+
+          <div className="flex-1 overflow-hidden relative">
+            {sidebarMode === 'ai' ? (
+              <AIAgentSidebar 
+                currentDocType={activeTab} 
+                onDocumentGenerated={handleDocumentGenerated}
+                initialContext={formData}
+                focusedField={focusedField}
+                onClearFocus={() => setFocusedField(null)}
+                docId={docId}
+              />
+            ) : (
+              <div className="h-full overflow-y-auto p-6 scrollbar-hide">
+                <div className="mb-6">
+                  <h2 className="text-lg font-bold text-foreground">Manual Editor</h2>
+                  <p className="text-xs text-muted-foreground mt-1">Structure your document details manually.</p>
+                </div>
+                <EditorForm 
+                  documentType={activeTab} 
+                  formData={formData} 
+                  onChange={(data) => setFormData(data)} 
+                  onFocusField={handleFocusField}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right Side: Document Preview */}
+        {/* Right Side: Document Preview (WYSIWYG) */}
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-muted/30 relative">
           <div className="border-b border-border bg-card/80 backdrop-blur z-10">
             <div className="max-w-4xl mx-auto px-6">
@@ -357,12 +408,22 @@ export function EditorLayout({ documentType: initialType }: { documentType: Docu
 
           <div className="flex-1 overflow-y-auto p-4 lg:p-12 flex justify-center scrollbar-hide">
             <div className="a4-paper-container shadow-2xl transition-transform duration-300">
-              <DocumentPreview 
-                documentType={activeTab} 
-                formData={formData} 
-                onFieldChange={handleFieldChange}
-                onFieldClick={handleFocusField} 
-              />
+              {loading ? (
+                <div className="w-[210mm] h-[297mm] bg-white rounded-sm shadow-xl flex flex-col items-center justify-center gap-4">
+                  <div className="w-12 h-12 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
+                  <div className="text-center space-y-1">
+                    <p className="font-bold text-foreground">Loading Document...</p>
+                    <p className="text-xs text-muted-foreground">Fetching your latest data</p>
+                  </div>
+                </div>
+              ) : (
+                <DocumentPreview 
+                  documentType={activeTab} 
+                  formData={formData} 
+                  onFieldChange={handleFieldChange}
+                  onFieldClick={handleFocusField} 
+                />
+              )}
             </div>
           </div>
         </div>

@@ -59,8 +59,8 @@ export function CreateButtons() {
               <div className="w-12 h-12 bg-white rounded-2xl border border-[#EBE7E0] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300 group-hover:shadow-md">
                 <btn.icon className="w-6 h-6 text-foreground" strokeWidth={1.5} />
               </div>
-              <div className="w-8 h-8 rounded-full bg-[#F6F3EE] flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                <Plus className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-full bg-[#F6F3EE] flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-300 font-bold text-lg">
+                +
               </div>
             </div>
 

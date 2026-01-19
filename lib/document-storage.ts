@@ -36,38 +36,62 @@ export class DocumentStorage {
   }
 
   async getAllDocuments(filters?: { type?: DocumentType; status?: DocumentStatus; limit?: number }): Promise<Document[]> {
-    let query = supabase.from('documents').select('*')
+    try {
+      // Default limit to prevent loading too many documents at once
+      const limit = filters?.limit || 100
+      let query = supabase.from('documents').select('*', { count: 'exact' })
 
-    if (filters?.type) query = query.eq('doc_type', filters.type)
-    if (filters?.status) query = query.eq('status', filters.status)
-    if (filters?.limit) query = query.limit(filters.limit)
+      if (filters?.type) query = query.eq('doc_type', filters.type)
+      if (filters?.status) query = query.eq('status', filters.status)
+      
+      // Always apply limit for performance
+      query = query.limit(limit)
 
-    const { data, error } = await query.order('updated_at', { ascending: false })
+      const { data, error } = await query.order('updated_at', { ascending: false })
 
-    if (error) {
-      console.error('Error getting documents:', error)
+      if (error) {
+        // Handle case where table doesn't exist or RLS blocks access
+        if (error.code === '42P01' || error.code === 'PGRST301') {
+          console.warn('Documents table may not exist yet. Please run the database migration scripts.')
+        } else {
+          console.error('Error getting documents:', error)
+        }
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Unexpected error getting documents:', error)
       return []
     }
-
-    return data || []
   }
 
   async getDocumentStats(): Promise<{ total: number; quotations: number; contracts: number; invoices: number }> {
-    const { data, error } = await supabase.from('documents').select('doc_type')
+    try {
+      const { data, error } = await supabase.from('documents').select('doc_type')
 
-    if (error) {
-      console.error('Error getting document stats:', error)
+      if (error) {
+        // Handle case where table doesn't exist
+        if (error.code === '42P01' || error.code === 'PGRST301') {
+          console.warn('Documents table may not exist yet.')
+        } else {
+          console.error('Error getting document stats:', error)
+        }
+        return { total: 0, quotations: 0, contracts: 0, invoices: 0 }
+      }
+
+      const stats = {
+        total: data?.length || 0,
+        quotations: data?.filter(d => d.doc_type === 'quotation').length || 0,
+        contracts: data?.filter(d => d.doc_type === 'contract').length || 0,
+        invoices: data?.filter(d => d.doc_type === 'invoice').length || 0,
+      }
+
+      return stats
+    } catch (error) {
+      console.error('Unexpected error getting document stats:', error)
       return { total: 0, quotations: 0, contracts: 0, invoices: 0 }
     }
-
-    const stats = {
-      total: data.length,
-      quotations: data.filter(d => d.doc_type === 'quotation').length,
-      contracts: data.filter(d => d.doc_type === 'contract').length,
-      invoices: data.filter(d => d.doc_type === 'invoice').length,
-    }
-
-    return stats
   }
 
   async deleteDocument(id: string): Promise<boolean> {

@@ -106,8 +106,8 @@ function DocumentsContent() {
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <Link href="/editor?type=quotation" className="w-full sm:w-auto">
-            <Button className="w-full h-12 rounded-[16px] text-base gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-              <Plus className="w-5 h-5" /> Create New
+            <Button className="w-full h-12 rounded-[16px] text-base gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all font-bold">
+              + Create New
             </Button>
           </Link>
         </div>
@@ -145,9 +145,16 @@ function DocumentsContent() {
 
       {/* Document List */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-32">
-          <Loader2 className="w-12 h-12 animate-spin text-primary/50 mb-4" />
-          <p className="text-muted-foreground font-medium">Loading your documents...</p>
+        <div className="grid grid-cols-1 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-24 bg-card/50 border border-border rounded-[24px] animate-pulse flex items-center px-6 gap-4">
+              <div className="w-12 h-12 rounded-xl bg-muted" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-muted rounded w-1/4" />
+                <div className="h-3 bg-muted rounded w-1/6" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredDocs.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
@@ -227,8 +234,8 @@ function DocumentsContent() {
               : `You don't have any ${activeTab}s yet.`}
           </p>
           <Link href="/editor?type=quotation">
-            <Button size="lg" className="h-12 px-8 rounded-[16px] text-base gap-2 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
-              <Plus className="w-5 h-5" /> Create First Document
+            <Button size="lg" className="h-12 px-8 rounded-[16px] text-base gap-2 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all font-bold">
+              + Create First Document
             </Button>
           </Link>
         </div>
@@ -240,8 +247,13 @@ function DocumentsContent() {
 export default function DocumentsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      <div className="min-h-screen bg-background p-10">
+        <div className="h-8 bg-muted rounded w-1/4 animate-pulse mb-10" />
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-24 bg-card border border-border rounded-[24px] animate-pulse" />
+          ))}
+        </div>
       </div>
     }>
       <DocumentsContent />

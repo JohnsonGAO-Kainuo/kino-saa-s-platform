@@ -56,7 +56,6 @@ interface DocumentPreviewProps {
   onFieldClick?: (fieldId: string) => void
 }
 
-// Helper for inline editing - Moved OUTSIDE to keep focus stable
 const EditableText = ({ 
   value, 
   field, 
@@ -133,14 +132,12 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
   const { user } = useAuth()
   const [companySettings, setCompanySettings] = useState<any>(null)
   
-  // Local state for smooth dragging
   const [draggingAsset, setDraggingAsset] = useState<'signature' | 'stamp' | 'clientSignature' | null>(null)
   const [dragPos, setDragPos] = useState({ x: 0, y: 0 })
   const [dragStartMouse, setDragStartMouse] = useState({ x: 0, y: 0 })
   const [dragStartOffset, setDragStartOffset] = useState({ x: 0, y: 0 })
   
-  const totalAmount = formData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
-  const paymentStatus = formData.paymentStatus
+  const totalAmount = formData.items.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0)
   const languageMode = formData.languageMode || "single"
   const primaryLanguage = formData.primaryLanguage || "en"
   const secondaryLanguage = formData.secondaryLanguage || "zh-TW"
@@ -152,12 +149,17 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
   useEffect(() => {
     async function fetchSettings() {
       if (user) {
-        const { data } = await supabase
-          .from('company_settings')
-          .select('*')
-          .eq('user_id', user.id)
-          .single()
-        if (data) setCompanySettings(data)
+        try {
+          const { data, error } = await supabase.from('company_settings').select('*').eq('user_id', user.id).single()
+          // Handle case where no settings exist yet (PGRST116 = no rows returned)
+          if (error && error.code !== 'PGRST116') {
+            console.error('Failed to load company settings:', error)
+          } else if (data) {
+            setCompanySettings(data)
+          }
+        } catch (error) {
+          console.error('Error fetching company settings:', error)
+        }
       }
     }
     fetchSettings()
@@ -172,611 +174,184 @@ export function DocumentPreview({ documentType, formData, onFieldChange, onField
 
   const getDocumentTitle = () => {
     switch (documentType) {
-      case "quotation":
-        return { en: "QUOTATION", 'zh-TW': "報價單", fr: "DEVIS", ja: "見積書", es: "PRESUPUESTO" }
-      case "invoice":
-        return { en: "INVOICE", 'zh-TW': "發票", fr: "FACTURE", ja: "請求書", es: "FACTURA" }
-      case "receipt":
-        return { en: "OFFICIAL RECEIPT", 'zh-TW': "正式收據", fr: "REÇU", ja: "領収書", es: "RECIBO" }
-      case "contract":
-        return { en: "CONTRACT", 'zh-TW': "合約", fr: "CONTRAT", ja: "契約書", es: "CONTRATO" }
-      default:
-        return { en: "DOCUMENT", 'zh-TW': "文件" }
+      case "quotation": return { en: "QUOTATION", 'zh-TW': "報價單" };
+      case "invoice": return { en: "INVOICE", 'zh-TW': "發票" };
+      case "receipt": return { en: "OFFICIAL RECEIPT", 'zh-TW': "正式收據" };
+      case "contract": return { en: "CONTRACT", 'zh-TW': "合約" };
+      default: return { en: "DOCUMENT", 'zh-TW': "文件" };
     }
   }
 
   const titleLabels = getDocumentTitle()
-
-  const isPaidReceipt = documentType === "receipt" && paymentStatus?.status === "paid"
-  const isVoidedReceipt = documentType === "receipt" && paymentStatus?.status === "voided"
+  const isPaidReceipt = documentType === "receipt" && formData.paymentStatus?.status === "paid"
 
   const styles = {
     standard: {
-      card: "bg-white text-foreground p-8 min-h-[800px] shadow-none border-none sticky top-0 relative", // Reset styles for print
-      header: "border-b border-border pb-6 mb-8",
-      accentLine: "border-t border-border",
+      card: "bg-white text-foreground p-12 min-h-[800px] shadow-sm relative",
+      header: "border-b border-border pb-8 mb-10",
+      accentLine: "border-t border-foreground",
       itemRow: "border-b border-border/50",
       sectionHeader: "font-bold text-foreground mb-2 uppercase tracking-tight border-b border-border/50 pb-1"
     },
-    corporate: {
-      card: "bg-white text-foreground p-10 min-h-[842px] shadow-none border-t-8 border-primary sticky top-0 relative",
-      header: "flex justify-between items-start mb-12",
-      accentLine: "border-t border-muted-foreground/30",
-      itemRow: "border-b border-border/50",
-      sectionHeader: "bg-secondary px-2 py-1 text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3"
-    },
-    modern: {
-      card: "bg-white text-foreground p-8 min-h-[800px] shadow-none sticky top-0 relative overflow-hidden",
-      header: "flex justify-between items-center mb-8 bg-primary/5 -mx-8 px-8 py-6 border-b border-primary/10",
-      accentLine: "border-t-2 border-primary/20",
-      itemRow: "border-b border-border/30",
-      sectionHeader: "text-primary text-[12px] font-black uppercase tracking-tighter mb-2"
-    }
-  }[templateId]
+    // Simplified for now, using standard logic mostly
+    corporate: { card: "bg-white p-12", header: "mb-10", accentLine: "border-t", itemRow: "border-b", sectionHeader: "font-bold" },
+    modern: { card: "bg-white p-12", header: "mb-10", accentLine: "border-t", itemRow: "border-b", sectionHeader: "font-bold" }
+  }[templateId] || styles.standard
 
-
-  const Header = () => {
-    const Logo = () => (
-      <div 
-        className={`flex ${logoPosition === "center" ? "justify-center" : logoPosition === "right" ? "justify-end" : "justify-start"} cursor-pointer hover:ring-2 hover:ring-primary/20 rounded p-1 transition-all group relative min-h-[60px] min-w-[120px]`} 
-        onClick={(e) => {
-          e.stopPropagation();
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = 'image/*';
-          input.onchange = async (event) => {
-            const file = (event.target as HTMLInputElement).files?.[0];
-            if (file) {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                onFieldChange?.('logo', reader.result as string);
-              };
-              reader.readAsDataURL(file);
-            }
-          };
-          input.click();
-        }}
-      >
-        {formData.logo ? (
-          <>
-            <img src={formData.logo} alt="Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" crossOrigin="anonymous" />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded">
-              <span className="bg-white px-3 py-1 rounded-full text-xs font-bold text-primary shadow-sm">Click to Change</span>
-            </div>
-          </>
-        ) : (companySettings?.logo_url && !companySettings.logo_url.includes('kino')) ? (
-          <>
-            <img src={companySettings.logo_url} alt="Company Logo" style={{ width: `${logoWidth}px` }} className="h-auto object-contain rounded" crossOrigin="anonymous" />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded">
-              <span className="bg-white px-3 py-1 rounded-full text-xs font-bold text-primary shadow-sm">Click to Change</span>
-            </div>
-          </>
-        ) : (
-          <div className={`flex flex-col items-${logoPosition === 'center' ? 'center' : logoPosition === 'right' ? 'end' : 'start'} border-2 border-dashed border-border hover:border-primary/40 p-4 rounded bg-secondary/30 hover:bg-primary/5 w-full transition-all`}>
-            <Upload className="w-6 h-6 text-muted-foreground/50 mb-1" />
-            <div className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">{t({ en: "UPLOAD LOGO", 'zh-TW': "點擊上傳標誌" })}</div>
+  const Header = () => (
+    <div className={styles.header}>
+      <div className="flex justify-between items-start gap-6">
+        <div className={`cursor-pointer hover:ring-2 hover:ring-primary/20 rounded p-1 transition-all group relative min-h-[60px] min-w-[120px]`} 
+          onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = (e: any) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => onFieldChange?.('logo', reader.result as string);
+                reader.readAsDataURL(file);
+              }
+            };
+            input.click();
+          }}>
+          {formData.logo ? <img src={formData.logo} style={{ width: `${logoWidth}px` }} className="object-contain" /> : <div className="border-2 border-dashed border-border p-4 rounded text-center"><Upload className="w-5 h-5 mx-auto mb-1 opacity-20" /><span className="text-[10px] opacity-20">LOGO</span></div>}
           </div>
-        )}
-      </div>
-    )
-
-    const Title = () => {
-      const docNumber = `${documentType === "quotation" ? "QT" : documentType === "contract" ? "CTR" : documentType === "invoice" ? "INV" : "RC"}-${currentYear}001`
-      const currentDate = new Date().toISOString().split('T')[0]
-      const validUntilDate = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
-
-      return (
         <div className="text-right">
-          <div className="flex flex-col gap-1 items-end">
-            <h1 className={`font-bold ${templateId === 'modern' ? 'text-4xl text-foreground' : 'text-3xl text-foreground'}`}>{t(titleLabels)}</h1>
-            <div className="mt-4 space-y-1 text-right">
-              <div className="flex justify-end items-center gap-4 text-[11px]">
-                <span className="font-bold text-foreground uppercase tracking-wide">{t({ en: "DOC NO.", 'zh-TW': "編號" })}</span>
-                <span className="font-mono text-muted-foreground">{docNumber}</span>
+          <h1 className="text-4xl font-black text-foreground tracking-tighter">{t(titleLabels)}</h1>
+          <div className="mt-4 space-y-1 text-[11px] font-bold">
+            <p><span className="text-muted-foreground uppercase mr-2">{t({ en: "DOC NO", 'zh-TW': "編號" })}:</span> <span className="font-mono">{`${documentType.substring(0,2).toUpperCase()}-${currentYear}001`}</span></p>
+            <p><span className="text-muted-foreground uppercase mr-2">{t({ en: "DATE", 'zh-TW': "日期" })}:</span> <span className="font-mono">{new Date().toISOString().split('T')[0]}</span></p>
+          </div>
               </div>
-              <div className="flex justify-end items-center gap-4 text-[11px]">
-                <span className="font-bold text-foreground uppercase tracking-wide">{t({ en: "DATE", 'zh-TW': "日期" })}</span>
-                <span className="font-mono text-muted-foreground">{currentDate}</span>
-              </div>
-              {(documentType === "quotation" || documentType === "contract") && (
-                <div className="flex justify-end items-center gap-4 text-[11px]">
-                  <span className="font-bold text-foreground uppercase tracking-wide">{t({ en: "VALID UNTIL", 'zh-TW': "有效期至" })}</span>
-                  <span className="font-mono text-muted-foreground">{validUntilDate}</span>
-                </div>
-              )}
             </div>
           </div>
-        </div>
-      )
-    }
+  )
 
-    return (
-      <div className={styles.header}>
-        <div className={`flex flex-col md:flex-row justify-between items-start gap-6 w-full`}>
-          <div className={`w-full md:w-auto ${logoPosition !== "left" ? "order-2 md:order-1" : ""}`}><Logo /></div>
-          <div className={`w-full md:w-auto ${logoPosition === "left" ? "order-1 md:order-2" : "order-1"}`}><Title /></div>
-        </div>
-      </div>
-    )
-  }
+  const Parties = () => (
+    <div className="grid grid-cols-2 gap-16 mb-12">
+      <div className="space-y-2">
+        <p className="text-[10px] font-black text-primary border-b border-primary/20 pb-1 mb-2 uppercase tracking-[0.2em]">{t({ en: "FROM", 'zh-TW': "發件人" })}</p>
+        <EditableText value={formData.companyName || companySettings?.company_name || ""} field="companyName" placeholder="Company Name" className="text-base font-black text-foreground" onSave={onFieldChange} />
+        <EditableText value={formData.companyAddress || companySettings?.company_address || ""} field="companyAddress" multiline placeholder="Address" className="text-xs text-muted-foreground leading-relaxed" onSave={onFieldChange} />
+            </div>
+      <div className="space-y-2">
+        <p className="text-[10px] font-black text-primary border-b border-primary/20 pb-1 mb-2 uppercase tracking-[0.2em]">{t({ en: "BILL TO", 'zh-TW': "致" })}</p>
+        <EditableText value={formData.clientName} field="clientName" placeholder="Client Name" className="text-base font-black text-foreground" onSave={onFieldChange} />
+        <EditableText value={formData.clientAddress} field="clientAddress" multiline placeholder="Client Address" className="text-xs text-muted-foreground leading-relaxed" onSave={onFieldChange} />
+            </div>
+          </div>
+  )
 
-  const PartiesInfo = () => {
-    const displayCompanyName = formData.companyName || companySettings?.company_name || ""
-    const displayCompanyAddress = formData.companyAddress || companySettings?.company_address || ""
-
-    return (
-      <div className={`grid grid-cols-2 gap-12 mb-10 ${templateId === 'modern' ? 'bg-secondary/20 p-6 rounded-2xl border border-border/50' : ''}`}>
-        <div className="text-xs space-y-1">
-          <p className="text-primary font-bold mb-1 uppercase tracking-widest text-[10px] border-b border-primary/20 pb-1 flex items-center gap-1">
-            <Building2 className="w-3.5 h-3.5" /> {t({ en: "FROM", 'zh-TW': "發件人" })}
-          </p>
-          <EditableText 
-            value={displayCompanyName} 
-            field="companyName" 
-            placeholder={t({ en: "[Company Name]", 'zh-TW': "[公司名稱]" })} 
-            className="font-black text-foreground uppercase text-sm"
-            onSave={onFieldChange}
-          />
-          <EditableText 
-            value={displayCompanyAddress} 
-            field="companyAddress" 
-            multiline
-            placeholder={t({ en: "[Address]", 'zh-TW': "[地址]" })} 
-            className="text-muted-foreground leading-relaxed"
-            onSave={onFieldChange}
-          />
-        </div>
-        <div className="text-xs space-y-1">
-          <p className="text-primary font-bold mb-1 uppercase tracking-widest text-[10px] border-b border-primary/20 pb-1 flex items-center gap-1">
-            <User className="w-3.5 h-3.5" /> {t({ en: "BILL TO", 'zh-TW': "致" })}
-          </p>
-          <EditableText 
-            value={formData.clientName} 
-            field="clientName" 
-            placeholder={t({ en: "[Client Name]", 'zh-TW': "[客戶名稱]" })} 
-            className="font-black text-[14px] text-foreground mt-2" 
-            onSave={onFieldChange}
-          />
-          <EditableText 
-            value={formData.clientAddress} 
-            field="clientAddress" 
-            multiline
-            placeholder={t({ en: "[Client Address]", 'zh-TW': "[客戶地址]" })} 
-            className="text-muted-foreground leading-relaxed" 
-            onSave={onFieldChange}
-          />
-        </div>
-      </div>
-    )
-  }
-
-  const ItemsTable = () => (
-    <div className="mb-6">
-      <table className="w-full">
-        <thead>
-          <tr className={styles.accentLine}>
-            <th className="text-left py-2 font-bold text-xs text-foreground">{t({ en: "Description", 'zh-TW': "描述" })}</th>
-            <th className="text-right py-2 font-bold text-xs w-16 text-foreground">{t({ en: "Qty", 'zh-TW': "數量" })}</th>
-            <th className="text-right py-2 font-bold text-xs w-20 text-foreground">{t({ en: "Unit Price", 'zh-TW': "單價" })}</th>
-            <th className="text-right py-2 font-bold text-xs w-20 text-foreground">{t({ en: "Amount", 'zh-TW': "金額" })}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {formData.items.map((item, index) => (
-            <React.Fragment key={index}>
-              <tr className={styles.itemRow}>
-                <td className="py-3 text-xs text-foreground font-semibold group relative">
-                  <EditableText 
-                    value={item.description} 
-                    field={`items.${index}.description`} 
-                    placeholder="Description"
-                    className="font-semibold"
-                    onSave={onFieldChange}
-                  />
-                  <button 
-                    onClick={() => {
-                      const newItems = [...formData.items];
-                      newItems.splice(index, 1);
-                      onFieldChange?.('items', newItems);
-                    }}
-                    className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </td>
-                <td className="text-right py-3 text-xs text-foreground/80">
-                  <input 
-                    type="number"
-                    className="w-12 bg-transparent text-right outline-none hover:bg-secondary/50 focus:bg-secondary/50 rounded px-1 transition-all"
-                    defaultValue={item.quantity}
-                    onBlur={(e) => {
-                      const val = parseInt(e.target.value) || 0;
-                      if (val !== item.quantity) {
-                        const newItems = [...formData.items];
-                        newItems[index].quantity = val;
-                        onFieldChange?.('items', newItems);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                    }}
-                  />
-                </td>
-                <td className="text-right py-3 text-xs text-foreground/80">
-                  <div className="flex items-center justify-end">
-                    <span>$</span>
-                    <input 
-                      type="number"
-                      className="w-20 bg-transparent text-right outline-none hover:bg-secondary/50 focus:bg-secondary/50 rounded px-1 transition-all"
-                      defaultValue={item.unitPrice}
-                      onBlur={(e) => {
-                        const val = parseFloat(e.target.value) || 0;
-                        if (val !== item.unitPrice) {
-                          const newItems = [...formData.items];
-                          newItems[index].unitPrice = val;
-                          onFieldChange?.('items', newItems);
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                      }}
-                    />
-                  </div>
-                </td>
-                <td className="text-right py-3 font-semibold text-xs text-foreground">${(item.quantity * item.unitPrice).toFixed(2)}</td>
-              </tr>
-              {item.subItems && item.subItems.length > 0 && item.subItems.map((subItem, sIndex) => (
-                <tr key={`${index}-${sIndex}`} className="border-b border-border/30 bg-secondary/10">
-                  <td colSpan={4} className="py-1 pl-6 text-[11px] text-muted-foreground group relative">
-                    <div className="flex items-center gap-1">
-                      <span>•</span>
-                      <EditableText 
-                        value={subItem} 
-                        field={`items.${index}.subItems.${sIndex}`} 
-                        placeholder="Detail..."
-                        className="text-[11px] flex-1"
-                        onSave={onFieldChange}
-                      />
-                      <button 
-                        onClick={() => {
-                          const newItems = [...formData.items];
-                          newItems[index].subItems = newItems[index].subItems?.filter((_, i) => i !== sIndex);
-                          onFieldChange?.('items', newItems);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all"
-                      >
-                        <Trash2 className="w-2.5 h-2.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-      <button 
-        onClick={() => {
-          const newItems = [...formData.items, { description: "", quantity: 1, unitPrice: 0, subItems: [] }];
-          onFieldChange?.('items', newItems);
-        }}
-        className="w-full py-2 border-2 border-dashed border-border text-muted-foreground/50 hover:border-primary/30 hover:text-primary rounded-lg transition-all flex items-center justify-center gap-1 mt-2 text-xs font-bold"
-      >
-        <Plus className="w-3.5 h-3.5" /> {t({ en: "ADD ITEM", 'zh-TW': "增加項目" })}
-      </button>
+  const Items = () => (
+    <div className="mb-10">
+              <table className="w-full">
+        <thead className="border-y-2 border-foreground">
+          <tr>
+            <th className="text-left py-3 text-[11px] font-black uppercase tracking-widest">{t({ en: "DESCRIPTION", 'zh-TW': "描述" })}</th>
+            <th className="text-right py-3 text-[11px] font-black uppercase tracking-widest w-20">{t({ en: "QTY", 'zh-TW': "數量" })}</th>
+            <th className="text-right py-3 text-[11px] font-black uppercase tracking-widest w-32">{t({ en: "PRICE", 'zh-TW': "單價" })}</th>
+            <th className="text-right py-3 text-[11px] font-black uppercase tracking-widest w-32">{t({ en: "AMOUNT", 'zh-TW': "金額" })}</th>
+                  </tr>
+                </thead>
+        <tbody className="divide-y divide-border/50">
+          {formData.items.map((item, i) => (
+            <tr key={i} className="group">
+              <td className="py-4 text-xs font-bold relative">
+                <EditableText value={item.description} field={`items.${i}.description`} onSave={onFieldChange} />
+                <button onClick={() => onFieldChange?.('items', formData.items.filter((_, idx) => idx !== i))} className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-destructive"><Trash2 className="w-4 h-4" /></button>
+              </td>
+              <td className="py-4 text-right">
+                <input type="number" value={item.quantity} onChange={(e) => {
+                  const newItems = [...formData.items];
+                  newItems[i].quantity = parseInt(e.target.value) || 0;
+                  onFieldChange?.('items', newItems);
+                }} className="w-full bg-transparent text-right outline-none text-xs font-bold" />
+              </td>
+              <td className="py-4 text-right">
+                <input type="number" value={item.unitPrice} onChange={(e) => {
+                  const newItems = [...formData.items];
+                  newItems[i].unitPrice = parseFloat(e.target.value) || 0;
+                  onFieldChange?.('items', newItems);
+                }} className="w-full bg-transparent text-right outline-none text-xs font-bold" />
+                      </td>
+              <td className="py-4 text-right text-xs font-black">${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+      <Button variant="ghost" className="w-full border-2 border-dashed border-border mt-4 h-10 text-[10px] font-black tracking-widest uppercase hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all" onClick={() => onFieldChange?.('items', [...formData.items, { description: "New Item", quantity: 1, unitPrice: 0 }])}>+ {t({ en: "Add Item", 'zh-TW': "增加項目" })}</Button>
     </div>
   )
 
-  const Footer = () => {
-    const stampX = formData.stampOffset?.x || 0
-    const stampY = formData.stampOffset?.y || 0
-    const sigX = formData.signatureOffset?.x || 0
-    const sigY = formData.signatureOffset?.y || 0
-    const clientSigX = formData.clientSignatureOffset?.x || 0
-    const clientSigY = formData.clientSignatureOffset?.y || 0
-
-    const handleAssetClick = (assetType: 'signature' | 'stamp' | 'clientSignature', currentValue: string | null | undefined) => {
-      if (currentValue) {
-        const action = confirm(t({ en: "Remove this asset or upload a new one?\n\nOK = Remove\nCancel = Upload new", 'zh-TW': "移除此資產還是上傳新的？\n\n確定 = 移除\n取消 = 上傳新的" }));
-        if (action) {
-          onFieldChange?.(assetType, null);
-        } else {
-          triggerAssetUpload(assetType);
-        }
-      } else {
-        triggerAssetUpload(assetType);
-      }
-    };
-
-    const triggerAssetUpload = (assetType: 'signature' | 'stamp' | 'clientSignature') => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = async (event) => {
-        const file = (event.target as HTMLInputElement).files?.[0];
-        if (file) {
-          // Auto background removal for stamps/signatures
-          try {
-            const { removeImageBackground, dataURLtoFile } = await import('@/lib/image-utils');
-            const transparentDataUrl = await removeImageBackground(file);
-            onFieldChange?.(assetType, transparentDataUrl);
-          } catch (error) {
-            console.error('Background removal failed:', error);
-            // Fallback: upload without bg removal
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              onFieldChange?.(assetType, reader.result as string);
-            };
-            reader.readAsDataURL(file);
-          }
-        }
-      };
-      input.click();
-    };
-
-    const handleMouseDown = (e: React.MouseEvent, assetType: 'signature' | 'stamp' | 'clientSignature') => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      const currentOffset = formData[`${assetType}Offset` as keyof FormDataType] as { x: number, y: number } || { x: 0, y: 0 };
-      
-      setDraggingAsset(assetType);
-      setDragStartMouse({ x: e.clientX, y: e.clientY });
-      setDragStartOffset(currentOffset);
-      setDragPos(currentOffset);
-    };
-
-    useEffect(() => {
-      if (!draggingAsset) return;
-
-      const handleMouseMove = (e: MouseEvent) => {
-        if (!draggingAsset) return;
-        
-        // Find scale factor of the container
-        const container = document.querySelector('.a4-paper-container');
-        let scale = 1;
-        if (container) {
-          const style = window.getComputedStyle(container);
-          const matrix = new WebKitCSSMatrix(style.transform);
-          scale = matrix.a || 1; // Current scale factor
-        }
-
-        const deltaX = (e.clientX - dragStartMouse.x) / scale;
-        const deltaY = (e.clientY - dragStartMouse.y) / scale;
-        
-        const newPos = { 
-          x: dragStartOffset.x + deltaX, 
-          y: dragStartOffset.y + deltaY 
-        };
-        
-        setDragPos(newPos);
-      };
-
-      const handleMouseUp = () => {
-        if (draggingAsset) {
-          const offsetField = `${draggingAsset}Offset` as 'signatureOffset' | 'stampOffset' | 'clientSignatureOffset';
-          onFieldChange?.(offsetField, { 
-            x: Math.round(dragPos.x), 
-            y: Math.round(dragPos.y) 
-          });
-        }
-        setDraggingAsset(null);
-      };
-
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }, [draggingAsset, dragStartMouse, dragStartOffset, dragPos, onFieldChange]);
-
-    // Quotation usually has no signature, but show confirmation names for consistency
-    if (documentType === "quotation") {
-      return (
-        <div className="pt-8 mt-12 border-t-2 border-foreground">
-          <div className="flex justify-between items-start">
-            <div className="flex gap-12">
-              <div className="w-48">
-                <div className="border-t border-muted-foreground/50 pt-2">
-                  <p className="text-[9px] uppercase text-muted-foreground font-bold mb-1">{t({ en: "ISSUED BY", 'zh-TW': "發件人" })}</p>
-                  <p className="text-[11px] font-black text-foreground truncate">
-                    {formData.companyName || companySettings?.company_name || ""}
-                  </p>
-                </div>
-              </div>
-              <div className="w-48">
-                <div className="border-t border-muted-foreground/50 pt-2">
-                  <p className="text-[9px] uppercase text-muted-foreground font-bold mb-1">{t({ en: "PREPARED FOR", 'zh-TW': "致" })}</p>
-                  <p className="text-[11px] font-black text-foreground truncate">
-                    {formData.clientName || ""}
-                  </p>
-                </div>
-              </div>
+  const Footer = () => (
+    <div className="mt-16 pt-10 border-t-2 border-foreground">
+      <div className="flex justify-between items-start">
+        <div className="flex gap-16">
+          <div className="w-48 text-center space-y-4">
+            <div className="h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center relative group cursor-pointer" onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.onchange = (e: any) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => onFieldChange?.('signature', reader.result as string);
+                  reader.readAsDataURL(file);
+                }
+              };
+              input.click();
+            }}>
+              {formData.signature ? <img src={formData.signature} className="h-20 object-contain" /> : <Upload className="w-5 h-5 opacity-20" />}
             </div>
-
-            <div className="w-64 space-y-1">
-              <div className="flex justify-between py-1 text-xs">
-                <span className="font-bold text-foreground">{t({ en: "SUBTOTAL", 'zh-TW': "小計" })}:</span>
-                <span className="text-foreground">${totalAmount.toFixed(2)}</span>
+            <div className="border-t border-foreground/50 pt-2">
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{t({ en: "ISSUED BY", 'zh-TW': "發件人簽章" })}</p>
+              <p className="text-[11px] font-black text-foreground mt-1 uppercase">{formData.companyName || companySettings?.company_name || ""}</p>
               </div>
-              <div className="flex justify-between py-2 font-bold text-foreground border-t-2 border-foreground mt-2">
-                <span className="text-sm">{t({ en: "TOTAL", 'zh-TW': "總計" })}:</span>
-                <span className="text-sm">${totalAmount.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-          <div className="mt-12 text-center border-t border-border pt-4">
-            <p className="text-[11px] text-muted-foreground italic">{t({ en: "Thank you for your business!", 'zh-TW': "多謝惠顧！" })}</p>
-            <p className="text-[10px] text-muted-foreground/50 mt-2">{t({ en: "End of Document", 'zh-TW': "文件完" })}</p>
-          </div>
-        </div>
-      )
-    }
-
-    return (
-      <div className="pt-8 mt-12 border-t-2 border-foreground">
-        <div className="flex justify-between items-end">
-          {/* Left Side: Signatures & Stamps */}
-          <div className="flex flex-col gap-8">
-            <div className="flex gap-12 items-end">
-              <div className="relative flex flex-col items-center min-w-[200px]">
-                <div className="h-28 flex items-center justify-center relative w-full mb-2">
-                  {(formData.stamp || companySettings?.stamp_url) ? (
-                    <div 
-                      className={`absolute right-0 top-0 opacity-80 cursor-move hover:ring-2 hover:ring-primary rounded p-1 group ${draggingAsset === 'stamp' ? '' : 'transition-all'}`}
-                      style={{ transform: `translate(${draggingAsset === 'stamp' ? dragPos.x : stampX}px, ${draggingAsset === 'stamp' ? dragPos.y : stampY}px)` }}
-                      onMouseDown={(e) => handleMouseDown(e, 'stamp')}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAssetClick('stamp', formData.stamp || companySettings?.stamp_url);
-                      }}
-                    >
-                      <img src={formData.stamp || companySettings?.stamp_url} alt="Stamp" className="h-24 w-24 object-contain" crossOrigin="anonymous" />
-                      <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div 
-                      onClick={() => handleAssetClick('stamp', null)}
-                      className="absolute right-0 top-0 border-2 border-dashed border-border hover:border-primary/40 rounded-lg p-2 cursor-pointer bg-secondary/30 hover:bg-primary/5 transition-all flex items-center justify-center"
-                      style={{ width: '96px', height: '96px' }}
-                    >
-                      <div className="text-center">
-                        <Upload className="w-6 h-6 text-muted-foreground/50 mx-auto mb-1" />
-                        <span className="text-[8px] text-muted-foreground/50">STAMP</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {(formData.signature || companySettings?.signature_url) ? (
-                    <div 
-                      className={`z-10 cursor-move hover:ring-2 hover:ring-primary rounded p-1 group ${draggingAsset === 'signature' ? '' : 'transition-all'}`}
-                      style={{ transform: `translate(${draggingAsset === 'signature' ? dragPos.x : sigX}px, ${draggingAsset === 'signature' ? dragPos.y : sigY}px)` }}
-                      onMouseDown={(e) => handleMouseDown(e, 'signature')}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAssetClick('signature', formData.signature || companySettings?.signature_url);
-                      }}
-                    >
-                      <img src={formData.signature || companySettings?.signature_url} alt="Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
-                      <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div 
-                      onClick={() => handleAssetClick('signature', null)}
-                      className="border-2 border-dashed border-border hover:border-primary/40 rounded-lg p-4 cursor-pointer bg-secondary/30 hover:bg-primary/5 transition-all flex items-center justify-center"
-                      style={{ width: '192px', height: '80px' }}
-                    >
-                      <div className="text-center">
-                        <Upload className="w-6 h-6 text-muted-foreground/50 mx-auto mb-1" />
-                        <span className="text-[8px] text-muted-foreground/50">SIGNATURE</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="w-full border-t border-foreground pt-2 text-center">
-                  <p className="font-bold text-[10px] uppercase tracking-tight text-foreground mb-1">
-                    {documentType === "contract" ? t({ en: "PARTY A (ISSUER)", 'zh-TW': "甲方 (發件人)" }) : t({ en: "AUTHORIZED SIGNATURE & CHOP", 'zh-TW': "授權簽名及公司蓋章" })}
-                  </p>
-                  <p className="text-[11px] font-black text-foreground truncate px-2">
-                    {formData.companyName || companySettings?.company_name || ""}
-                  </p>
-                </div>
-              </div>
-
-              {/* Client Signature (Contract Only) */}
-              {documentType === "contract" && (
-                <div className="relative flex flex-col items-center min-w-[200px]">
-                  <div className="h-28 flex items-center justify-center relative w-full mb-2">
-                    {formData.clientSignature ? (
-                      <div 
-                        className={`cursor-move hover:ring-2 hover:ring-primary rounded p-1 group ${draggingAsset === 'clientSignature' ? '' : 'transition-all'}`}
-                        style={{ transform: `translate(${draggingAsset === 'clientSignature' ? dragPos.x : clientSigX}px, ${draggingAsset === 'clientSignature' ? dragPos.y : clientSigY}px)` }}
-                        onMouseDown={(e) => handleMouseDown(e, 'clientSignature')}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAssetClick('clientSignature', formData.clientSignature);
-                        }}
-                      >
-                        <img src={formData.clientSignature} alt="Client Signature" className="h-20 w-48 object-contain" crossOrigin="anonymous" />
-                        <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-lg">
-                          <Trash2 className="w-3 h-3 text-destructive" />
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        onClick={() => handleAssetClick('clientSignature', null)}
-                        className="border-2 border-dashed border-border hover:border-primary/40 rounded-lg p-4 cursor-pointer bg-secondary/30 hover:bg-primary/5 transition-all flex items-center justify-center"
-                        style={{ width: '192px', height: '80px' }}
-                      >
-                        <div className="text-center">
-                          <Upload className="w-6 h-6 text-muted-foreground/50 mx-auto mb-1" />
-                          <span className="text-[8px] text-muted-foreground/50">CLIENT SIGNATURE</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="w-full border-t border-foreground pt-2 text-center">
-                    <p className="font-bold text-[10px] uppercase tracking-tight text-foreground mb-1">
-                      {t({ en: "PARTY B (CLIENT)", 'zh-TW': "乙方 (客戶)" })}
-                    </p>
-                    <p className="text-[11px] font-black text-foreground truncate px-2">
-                      {formData.clientName || ""}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Right Side: Totals */}
-          <div className="w-64 space-y-1">
-            <div className="flex justify-between py-1 text-xs">
-              <span className="font-bold text-foreground">{t({ en: "SUBTOTAL", 'zh-TW': "小計" })}:</span>
-              <span className="text-foreground">${totalAmount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between py-2 font-bold text-foreground border-t-2 border-foreground mt-2">
-              <span className="text-sm">{t({ en: "TOTAL", 'zh-TW': "總計" })}:</span>
-              <span className="text-sm">${totalAmount.toFixed(2)}</span>
-            </div>
+          {(documentType === 'contract') && (
+            <div className="w-48 text-center space-y-4">
+              <div className="h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center relative group cursor-pointer">
+                {formData.clientSignature ? <img src={formData.clientSignature} className="h-20 object-contain" /> : <Upload className="w-5 h-5 opacity-20" />}
+              </div>
+              <div className="border-t border-foreground/50 pt-2">
+                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{t({ en: "PREPARED FOR", 'zh-TW': "客戶簽章" })}</p>
+                <p className="text-[11px] font-black text-foreground mt-1 uppercase">{formData.clientName || ""}</p>
+              </div>
+              </div>
+            )}
           </div>
-        </div>
 
-        <div className="mt-12 text-center border-t border-border pt-4">
-          <p className="text-[11px] text-muted-foreground italic">{t({ en: "Thank you for your business!", 'zh-TW': "多謝惠顧！" })}</p>
-          <p className="text-[10px] text-muted-foreground/50 mt-2">{t({ en: "End of Document", 'zh-TW': "文件完" })}</p>
+        <div className="w-64 space-y-2">
+          <div className="flex justify-between text-xs font-bold">
+            <span className="text-muted-foreground">{t({ en: "SUBTOTAL", 'zh-TW': "小計" })}</span>
+            <span>${totalAmount.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-lg font-black border-t-2 border-foreground pt-2">
+            <span>{t({ en: "TOTAL", 'zh-TW': "總計" })}</span>
+            <span className="text-primary">${totalAmount.toFixed(2)}</span>
+          </div>
         </div>
       </div>
-    )
-  }
+      <div className="mt-20 text-center opacity-30 text-[10px] font-bold tracking-widest uppercase italic">
+        {t({ en: "Thank you for your business!", 'zh-TW': "多謝惠顧！" })}
+      </div>
+    </div>
+  )
 
   return (
-    <Card id="document-preview-card" className={cn(styles.card, isPaidReceipt || isVoidedReceipt ? "bg-gradient-to-br from-white to-secondary/30" : "")}>
-      {templateId === 'modern' && <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full -mr-16 -mt-16 pointer-events-none" />}
-      <div className="max-w-full text-sm leading-relaxed relative z-10">
-        {Header()}
-        {PartiesInfo()}
-        {ItemsTable()}
-        {formData.notes && (
-          <div className="mb-6 pt-4 border-t border-border/50">
-            <p className={styles.sectionHeader}>{t({ en: "Notes", 'zh-TW': "備註" })}:</p>
-            <EditableText 
-              value={formData.notes} 
-              field="notes" 
-              multiline
-              placeholder={t({ en: "Additional notes...", 'zh-TW': "額外備註..." })} 
-              className="text-xs text-muted-foreground whitespace-pre-wrap"
-              onSave={onFieldChange}
-            />
-          </div>
-        )}
-        {Footer()}
-      </div>
+    <Card className={styles.card}>
+      {Header()}
+      {Parties()}
+      {Items()}
+      {formData.notes && (
+        <div className="mb-10">
+          <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">{t({ en: "NOTES", 'zh-TW': "備註" })}</p>
+          <EditableText value={formData.notes} field="notes" multiline onSave={onFieldChange} className="text-xs text-muted-foreground" />
+        </div>
+      )}
+      {Footer()}
     </Card>
   )
 }

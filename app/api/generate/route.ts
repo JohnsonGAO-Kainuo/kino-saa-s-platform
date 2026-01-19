@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// Define the schema that matches our FormDataType
 const itemSchema = z.object({
   description: z.string(),
   subItems: z.array(z.string()).optional(),
@@ -35,58 +34,42 @@ export async function POST(req: Request) {
       return Response.json({ error: 'DeepSeek API Key is missing.' }, { status: 500 });
     }
 
-    // Determine target language
     const isChinese = uiLanguage === 'zh-TW' || !uiLanguage;
     const targetLangName = isChinese ? '繁體中文 (zh-TW)' : 'English';
 
-    // Dynamic Prompt Engineering
     let roleDescription = "";
-    
     switch (documentType) {
-      case "quotation":
-        roleDescription = isChinese ? "資深商務銷售顧問" : "Senior Sales Consultant";
-        break;
-      case "contract":
-        roleDescription = isChinese ? "專業法律顧問" : "Legal Counsel";
-        break;
+      case "quotation": roleDescription = isChinese ? "資深商務銷售顧問" : "Senior Sales Consultant"; break;
+      case "contract": roleDescription = isChinese ? "專業法律顧問" : "Legal Counsel"; break;
       case "invoice":
-      case "receipt":
-        roleDescription = isChinese ? "精算財務會計" : "Financial Accountant";
-        break;
-      default:
-        roleDescription = isChinese ? "專業商務助理" : "Professional Business Assistant";
+      case "receipt": roleDescription = isChinese ? "精算財務會計" : "Financial Accountant"; break;
+      default: roleDescription = isChinese ? "專業商務助理" : "Professional Business Assistant";
     }
 
     const systemPrompt = `You are a ${roleDescription} at Kino SaaS.
 Current UI Language: ${targetLangName}.
 
 STRICT RULES:
-1. **Language**: EVERYTHING (the 'message' and all strings inside 'data') MUST be in ${targetLangName}. NEVER use English if the UI language is Chinese.
-2. **Action First**: If the user mentions ANY project, service, or amount, you MUST set action="update_document" and provide the data. DO NOT just ask questions.
-3. **Accuracy (CRITICAL)**: Use the EXACT numbers and items provided by the user. If the user says "5000", the unitPrice MUST be 5000. DO NOT change it.
-4. **Anti-Hallucination**: 
-   - If the user ONLY provides numbers (e.g., "5000, 2000") without specifying what they are for, DO NOT invent "Professional Consulting" or other complex names. 
-   - Instead, use simple placeholders like "Item 1", "Item 2" or "Service Item A".
-   - Mention in your 'message' that you've updated the amounts and are waiting for them to fill in the specific item descriptions.
-5. **Context-Aware Editing**: If "Current Document State" is provided, and the user only specifies a price change, try to match the price to the most relevant existing item or add it as a new item with a generic name.
-6. **External Database (Lazy Mode)**:
-   - You have access to the user's Client Database and Item Database (see Context below).
-   - **Clients**: If the user mentions a client name (e.g., "Acme") that vaguely matches an entry in 'Client Database', you MUST auto-fill 'clientName', 'clientEmail', and 'clientAddress' from that entry.
-   - **Items**: If the user mentions an item (e.g., "Web Dev") that matches an entry in 'Item Database', you MUST auto-fill its 'description', 'unitPrice' (price), and 'unit'.
-7. **Document Specifics**:
-   - **Quotation**: Focus on value. NOTE: Quotations do NOT have signatures.
-   - **Contract**: Focus on terms. NOTE: Contracts require dual signatures.
-   - **Invoice/Receipt**: Focus on payment proof. These have one signature/stamp from the issuer.
-8. **Consistency**: The 'message' must accurately reflect the 'data' changes. Keep it concise.
-9. **Context Focus**: If \`focusedField\` is provided (e.g., "notes", "items-section"), prioritize your suggestions and updates for that specific part of the document.
+1. **Language**: EVERYTHING MUST be in ${targetLangName}.
+2. **Action First**: Set action="update_document" for any relevant document request.
+3. **Mathematical Integrity (CRITICAL)**: 
+   - Ensure 'unitPrice' is NEVER 0 if there is any cost.
+   - If the user provides a total amount (e.g., "5000") but no unit price, calculate it: unitPrice = total / quantity.
+   - Example: user says "3 items for 3000", quantity=3, unitPrice=1000.
+4. **Anti-Hallucination**: Use generic names like "Item A" if descriptions are missing. Mention this in your message.
+5. **Context Database**: Auto-fill client/item details if a match is found in the provided databases.
+6. **Signature Logic**: 
+   - Quotation: NO signatures. 
+   - Contract: DUAL signatures. 
+   - Invoice/Receipt: ISSUER signature only.
 
 Response Format (JSON only):
 {
-  "message": "A concise response in ${targetLangName}. Explain what was updated. If descriptions were missing, ask for them politely.",
+  "message": "Concise explanation in ${targetLangName}",
   "action": "update_document",
   "data": {
     "items": [
-      { "description": "Generic name if user provided none", "quantity": 1, "unitPrice": number }
+      { "description": "name", "quantity": 1, "unitPrice": number }
     ]
   }
 }`;
@@ -109,31 +92,31 @@ Item Database: ${JSON.stringify(externalContext.items)}` : 'No external database
           { role: 'user', content: userPrompt }
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.3 // Lower temperature for higher accuracy
+        temperature: 0.1 // Further lower temperature for extreme accuracy
       })
     });
 
-    if (!response.ok) {
-      return Response.json({ error: `DeepSeek Error: ${response.status}` }, { status: response.status });
-    }
+    if (!response.ok) return Response.json({ error: `DeepSeek Error: ${response.status}` }, { status: response.status });
 
     const result = await response.json();
     const content = result.choices[0]?.message?.content;
 
     try {
       const parsed = JSON.parse(content);
-      // Extra validation: ensure data.items unitPrice are numbers
       if (parsed.data?.items) {
-        parsed.data.items = parsed.data.items.map((item: any) => ({
-          ...item,
-          unitPrice: Number(item.unitPrice) || 0,
-          quantity: Number(item.quantity) || 1
-        }));
+        parsed.data.items = parsed.data.items.map((item: any) => {
+          const qty = Number(item.quantity) || 1;
+          const up = Number(item.unitPrice) || 0;
+          return {
+            ...item,
+            quantity: qty,
+            unitPrice: up === 0 && item.amount ? (Number(item.amount) / qty) : up
+          };
+        });
       }
       const validated = responseSchema.parse(parsed);
       return Response.json(validated);
     } catch (e: any) {
-      console.error("AI Parse Error:", content);
       return Response.json({ error: "Format Error", details: e.message }, { status: 500 });
     }
   } catch (error: any) {

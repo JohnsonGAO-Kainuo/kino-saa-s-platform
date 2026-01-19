@@ -29,28 +29,36 @@ const LanguageContext = createContext<LanguageContextType>({
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth()
   const [language, setLanguageState] = useState<Language>('en')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Don't block initial render
 
   useEffect(() => {
-    async function loadLanguagePreference() {
-      if (user) {
+    // Set loading to false immediately to not block render
+    setLoading(false)
+    
+    // Load language preference in background (non-blocking)
+    if (user) {
+      // Use setTimeout to defer the query and not block initial render
+      const timeoutId = setTimeout(async () => {
         try {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('company_settings')
             .select('ui_language')
             .eq('user_id', user.id)
             .single()
           
-          if (data?.ui_language) {
+          // Handle case where no settings exist yet (PGRST116 = no rows returned)
+          if (error && error.code !== 'PGRST116') {
+            console.error('Failed to load language preference:', error)
+          } else if (data?.ui_language) {
             setLanguageState(data.ui_language as Language)
           }
         } catch (error) {
           console.error('Failed to load language preference:', error)
         }
-      }
-      setLoading(false)
+      }, 0) // Defer to next tick
+      
+      return () => clearTimeout(timeoutId)
     }
-    loadLanguagePreference()
   }, [user])
 
   const setLanguage = async (lang: Language) => {

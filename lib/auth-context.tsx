@@ -24,21 +24,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+    let mounted = true
+    
+    // Get initial session with timeout to prevent hanging
+    const sessionPromise = supabase.auth.getSession()
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3000)) // 3s timeout
+    
+    Promise.race([sessionPromise, timeoutPromise]).then((result) => {
+      if (mounted && result && typeof result === 'object' && 'data' in result) {
+        const { data: { session } } = result as any
+        setSession(session)
+        setUser(session?.user ?? null)
+      }
+      if (mounted) {
+        setLoading(false)
+      }
+    }).catch(() => {
+      if (mounted) {
+        setLoading(false)
+      }
     })
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      if (mounted) {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
     })
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
     }
   }, [])

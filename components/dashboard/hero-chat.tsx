@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 
 export default function DashboardHero() {
   const router = useRouter()
-  const { t } = useLanguage()
+  const { t: translate } = useLanguage()
   const [prompt, setPrompt] = useState("")
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null)
 
@@ -50,13 +50,13 @@ export default function DashboardHero() {
   ]
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] w-full max-w-5xl mx-auto px-4 animate-in fade-in zoom-in duration-700">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] w-full max-w-5xl mx-auto px-4">
       
       {/* Hero Text */}
       <div className="text-center space-y-6 mb-12">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-border shadow-sm mb-4">
           <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-          <span className="text-sm font-semibold text-muted-foreground">AI-Powered Document Assistant</span>
+          <span className="text-sm font-semibold text-muted-foreground">{translate("AI-Powered Document Assistant") || "AI-Powered Document Assistant"}</span>
         </div>
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground">
           What do you want to <br/>
@@ -110,24 +110,24 @@ export default function DashboardHero() {
 
       {/* Templates / Quick Starts */}
       <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-        {templates.map((t) => (
+        {templates.map((template) => (
           <button
-            key={t.id}
-            onClick={() => setActiveTemplate(t.id)}
+            key={template.id}
+            onClick={() => setActiveTemplate(template.id)}
             className={cn(
               "group relative flex flex-col items-center p-6 rounded-[24px] border-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-white",
-              activeTemplate === t.id 
+              activeTemplate === template.id 
                 ? `border-primary ring-4 ring-primary/10 shadow-lg scale-105 z-10` 
                 : "border-transparent hover:border-border shadow-sm hover:bg-white"
             )}
           >
-            <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110", t.bg)}>
-              <t.icon className={cn("w-8 h-8", t.color)} />
+            <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110", template.bg)}>
+              <template.icon className={cn("w-8 h-8", template.color)} />
             </div>
-            <h3 className="text-lg font-bold text-foreground mb-1">{t.label}</h3>
-            <p className="text-sm text-muted-foreground">{t.desc}</p>
+            <h3 className="text-lg font-bold text-foreground mb-1">{template.label}</h3>
+            <p className="text-sm text-muted-foreground">{template.desc}</p>
             
-            {activeTemplate === t.id && (
+            {activeTemplate === template.id && (
               <div className="absolute top-4 right-4 w-3 h-3 bg-primary rounded-full animate-ping" />
             )}
           </button>

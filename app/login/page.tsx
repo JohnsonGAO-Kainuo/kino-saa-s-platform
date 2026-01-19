@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Mail, CheckCircle2 } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -16,20 +17,30 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
   const router = useRouter()
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setEmailSent(false)
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
         })
         if (error) throw error
-        toast.success('Check your email for confirmation!')
+        
+        // Show success message and email sent state
+        setEmailSent(true)
+        toast.success('Verification email sent! Please check your inbox.', {
+          duration: 5000,
+        })
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -39,7 +50,8 @@ export default function LoginPage() {
         router.push('/')
       }
     } catch (error: any) {
-      toast.error(error.message)
+      toast.error(error.message || 'An error occurred. Please try again.')
+      setEmailSent(false)
     } finally {
       setLoading(false)
     }
@@ -52,28 +64,32 @@ export default function LoginPage() {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'select_account', // Force account selection
+            access_type: 'offline',
+          },
         },
       })
       if (error) throw error
     } catch (error: any) {
-      toast.error(error.message)
+      toast.error(error.message || 'Failed to sign in with Google')
       setGoogleLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] flex items-center justify-center p-4">
-      <Card className="w-full max-w-[400px] border-[#e6e9ef] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] rounded-xl bg-white overflow-hidden">
-        <CardHeader className="pt-8 pb-4 px-8 text-center">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-[420px] border border-border shadow-[0_8px_40px_rgba(0,0,0,0.08)] rounded-[24px] bg-card overflow-hidden">
+        <CardHeader className="pt-10 pb-6 px-8 text-center">
           <div className="flex justify-center mb-6">
-            <div className="w-10 h-10 bg-[#6366f1] rounded-lg flex items-center justify-center shadow-sm">
-              <span className="text-xl font-bold text-white">K</span>
+            <div className="w-12 h-12 bg-primary rounded-[14px] flex items-center justify-center shadow-lg shadow-primary/20">
+              <img src="/kino-logo.svg" alt="Kino Logo" className="w-full h-full object-cover p-2" />
             </div>
           </div>
-          <CardTitle className="text-[24px] font-semibold tracking-tight text-[#1a1f36]">
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
             {isSignUp ? 'Create your account' : 'Sign in to Kino'}
           </CardTitle>
-          <CardDescription className="text-[#4f566b] mt-2">
+          <CardDescription className="text-muted-foreground mt-3 text-base">
             {isSignUp 
               ? 'Start generating professional documents today' 
               : 'Welcome back to your document dashboard'}
@@ -81,24 +97,43 @@ export default function LoginPage() {
         </CardHeader>
         
         <CardContent className="px-8 pb-8 pt-2">
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-[13px] font-medium text-[#1a1f36]">Email</Label>
+          {emailSent && (
+            <Alert className="mb-6 border-primary/20 bg-primary/5 rounded-[16px]">
+              <Mail className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-sm text-foreground">
+                <strong className="font-semibold">Verification email sent!</strong>
+                <br />
+                Please check your inbox at <span className="font-medium">{email}</span> and click the confirmation link to activate your account.
+                <br />
+                <span className="text-xs text-muted-foreground mt-1 block">
+                  Didn't receive it? Check your spam folder or try signing up again.
+                </span>
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <form onSubmit={handleAuth} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-semibold text-foreground">Email</Label>
               <Input 
                 id="email" 
                 type="email" 
                 placeholder="name@company.com" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setEmailSent(false)
+                }}
                 required 
-                className="h-10 border-[#e6e9ef] focus:border-[#6366f1] focus:ring-[2px] focus:ring-[#6366f1]/10 bg-white transition-all duration-200"
+                disabled={emailSent}
+                className="h-12 border-border bg-input focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-[16px] transition-all"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-[13px] font-medium text-[#1a1f36]">Password</Label>
+                <Label htmlFor="password" className="text-sm font-semibold text-foreground">Password</Label>
                 {!isSignUp && (
-                  <button type="button" className="text-[13px] font-medium text-[#6366f1] hover:text-[#5658d2]">
+                  <button type="button" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
                     Forgot password?
                   </button>
                 )}
@@ -109,34 +144,44 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required 
-                className="h-10 border-[#e6e9ef] focus:border-[#6366f1] focus:ring-[2px] focus:ring-[#6366f1]/10 bg-white transition-all duration-200"
+                disabled={emailSent}
+                className="h-12 border-border bg-input focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-[16px] transition-all"
               />
             </div>
             
             <Button 
-              className="w-full h-10 bg-[#6366f1] hover:bg-[#5658d2] text-white font-medium shadow-sm transition-all duration-200" 
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg hover:shadow-xl rounded-[16px] transition-all" 
               type="submit" 
-              disabled={loading || googleLoading}
+              disabled={loading || googleLoading || emailSent}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSignUp ? 'Continue' : 'Sign In'}
+              {emailSent ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Email Sent
+                </>
+              ) : isSignUp ? (
+                'Continue'
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-[#e6e9ef]"></span>
+              <span className="w-full border-t border-border"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-[#8792a2] font-medium">Or continue with</span>
+              <span className="bg-card px-3 text-muted-foreground font-semibold tracking-wider">Or continue with</span>
             </div>
           </div>
 
           <Button 
             variant="outline" 
-            className="w-full h-10 border-[#e6e9ef] hover:bg-[#f7f9fc] text-[#4f566b] font-medium shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
+            className="w-full h-12 border-border hover:bg-secondary text-foreground font-medium shadow-sm hover:shadow-md rounded-[16px] transition-all flex items-center justify-center gap-3"
             onClick={handleGoogleLogin}
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || emailSent}
             type="button"
           >
             {googleLoading ? (
@@ -166,8 +211,13 @@ export default function LoginPage() {
           
           <div className="mt-8 text-center">
             <button 
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-[14px] text-[#6366f1] hover:text-[#5658d2] font-medium transition-colors"
+              onClick={() => {
+                setIsSignUp(!isSignUp)
+                setEmailSent(false)
+                setEmail('')
+                setPassword('')
+              }}
+              className="text-sm text-primary hover:text-primary/80 font-semibold transition-colors"
             >
               {isSignUp 
                 ? 'Already have an account? Sign in' 
@@ -177,7 +227,7 @@ export default function LoginPage() {
         </CardContent>
       </Card>
       
-      <div className="fixed bottom-8 text-[12px] text-[#8792a2]">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 text-xs text-muted-foreground">
         &copy; 2026 Kino SaaS Platform. Built with ❤️ in Hong Kong.
       </div>
     </div>

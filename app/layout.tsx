@@ -1,6 +1,6 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import type { Metadata, Viewport } from "next"
+import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
@@ -9,14 +9,24 @@ import { Toaster } from "@/components/ui/sonner"
 import { Sidebar } from "@/components/layout/sidebar"
 import { MobileNav } from "@/components/layout/mobile-nav"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+// Use Inter as a primary font for better performance and professional look
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-inter',
+})
+
+export const viewport: Viewport = {
+  themeColor: "#F55503",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+}
 
 export const metadata: Metadata = {
-  title: "Kino - Document Management SaaS",
-  description: "Professional document generation platform for quotations, invoices, and receipts",
-  generator: "v0.app",
-// ... existing metadata code ...
+  title: "Kino SaaS - AI Document Workspace",
+  description: "Minimalist AI-powered platform for professional quotations, invoices, and contracts",
+  metadataBase: new URL('https://kino-saas.vercel.app'), // Replace with actual URL
 }
 
 export default function RootLayout({
@@ -24,20 +34,31 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+
   return (
-    <html lang="en">
-      <body className={`font-sans antialiased bg-background text-foreground`}>
+    <html lang="en" className={`${inter.variable}`}>
+      <head>
+        {/* Preconnect to Supabase for faster initial handshakes - only if URL is defined */}
+        {supabaseUrl && (
+          <>
+            <link rel="preconnect" href={supabaseUrl} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={supabaseUrl} />
+          </>
+        )}
+      </head>
+      <body className="font-sans antialiased bg-background text-foreground min-h-screen">
         <AuthProvider>
           <LanguageProvider>
-            <div className="flex flex-col md:flex-row min-h-screen">
+            <div className="flex flex-col md:flex-row min-h-screen relative">
               <Sidebar />
               <MobileNav />
-              <main className="flex-1 md:pl-64 transition-all duration-300 ease-in-out w-full">
+              <main className="flex-1 md:pl-64 transition-all duration-300 ease-in-out w-full relative">
                 {children}
               </main>
             </div>
             <Analytics />
-            <Toaster />
+            <Toaster position="top-center" expand={false} richColors />
           </LanguageProvider>
         </AuthProvider>
       </body>
