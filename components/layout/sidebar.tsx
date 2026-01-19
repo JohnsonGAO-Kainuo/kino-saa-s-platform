@@ -1,7 +1,7 @@
 "use client"
 
 import React, { memo, useEffect, useState } from "react"
-import { Home, FileText, Settings, Briefcase, ChevronRight, Users, Package, CreditCard } from "lucide-react"
+import { FileText, Settings, Briefcase, ChevronRight, Users, Package, CreditCard } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -10,7 +10,6 @@ import { supabase } from "@/lib/supabase"
 import { useLanguage } from "@/lib/language-context"
 
 const sidebarItems = [
-  { icon: Home, label: "Dashboard", href: "/" },
   { icon: FileText, label: "Documents", href: "/documents" },
   { icon: Users, label: "Clients", href: "/clients" },
   { icon: Package, label: "Items", href: "/items" },
