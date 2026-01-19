@@ -10,7 +10,7 @@ const plans = [
   {
     name: "Pro",
     description: "Best for freelancers & small teams",
-    price: "$7.80",
+    price: "$7.99",
     period: "per month",
     trial: "7-day free trial",
     features: [
