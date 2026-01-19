@@ -1,10 +1,13 @@
 "use client"
 
-import React, { memo } from "react"
-import { Home, FileText, Settings, Briefcase, ChevronRight, Users, Package } from "lucide-react"
+import React, { memo, useEffect, useState } from "react"
+import { Home, FileText, Settings, Briefcase, ChevronRight, Users, Package, CreditCard } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth-context"
+import { supabase } from "@/lib/supabase"
+import { useLanguage } from "@/lib/language-context"
 
 const sidebarItems = [
   { icon: Home, label: "Dashboard", href: "/" },
@@ -12,12 +15,55 @@ const sidebarItems = [
   { icon: Users, label: "Clients", href: "/clients" },
   { icon: Package, label: "Items", href: "/items" },
   { icon: Briefcase, label: "Business Profile", href: "/profile" },
+  { icon: CreditCard, label: "Pricing", href: "/pricing" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
 // Memoized Sidebar to prevent unnecessary re-renders
 export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname()
+  const { user } = useAuth()
+  const { t } = useLanguage()
+  const [userInfo, setUserInfo] = useState<{ name: string; plan: string }>({ 
+    name: '', 
+    plan: 'Free Plan' 
+  })
+
+  useEffect(() => {
+    async function fetchUserInfo() {
+      if (!user) return
+      
+      try {
+        // Get user's company name from company_settings
+        const { data: companyData } = await supabase
+          .from('company_settings')
+          .select('company_name')
+          .eq('user_id', user.id)
+          .single()
+
+        // Get subscription info
+        const { data: subData } = await supabase
+          .from('subscriptions')
+          .select('plan_type')
+          .eq('user_id', user.id)
+          .single()
+
+        const displayName = companyData?.company_name || user.email?.split('@')[0] || 'User'
+        const planType = subData?.plan_type || 'free'
+        const planLabel = planType === 'pro' ? 'Pro Plan' : planType === 'enterprise' ? 'Enterprise' : 'Free Plan'
+
+        setUserInfo({ name: displayName, plan: planLabel })
+      } catch (error) {
+        // Use fallback values
+        setUserInfo({ 
+          name: user.email?.split('@')[0] || 'User', 
+          plan: 'Free Plan' 
+        })
+      }
+    }
+
+    fetchUserInfo()
+  }, [user])
 
   return (
     <div className="hidden md:flex flex-col w-[260px] h-screen fixed left-0 top-0 z-30 p-4">
@@ -78,16 +124,18 @@ export const Sidebar = memo(function Sidebar() {
 
         {/* User Profile */}
         <div className="p-3 mt-auto">
-          <div className="flex items-center gap-3 p-3 bg-white/60 border border-white/50 rounded-[18px] hover:bg-white transition-colors cursor-pointer shadow-sm group">
-            <div className="w-9 h-9 bg-[#EBE7E0] rounded-full flex items-center justify-center text-foreground font-bold text-sm border-2 border-white shadow-sm">
-              K
+          <Link href="/settings">
+            <div className="flex items-center gap-3 p-3 bg-white/60 border border-white/50 rounded-[18px] hover:bg-white transition-colors cursor-pointer shadow-sm group">
+              <div className="w-9 h-9 bg-[#EBE7E0] rounded-full flex items-center justify-center text-foreground font-bold text-sm border-2 border-white shadow-sm">
+                {userInfo.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold text-foreground truncate group-hover:text-primary transition-colors">{userInfo.name}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{userInfo.plan}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary/50" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-foreground truncate group-hover:text-primary transition-colors">Kainuo Admin</p>
-              <p className="text-[11px] text-muted-foreground truncate">Pro Plan Active</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary/50" />
-          </div>
+          </Link>
         </div>
       </div>
     </div>

@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { Loader2, Mail, CheckCircle2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -18,10 +20,18 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const router = useRouter()
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Check terms agreement for sign up
+    if (isSignUp && !agreedToTerms) {
+      toast.error('Please agree to the Terms of Service and Privacy Policy to continue.')
+      return
+    }
+    
     setLoading(true)
     setEmailSent(false)
 
@@ -149,10 +159,36 @@ export default function LoginPage() {
               />
             </div>
             
+            {/* Terms Agreement Checkbox - Only shown on sign up */}
+            {isSignUp && (
+              <div className="flex items-start space-x-3 py-2">
+                <Checkbox 
+                  id="terms" 
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                  disabled={emailSent}
+                  className="mt-0.5"
+                />
+                <label 
+                  htmlFor="terms" 
+                  className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
+                >
+                  I agree to the{' '}
+                  <Link href="/terms" className="text-primary hover:underline font-medium" target="_blank">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="text-primary hover:underline font-medium" target="_blank">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+            )}
+            
             <Button 
               className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg hover:shadow-xl rounded-[16px] transition-all" 
               type="submit" 
-              disabled={loading || googleLoading || emailSent}
+              disabled={loading || googleLoading || emailSent || (isSignUp && !agreedToTerms)}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {emailSent ? (
@@ -181,7 +217,7 @@ export default function LoginPage() {
             variant="outline" 
             className="w-full h-12 border-border hover:bg-secondary text-foreground font-medium shadow-sm hover:shadow-md rounded-[16px] transition-all flex items-center justify-center gap-3"
             onClick={handleGoogleLogin}
-            disabled={loading || googleLoading || emailSent}
+            disabled={loading || googleLoading || emailSent || (isSignUp && !agreedToTerms)}
             type="button"
           >
             {googleLoading ? (
@@ -216,6 +252,7 @@ export default function LoginPage() {
                 setEmailSent(false)
                 setEmail('')
                 setPassword('')
+                setAgreedToTerms(false)
               }}
               className="text-sm text-primary hover:text-primary/80 font-semibold transition-colors"
             >

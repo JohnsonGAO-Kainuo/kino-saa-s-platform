@@ -81,7 +81,7 @@ export default function DashboardHero() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
-            placeholder="e.g., Create an invoice for web design services to Acme Corp for $2,500..."
+            placeholder={translate("e.g., Create an invoice for web design services for $2,500...") || "e.g., Create an invoice for web design services for $2,500..."}
             className="flex-1 h-16 px-6 text-lg bg-transparent border-none outline-none placeholder:text-muted-foreground/60 text-foreground w-full"
             autoFocus
           />
@@ -96,14 +96,14 @@ export default function DashboardHero() {
         
         {/* Suggested Prompts - Hints */}
         <div className="absolute -bottom-10 left-0 w-full flex justify-center gap-3">
-          <button onClick={() => setPrompt("Quote for Website Redesign")} className="text-xs bg-white/50 hover:bg-white border border-border/50 rounded-full px-3 py-1.5 text-muted-foreground transition-all">
-            "Quote for Website Redesign"
+          <button onClick={() => setPrompt(translate("Quote for Website Redesign") || "Quote for Website Redesign")} className="text-xs bg-white/50 hover:bg-white border border-border/50 rounded-full px-3 py-1.5 text-muted-foreground transition-all">
+            "{translate("Quote for Website Redesign") || "Quote for Website Redesign"}"
           </button>
-          <button onClick={() => setPrompt("Invoice to Acme for $500")} className="text-xs bg-white/50 hover:bg-white border border-border/50 rounded-full px-3 py-1.5 text-muted-foreground transition-all">
-            "Invoice to Acme for $500"
+          <button onClick={() => setPrompt(translate("Invoice for $500") || "Invoice for $500")} className="text-xs bg-white/50 hover:bg-white border border-border/50 rounded-full px-3 py-1.5 text-muted-foreground transition-all">
+            "{translate("Invoice for $500") || "Invoice for $500"}"
           </button>
-          <button onClick={() => setPrompt("Contract for Marketing Services")} className="text-xs bg-white/50 hover:bg-white border border-border/50 rounded-full px-3 py-1.5 text-muted-foreground transition-all">
-            "Contract for Marketing Services"
+          <button onClick={() => setPrompt(translate("Contract for Marketing Services") || "Contract for Marketing Services")} className="text-xs bg-white/50 hover:bg-white border border-border/50 rounded-full px-3 py-1.5 text-muted-foreground transition-all">
+            "{translate("Contract for Marketing Services") || "Contract for Marketing Services"}"
           </button>
         </div>
       </div>
@@ -134,12 +134,12 @@ export default function DashboardHero() {
         ))}
       </div>
 
-      {/* Trust / Stats (Simplified) */}
-      <div className="mt-20 flex items-center gap-8 text-sm text-muted-foreground/60">
+      {/* Trust / Stats (Simplified) - Hidden until we have real data */}
+      {/* <div className="mt-20 flex items-center gap-8 text-sm text-muted-foreground/60">
         <span>Trusted by 1,000+ Freelancers</span>
         <span className="w-1 h-1 bg-border rounded-full" />
         <span>Generated 50,000+ Documents</span>
-      </div>
+      </div> */}
     </div>
   )
 }

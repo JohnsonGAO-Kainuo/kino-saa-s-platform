@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import DashboardHero from "@/components/dashboard/hero-chat"
 import { StatsCards } from "@/components/dashboard/stats-cards"
@@ -26,54 +26,33 @@ export default function DashboardPage() {
     invoices: 0
   })
 
-  useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        setLoadingDocs(true)
-        // Only load recent 5 documents instead of all
-        const recentDocs = await documentStorage.getAllDocuments({ limit: 5 })
-        setDocuments(recentDocs)
-        
-        // Calculate stats in parallel - use a separate lightweight query
-        // For better performance, we can calculate stats from the limited set
-        // or make a separate optimized query
-        const newStats = {
-          total: recentDocs.length, // This is approximate, but faster
-          quotations: recentDocs.filter(d => d.doc_type === 'quotation').length,
-          contracts: recentDocs.filter(d => d.doc_type === 'contract').length,
-          invoices: recentDocs.filter(d => d.doc_type === 'invoice').length
-        }
-        setStats(newStats)
-        
-        // Load full stats in background (non-blocking)
-        setTimeout(async () => {
-          try {
-            const allDocs = await documentStorage.getAllDocuments()
-            const fullStats = {
-              total: allDocs.length,
-              quotations: allDocs.filter(d => d.doc_type === 'quotation').length,
-              contracts: allDocs.filter(d => d.doc_type === 'contract').length,
-              invoices: allDocs.filter(d => d.doc_type === 'invoice').length
-            }
-            setStats(fullStats)
-          } catch (error) {
-            console.error("Failed to load full stats:", error)
-          }
-        }, 100) // Load after initial render
-      } catch (error) {
-        console.error("Failed to load documents:", error)
-      } finally {
-        setLoadingDocs(false)
-      }
+  const loadDashboardData = useCallback(async () => {
+    if (!user) {
+      setLoadingDocs(false)
+      return
     }
-    
-    // Only load if user is available
-    if (user) {
-      loadDashboardData()
-    } else {
+
+    try {
+      setLoadingDocs(true)
+      
+      // Load recent documents and stats in parallel for better performance
+      const [recentDocs, docStats] = await Promise.all([
+        documentStorage.getAllDocuments({ limit: 5 }),
+        documentStorage.getDocumentStats()
+      ])
+      
+      setDocuments(recentDocs)
+      setStats(docStats)
+    } catch (error) {
+      console.error("Failed to load dashboard data:", error)
+    } finally {
       setLoadingDocs(false)
     }
   }, [user])
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-10 flex flex-col gap-12 relative overflow-x-hidden">
