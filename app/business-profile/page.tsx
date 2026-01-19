@@ -103,6 +103,7 @@ export default function BusinessProfilePage() {
   async function ensureSingleDefault(wantDefault: boolean) {
     if (!user || !wantDefault) return
     const { error } = await supabase
+      .schema('kino')
       .from("business_profiles")
       .update({ is_default: false })
       .eq("user_id", user.id)
@@ -121,6 +122,7 @@ export default function BusinessProfilePage() {
       await ensureSingleDefault(shouldBeDefault)
 
       const { data, error } = await supabase
+        .schema('kino')
         .from("business_profiles")
         .upsert({
           id: editingProfile?.id,
@@ -153,6 +155,7 @@ export default function BusinessProfilePage() {
 
     try {
       const { error } = await supabase
+        .schema('kino')
         .from("business_profiles")
         .delete()
         .eq("id", profile.id)
@@ -179,6 +182,7 @@ export default function BusinessProfilePage() {
     try {
       await ensureSingleDefault(true)
       const { error } = await supabase
+        .schema('kino')
         .from("business_profiles")
         .update({ is_default: true, updated_at: new Date().toISOString() })
         .eq("id", profileId)

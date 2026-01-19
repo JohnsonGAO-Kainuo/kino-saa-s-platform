@@ -96,6 +96,7 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       const { error } = await supabase
+          .schema('kino')
           .from('company_settings')
         .upsert({
           user_id: user?.id,
