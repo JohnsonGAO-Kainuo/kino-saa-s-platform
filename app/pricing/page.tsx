@@ -8,6 +8,24 @@ import { cn } from "@/lib/utils"
 
 const plans = [
   {
+    name: "Free",
+    description: "Great to get started",
+    price: "$0",
+    period: "per month",
+    trial: null,
+    features: [
+      "Create basic documents",
+      "Community support",
+      "Limited templates",
+      "Basic PDF export",
+    ],
+    limitations: ["Limited templates", "No priority support"],
+    cta: "Start for Free",
+    ctaVariant: "outline" as const,
+    popular: false,
+    icon: Building2,
+  },
+  {
     name: "Pro",
     description: "Best for freelancers & small teams",
     price: "$7.99",
@@ -57,7 +75,7 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 justify-items-center max-w-4xl mx-auto">
           {plans.map((plan) => (
             <Card 
               key={plan.name}
@@ -153,8 +171,7 @@ export default function PricingPage() {
             <div className="border border-border rounded-xl p-6">
               <h3 className="font-semibold mb-2">Is there a free trial for Pro?</h3>
               <p className="text-muted-foreground text-sm">
-                We don't offer a free trial, but our Free plan lets you explore the platform with 
-                limited features. You can upgrade to Pro anytime when you need more.
+                Yes — Pro includes a 7-day free trial so you can explore all premium features before upgrading.
               </p>
             </div>
             <div className="border border-border rounded-xl p-6">
