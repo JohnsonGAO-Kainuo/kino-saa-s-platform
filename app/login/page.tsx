@@ -46,17 +46,36 @@ export default function LoginPage() {
         })
         if (error) throw error
         
+        // Create membership for new user
+        if (data.user) {
+          await supabase.from('kino.app_memberships').upsert({
+            user_id: data.user.id,
+            app_slug: 'kino',
+            role: 'member'
+          }, { onConflict: 'user_id,app_slug' })
+        }
+        
         // Show success message and email sent state
         setEmailSent(true)
         toast.success('Verification email sent! Please check your inbox.', {
           duration: 5000,
         })
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
         if (error) throw error
+        
+        // Ensure membership exists for returning user
+        if (data.user) {
+          await supabase.from('kino.app_memberships').upsert({
+            user_id: data.user.id,
+            app_slug: 'kino',
+            role: 'member'
+          }, { onConflict: 'user_id,app_slug' })
+        }
+        
         router.push('/')
       }
     } catch (error: any) {

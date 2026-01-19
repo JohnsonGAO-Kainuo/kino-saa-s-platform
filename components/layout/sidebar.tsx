@@ -14,7 +14,7 @@ const sidebarItems = [
   { icon: FileText, label: "Documents", href: "/documents" },
   { icon: Users, label: "Clients", href: "/clients" },
   { icon: Package, label: "Items", href: "/items" },
-  { icon: Briefcase, label: "Business Profile", href: "/profile" },
+  { icon: Briefcase, label: "Business Profiles", href: "/business-profile" },
   { icon: CreditCard, label: "Pricing", href: "/pricing" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
@@ -36,14 +36,14 @@ export const Sidebar = memo(function Sidebar() {
       try {
         // Get user's company name from company_settings
         const { data: companyData } = await supabase
-          .from('company_settings')
+          .from('kino.company_settings')
           .select('company_name')
           .eq('user_id', user.id)
           .single()
 
         // Get subscription info
         const { data: subData } = await supabase
-          .from('subscriptions')
+          .from('kino.subscriptions')
           .select('plan_type')
           .eq('user_id', user.id)
           .single()
@@ -64,6 +64,8 @@ export const Sidebar = memo(function Sidebar() {
 
     fetchUserInfo()
   }, [user])
+
+  if (!user) return null
 
   return (
     <div className="hidden md:flex flex-col w-[260px] h-screen fixed left-0 top-0 z-30 p-4">

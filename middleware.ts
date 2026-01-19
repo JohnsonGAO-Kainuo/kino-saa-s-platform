@@ -36,10 +36,17 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // If there is no session and the user is trying to access a protected route
-  if (!session && (req.nextUrl.pathname === '/' || req.nextUrl.pathname.startsWith('/editor'))) {
+  // Gate editor for unauthenticated users
+  if (!session && req.nextUrl.pathname.startsWith('/editor')) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect authenticated users hitting the root to the documents hub
+  if (session && req.nextUrl.pathname === '/') {
+    const url = req.nextUrl.clone()
+    url.pathname = '/documents'
     return NextResponse.redirect(url)
   }
 

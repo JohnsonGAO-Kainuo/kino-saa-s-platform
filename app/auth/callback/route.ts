@@ -34,6 +34,15 @@ export async function GET(request: Request) {
     )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // Ensure user has kino membership
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('kino.app_memberships').upsert({
+          user_id: user.id,
+          app_slug: 'kino',
+          role: 'member'
+        }, { onConflict: 'user_id,app_slug' })
+      }
       // Use the actual site URL if available, otherwise use request origin
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin
       return NextResponse.redirect(`${siteUrl}${next}`)

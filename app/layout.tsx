@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/lib/language-context"
 import { Toaster } from "@/components/ui/sonner"
 import { Sidebar } from "@/components/layout/sidebar"
 import { MobileNav } from "@/components/layout/mobile-nav"
+import { AuthShell } from "@/components/layout/auth-shell"
 
 // Use Inter as a primary font for better performance and professional look
 const inter = Inter({ 
@@ -53,9 +54,9 @@ export default function RootLayout({
             <div className="flex flex-col md:flex-row min-h-screen relative">
               <Sidebar />
               <MobileNav />
-              <main className="flex-1 md:pl-64 transition-all duration-300 ease-in-out w-full relative">
+              <AuthShell>
                 {children}
-              </main>
+              </AuthShell>
             </div>
             <Analytics />
             <Toaster position="top-center" expand={false} richColors />

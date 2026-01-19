@@ -6,17 +6,21 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/auth-context"
 
 const navItems = [
   { icon: Home, label: "Dashboard", href: "/" },
   { icon: FileText, label: "Documents", href: "/documents" },
-  { icon: Briefcase, label: "Profile", href: "/profile" },
+  { icon: Briefcase, label: "Business Profiles", href: "/business-profile" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
+  const { user } = useAuth()
+
+  if (!user) return null
 
   return (
     <>

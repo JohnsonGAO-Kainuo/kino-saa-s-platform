@@ -14,14 +14,14 @@ export interface UserAsset {
 export async function getUserAssets(userId: string, assetType: string): Promise<UserAsset[]> {
   try {
     const { data, error } = await supabase
-      .from('user_assets')
+      .from('kino.user_assets')
       .select('*')
       .eq('user_id', userId)
       .eq('asset_type', assetType)
       .order('is_default', { ascending: false })
       .order('created_at', { ascending: false });
 
-    if (error) {
+      if (error) {
       // Handle case where table doesn't exist
       if (error.code === '42P01' || error.code === 'PGRST301') {
         console.warn('User assets table may not exist yet. Please run the database migration scripts.');
@@ -65,7 +65,7 @@ export async function uploadAsset(
     // 3. If setting as default, unset others first
     if (isDefault) {
       await supabase
-        .from('user_assets')
+        .from('kino.user_assets')
         .update({ is_default: false })
         .eq('user_id', userId)
         .eq('asset_type', assetType);
@@ -73,7 +73,7 @@ export async function uploadAsset(
 
     // 4. Insert into database
     const { data, error: dbError } = await supabase
-      .from('user_assets')
+      .from('kino.user_assets')
       .insert({
         user_id: userId,
         asset_type: assetType,
@@ -97,7 +97,7 @@ export async function uploadAsset(
       const updateField = fieldMap[assetType];
       if (updateField) {
         await supabase
-          .from('company_settings')
+          .from('kino.company_settings')
           .update({ [updateField]: publicUrl })
           .eq('user_id', userId);
       }
@@ -114,14 +114,14 @@ export async function setDefaultAsset(userId: string, assetId: string, assetType
   try {
     // 1. Unset current default
     await supabase
-      .from('user_assets')
+      .from('kino.user_assets')
       .update({ is_default: false })
       .eq('user_id', userId)
       .eq('asset_type', assetType);
 
     // 2. Set new default
     const { data: asset, error: setDefaultError } = await supabase
-      .from('user_assets')
+      .from('kino.user_assets')
       .update({ is_default: true })
       .eq('id', assetId)
       .select()
@@ -138,8 +138,8 @@ export async function setDefaultAsset(userId: string, assetId: string, assetType
     
     const updateField = fieldMap[assetType];
     if (updateField && asset) {
-      await supabase
-        .from('company_settings')
+        await supabase
+          .from('kino.company_settings')
         .update({ [updateField]: asset.asset_url })
         .eq('user_id', userId);
     }
@@ -155,7 +155,7 @@ export async function deleteAsset(userId: string, assetId: string): Promise<bool
   try {
     // 1. Get asset details to find file path
     const { data: asset, error: getError } = await supabase
-      .from('user_assets')
+      .from('kino.user_assets')
       .select('*')
       .eq('id', assetId)
       .single();
@@ -164,7 +164,7 @@ export async function deleteAsset(userId: string, assetId: string): Promise<bool
 
     // 2. Delete from database
     const { error: dbError } = await supabase
-      .from('user_assets')
+      .from('kino.user_assets')
       .delete()
       .eq('id', assetId);
 
@@ -189,7 +189,7 @@ export async function deleteAsset(userId: string, assetId: string): Promise<bool
 
 export async function renameAsset(userId: string, assetId: string, newName: string): Promise<boolean> {
   const { error } = await supabase
-    .from('user_assets')
+    .from('kino.user_assets')
     .update({ asset_name: newName, updated_at: new Date().toISOString() })
     .eq('id', assetId)
     .eq('user_id', userId);

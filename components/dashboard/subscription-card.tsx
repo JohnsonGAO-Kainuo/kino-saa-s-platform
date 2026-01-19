@@ -31,8 +31,8 @@ export function SubscriptionCard() {
         if (!user) return
 
         // Get subscription data
-        const { data: subData } = await supabase
-          .from('subscriptions')
+          const { data: subData } = await supabase
+            .from('kino.subscriptions')
           .select('plan_type')
           .eq('user_id', user.id)
           .single()
@@ -42,8 +42,8 @@ export function SubscriptionCard() {
         startOfMonth.setDate(1)
         startOfMonth.setHours(0, 0, 0, 0)
 
-        const { count } = await supabase
-          .from('documents')
+          const { count } = await supabase
+            .from('kino.documents')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
           .gte('created_at', startOfMonth.toISOString())

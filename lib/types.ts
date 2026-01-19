@@ -47,6 +47,27 @@ export interface CompanySettings {
   default_terms?: string
 }
 
+export interface BusinessProfile {
+  id: string
+  user_id: string
+  created_at?: string
+  updated_at?: string
+  name: string
+  email?: string
+  phone?: string
+  address?: string
+  tax_id?: string
+  bank_name?: string
+  account_number?: string
+  fps_id?: string
+  swift_code?: string
+  paypal_email?: string
+  default_invoice_notes?: string
+  default_contract_terms?: string
+  default_payment_notes?: string
+  is_default?: boolean
+}
+
 export interface AIGeneration {
   id: string
   prompt: string

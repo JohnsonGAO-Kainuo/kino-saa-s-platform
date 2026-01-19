@@ -41,7 +41,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       const timeoutId = setTimeout(async () => {
         try {
           const { data, error } = await supabase
-            .from('company_settings')
+            .from('kino.company_settings')
             .select('ui_language')
             .eq('user_id', user.id)
             .single()
@@ -66,7 +66,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     if (user) {
       try {
         await supabase
-          .from('company_settings')
+          .from('kino.company_settings')
           .upsert({
             user_id: user.id,
             ui_language: lang,
